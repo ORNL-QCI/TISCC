@@ -1,0 +1,10 @@
+CMake*
+*.cmake
+Makefile
+build
+*-build*
+.idea
+*.a
+*.vscode
+tests_*
+.DS_Store
