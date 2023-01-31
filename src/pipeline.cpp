@@ -1,18 +1,12 @@
 #include <TISCC/pipeline.hpp>
+#include <TISCC/gridmanager.hpp>
+#include <TISCC/logicalqubit.hpp>
 
 #include <argparse/argparse.h>
 #include <iostream>
 
 namespace TISCC 
 {
-    // Define possible types of sites in the trapped ion micro layout
-    enum SiteType : char {
-        QSite_Memory = 'M',
-        QSite_Memory_and_Ops = 'O',
-        Junction = 'J',
-        Nothing = 'X'
-    };
-
     // Parses command line arguments and runs through the code pipeline
     int run_tiscc(
         int argc, const char* argv[],
@@ -24,8 +18,20 @@ namespace TISCC
         std::string prog_name{argv[0]};
         argparse::ArgumentParser parser(prog_name, "Trapped-Ion Surface Code Compiler");
         parser.add_argument()
-                .names({"-d", "--dummy"})
-                .description("Dummy argument to test argparse")
+                .names({"-x", "--dx"})
+                .description("Code distance for X errors (Pauli weight of the minimum-weight logical X operator)")
+                .required(true);
+        parser.add_argument()
+                .names({"-z", "--dz"})
+                .description("Code distance for Z errors (Pauli weight of the minimum-weight logical Z operator)")
+                .required(true);
+        parser.add_argument()
+                .names({"-t", "--dt"})
+                .description("Code distance along the time dimension (number of surface code cycles)")
+                .required(true);
+        parser.add_argument()
+                .names({"-o", "--operation"})
+                .description("Surface code operation to be compiled")
                 .required(false);
         parser.enable_help();
         auto err = parser.parse(argc, argv);
@@ -41,49 +47,30 @@ namespace TISCC
             return 0;
         }
 
-        // Use of dummy command line flag
-        if (parser.exists("d"))
+        // Extracting required arguments from command line input
+        unsigned int dx = parser.get<unsigned int>("x");
+        unsigned int dz = parser.get<unsigned int>("z");
+        unsigned int cycles = parser.get<unsigned int>("t");
+
+        // Initializing grid on the heap using GridManager object
+        unsigned int nrows = dz+1; 
+        unsigned int ncols = dx+1;
+        GridManager a(nrows, ncols);
+        // a.print_grid();
+
+        // Operation-dependent logic
+        if (parser.exists("o"))
         {
-            std::cout << "Hello world!" << std::endl;
-        }
+            std::string s = parser.get<std::string>("o");
+            if (s == "idle") {
+                // Initialize logical qubit using the grid
+                LogicalQubit lq(dx, dz, a);
 
-        // Initializing grid on the heap
-        // TODO: Create an object called GridManager that has the root pointer as a private member variable
-        //  - Construct the grid in a private member function with repeating unit specified in the constructor
-        //  - Q: if I have the root as a private member variable and expose it through a const public member function, will the whole array be treated as const?
-        unsigned int nrows = 3;
-        unsigned int ncols = 3;
-        SiteType*** a = new SiteType**[nrows]; 
-        for (unsigned int i=0; i<nrows; i++) {
-            a[i] = new SiteType*[ncols];
-            // The third level of the array contains the repeating unit of the grid
-            for (unsigned int j=0; j<ncols; j++) {
-                a[i][j] = new SiteType[7];
-                a[i][j][0] = SiteType::QSite_Memory;
-                a[i][j][1] = SiteType::QSite_Memory_and_Ops;
-                a[i][j][2] = SiteType::QSite_Memory;
-                a[i][j][3] = SiteType::Junction;
-                a[i][j][4] = SiteType::QSite_Memory;
-                a[i][j][5] = SiteType::QSite_Memory_and_Ops;
-                a[i][j][6] = SiteType::QSite_Memory;
+                // Perform 'idle' operation
+                lq.idle(cycles);
             }
         }
-
-        // Print out grid
-        std::cout << a << std::endl;
-        for (unsigned int i=0; i<nrows; i++) {
-            std::cout << a[i] << std::endl;
-            for (unsigned int j=0; j<ncols; j++) {
-                std::cout << a[i][j] << std::endl;
-                SiteType* k;
-                for (SiteType* k=a[i][j]; k<a[i][j]+7; k++) {
-                    std::cout << k << std::endl;
-                }
-            }
-        }
-
-        // Create a hash table
-        //std::unordered_map<SiteType*, int> qsite_hash
+        else {std::cout << "Grid constructed and checks performed, but no valid operation selected. Quitting." << std::endl;}
 
         return 0;
     }
