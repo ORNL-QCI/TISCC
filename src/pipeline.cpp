@@ -56,7 +56,10 @@ namespace TISCC
         unsigned int nrows = dz+1; 
         unsigned int ncols = dx+1;
         GridManager a(nrows, ncols);
-        // a.print_grid();
+        a.print_grid();
+        // unsigned int b = 45;
+        // std::cout << a[b] << " " << a.grid(b) << " " << *(a.grid(b)) << std::endl;
+        // std::cout << a.get_row(b) << " " << a.get_col(b) << " " << a.get_idx(b) << " " << a.val_from_coords(a.get_row(b), a.get_col(b), a.get_idx(b)) << std::endl;
 
         // Operation-dependent logic
         if (parser.exists("o"))

@@ -4,6 +4,11 @@ namespace TISCC
 {
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& a) {
         // TODO: Construct the plaquettes of the surface code
+        // for (unsigned int i=0; i<a.get_nrows(); i++) {
+        //     for (unsigned int j=0; j<a.get_ncols(); j++) {
+        //         if ()
+        //     }
+        // }
 
         // Keep track of all data and measure qubits separately so that we can perform collision checks with other LQ
 

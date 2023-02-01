@@ -2,6 +2,7 @@
 #define TISCC_GRIDMANAGER_HPP
 
 #include <iostream>
+#include <vector>
 
 namespace TISCC {
 
@@ -20,35 +21,61 @@ public:
 
     // Destructor for GridManager
     ~GridManager() {
-        for (unsigned int i=0; i<nrows_; i++) {
-            for (unsigned int j=0; j<ncols_; j++) {
-                delete[] grid_[i][j];
-            }
-            delete[] grid_[i];
-        }
         delete[] grid_;
     }
 
-    // TODO: Provide public (read-only) access to the grid
-    // SiteType const*** grid();
-    SiteType*** grid();
+    // Providing read-only access to array elements 
+    const SiteType& operator[] (unsigned int i) const {return grid_[i];}
+
+    // Providing read-only access to array elements from coordinates
+    const SiteType& val_from_coords(unsigned int row, unsigned int col, unsigned int idx) const 
+        {return grid_[(row*ncols_+col)*7+idx];}
+
+    // Provide read-only access to array pointers
+    SiteType const* grid(unsigned int i) const {return grid_ + i;}
+    // TODO: Expand above into an iterator class (see below commented block).
+    // Provide indices and/or pointers to the location north, south, east, or west of a given index and/or pointer
+
+    /* All public member functions below depend on our specific choice of repeating unit (see constructor) */
+    // Providing row, col, and idx from array index
+    unsigned int get_idx(unsigned int i) {return i%7;}
+    unsigned int get_col(unsigned int i) {return ((i-i%7)/7)%ncols_;}
+    unsigned int get_row(unsigned int i) {return (((i-i%7)/7)-get_col(i))/ncols_;}
+
+    // Accessor functions for private member variables
+    unsigned int get_nrows() const {return nrows_;}
+    unsigned int get_ncols() const {return ncols_;}
 
     // Print out grid
     void print_grid();
 
 private:
-    // Should I use std::vector<std::vector<std::vector<SiteType>>> instead?
-    // Is three dimensions too unwieldy? Does it matter?
-    SiteType*** grid_;
+    SiteType* grid_;
     unsigned int nrows_;
     unsigned int ncols_;
-
-    // TODO: Include a hash table of memory address to qsite indices for later output 
-    //std::unordered_map<SiteType*, int> qsite_hash
-
-    // Constructs a particular repeating unit at a grid_[i][j]
-    void repeating_unit(unsigned int i, unsigned int j);
 };
+
+// class SiteIterator {
+// public:
+//     // Default constructor, copy constructor, assignment operator, & destructor
+//     SiteIterator() : ptr_(NULL) {}
+//     SiteIterator(SiteType* p) : ptr_(p) {}
+//     SiteIterator(const SiteIterator& old) : ptr_(old.ptr_) {}
+//     SiteIterator& operator= (const SiteIterator& old) {
+//         ptr_ = old.ptr_; return *this;}
+//     ~SiteIterator() {}
+
+//     // Dereferencing operator
+//     SiteType& operator*() {return *ptr_;}
+
+//     // Returns an iterator pointing to the site north of the current one
+//     SiteIterator& n() {
+
+//     }
+
+// private:
+//     GridManager::SiteType* ptr_;
+// }
 }
 
 #endif //TISCC_GRIDMANAGER_HPP
