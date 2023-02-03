@@ -18,6 +18,7 @@ namespace TISCC
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
+        // Bundle of Merge, Cool, Interact, Split
         TI_ops["ZZ"] = 2000;
     }
 
@@ -44,11 +45,17 @@ namespace TISCC
 
     // Set up the circuits that we intend to use
         /* TODO:
-            - Break move operations down into the corresponding 1-site moves
-            - OR have the code calculate time based on how many sites traversed
-            - NOTE that right now Move destinations are always qubits not sites
-            - They should potentially go WITHIN the CNOT gate specification after single-qubit gates
-            - and do the subsequent single-qubit gates require the qubits to be on different sites? */ 
+            - Fix error wherein single-qubit rotations on 'm' will be applied to a plaquette 
+                even if the overarching CNOT does not apply to its shape
+            - Break Move operations down into the corresponding 1-site moves
+                - NOTE that right now Move destinations are always qubits not sites
+                - Should include them WITHIN the CNOT function above
+                    - Apply single-qubit gates with qubits at their homes
+                    - Move target to site adjacent to control
+                    - Apply ZZ gate to these two sites (there is an implied merge, cool, interact, split)
+                    - Move target 'home' and then apply remaining single-qubit gates
+                    - Note that two of them can be applied in parallel
+        */ 
     void HardwareModel::init_circuits() {
 
         // Add instructions to the Z plaquette measurement circuit

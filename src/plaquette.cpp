@@ -24,6 +24,7 @@ namespace TISCC
     }
 
     // Move named qubit to its 'home' qsite on the grid
+    // TODO: This function depends on the specifics of the grid and its functionality should be moved into GridManager in the future
     void Plaquette::move_home(char qubit) {
         if (qubit == 'm') {
             mod_qsite(qubit) = grid_.index_from_coords(row_, col_, 1);

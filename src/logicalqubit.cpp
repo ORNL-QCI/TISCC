@@ -69,18 +69,19 @@ namespace TISCC
         }
 
         // Check that measure qubits are all unique
-        // for (Plaquette p : z_plaquettes) {
-        //     for (unsigned int q : measure_qubits) {
-        //         if (p.m == q) {std::cerr << "Found duplicate measure qubit among plaquettes."; abort();}
-        //     }
-        //     measure_qubits.push_back(p.m);
-        // }
-        // for (Plaquette p : x_plaquettes) {
-        //     for (unsigned int q : measure_qubits) {
-        //         if (p.m == q) {std::cerr << "Found duplicate measure qubit among plaquettes."; abort();}
-        //     }
-        //     measure_qubits.push_back(p.m);
-        // }
+        std::vector<unsigned int> measure_qubits;
+        for (Plaquette p : z_plaquettes) {
+            for (unsigned int q : measure_qubits) {
+                if (p.get_qsite('m') == q) {std::cerr << "Found duplicate measure qubit among plaquettes."; abort();}
+            }
+            measure_qubits.push_back(p.get_qsite('m'));
+        }
+        for (Plaquette p : x_plaquettes) {
+            for (unsigned int q : measure_qubits) {
+                if (p.get_qsite('m') == q) {std::cerr << "Found duplicate measure qubit among plaquettes."; abort();}
+            }
+            measure_qubits.push_back(p.get_qsite('m'));
+        }
 
         // TODO: Create a way to find all plaquettes containing a particular qubit
     }
@@ -91,94 +92,88 @@ namespace TISCC
         //print_stabilizers();
     }
 
-    void LogicalQubit::idle(unsigned int cycles, const GridManager& a) {
+   // Check to see if a given instruction is valid on a given plaquette 
+    bool LogicalQubit::is_instr_valid(const Instruction& instr, const Plaquette& p) {
+        bool n_valid = !(p.get_shape() == 'n' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'b') || (instr.get_q2() == 'a') || (instr.get_q2() == 'b')));
+        bool s_valid = !(p.get_shape() == 's' && ((instr.get_q1() == 'c') || (instr.get_q1() == 'd') || (instr.get_q2() == 'c') || (instr.get_q2() == 'd')));
+        bool e_valid = !(p.get_shape() == 'e' && ((instr.get_q1() == 'b') || (instr.get_q1() == 'd') || (instr.get_q2() == 'b') || (instr.get_q2() == 'd')));
+        bool w_valid = !(p.get_shape() == 'w' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'c') || (instr.get_q2() == 'a') || (instr.get_q2() == 'c')));
+        bool return_val = n_valid && s_valid && e_valid && w_valid;
+        return return_val;
+    }
+
+    // Apply a given instruction to all plaquettes in a given vector
+    void LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time) {
         // I/O settings
         int W = 15;
-        float time = 0;
         std::cout << std::setprecision(1);
         std::cout << std::setiosflags(std::ios::fixed);
+
+        // Don't explicitly apply an "Idle" operation
+        if (instr.get_name() != "Idle") {
+
+            // Loop over plaquettes
+            for (Plaquette& p : plaquettes) {
+
+                // Certain stabilizer shapes do not accomodate certain qubit labels
+                if (is_instr_valid(instr, p)) 
+                {
+                    /* Output data to file and apply ops to plaquettes */
+                    std::cout << std::setw(W) << time;
+                    std::cout << std::setw(W) << instr.get_name();
+                    std::cout << std::setw(W) << p.get_qsite(instr.get_q1());
+                    // Single-qubit gates
+                    if (instr.get_q2() == ' ') {
+                        std::cout << std::setw(W) << ' ';  
+                    }
+                    // The 'h' designation tells a qubit to go to its home on the grid
+                    else if ((instr.get_q2() == 'h') && (instr.get_name() == "Move")) {
+                        p.move_home(instr.get_q1());
+                        std::cout << std::setw(W) << p.get_qsite(instr.get_q1());
+                    }
+                    // Otherwise a move operation will target another qubit's qsite
+                    else if (instr.get_name() == "Move") {
+                        p.apply_move(instr.get_q1(), instr.get_q2());
+                        std::cout << std::setw(W) << p.get_qsite(instr.get_q2());
+                    }
+                    // The only other case currently is ZZ, which targets an adjacent site
+                    else if (instr.get_name() == "ZZ") {
+                        std::cout << std::setw(W) << p.get_qsite(instr.get_q2());
+                    }
+                    // 
+                    else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
+                    #ifdef DEBUG_OUTPUT_INSTRUCTIONS
+                    std::cout << std::setw(W) << instr.get_q1();
+                    std::cout << std::setw(W) << instr.get_q2();
+                    std::cout << std::setw(W) << p.get_shape();
+                    std::cout << std::setw(W) << p.get_type();
+                    #endif
+                    std::cout << std::endl;
+                }
+            }
+        }
+    }
+
+    void LogicalQubit::idle(unsigned int cycles, const GridManager& a) {
+        
+        // Initialize time counter
+        float time = 0;
         
         // Loop over surface code cycles
         for (unsigned int cycle=0; cycle < cycles; cycle++) {
             // TODO: Make sure that all plaquettes are re-set
 
-            // Loop over instructions and apply them to the plaquettes
-            // TODO: Since most of the code is the same between x and z stabilizers, we should throw it into a separate function
+            // To ensure synchronicity of the two different types of circuits we employ, we enforce that they contain the same number of instructions
+            // (and later that parallel instructions take the same amount of time)
             assert(TI_model.get_Z_circuit_Z_type().size() == TI_model.get_X_circuit_N_type().size());
-            for (unsigned int i=0; i<TI_model.get_Z_circuit_Z_type().size(); i++) {
-                Instruction instruction1 = TI_model.get_Z_circuit_Z_type()[i];
-                Instruction instruction2 = TI_model.get_X_circuit_N_type()[i];
-                if (instruction1.get_name() != "Idle") {
-                    for (Plaquette& p : z_plaquettes) {
-                        // Not all instructions are applied to all types of stabilizers. The conditionality is given by the following logic.
-                        if (!(p.get_shape() == 'n' && ((instruction1.get_q1() == 'a') || (instruction1.get_q1() == 'b') || (instruction1.get_q2() == 'a') || (instruction1.get_q2() == 'b')))
-                            && !(p.get_shape() == 's' && ((instruction1.get_q1() == 'c') || (instruction1.get_q1() == 'd') || (instruction1.get_q2() == 'c') || (instruction1.get_q2() == 'd')))
-                            && !(p.get_shape() == 'e' && ((instruction1.get_q1() == 'b') || (instruction1.get_q1() == 'd') || (instruction1.get_q2() == 'b') || (instruction1.get_q2() == 'd')))
-                            && !(p.get_shape() == 'w' && ((instruction1.get_q1() == 'a') || (instruction1.get_q1() == 'c') || (instruction1.get_q2() == 'a') || (instruction1.get_q2() == 'c'))))
-                        {
-                            std::cout << std::setw(W) << time;
-                            std::cout << std::setw(W) << instruction1.get_name();
-                            std::cout << std::setw(W) << p.get_qsite(instruction1.get_q1());
-                            if (instruction1.get_q2() == ' ') {
-                                std::cout << std::setw(W) << ' ';  
-                            }
-                            else if ((instruction1.get_q2() == 'h') && (instruction1.get_name() == "Move")) {
-                                p.move_home(instruction1.get_q1());
-                                std::cout << std::setw(W) << p.get_qsite(instruction1.get_q1());
-                            }
-                            else if (instruction1.get_name() == "Move") {
-                                std::cout << std::setw(W) << p.get_qsite(instruction1.get_q2());
-                                p.apply_move(instruction1.get_q1(), instruction1.get_q2());
-                            }
-                            else {
-                                std::cout << std::setw(W) << p.get_qsite(instruction1.get_q2());
-                            }
-                            #ifdef DEBUG_OUTPUT_INSTRUCTIONS
-                            std::cout << std::setw(W) << instruction1.get_q1();
-                            std::cout << std::setw(W) << instruction1.get_q2();
-                            std::cout << std::setw(W) << p.get_shape();
-                            std::cout << std::setw(W) << p.get_type();
-                            #endif
-                            std::cout << std::endl;
-                        }
-                    }
-                }
-                if (instruction2.get_name() != "Idle") {
-                    for (Plaquette& p : x_plaquettes) {
-                        if (!(p.get_shape() == 'n' && ((instruction2.get_q1() == 'a') || (instruction2.get_q1() == 'b') || (instruction2.get_q2() == 'a') || (instruction2.get_q2() == 'b')))
-                            && !(p.get_shape() == 's' && ((instruction2.get_q1() == 'c') || (instruction2.get_q1() == 'd') || (instruction2.get_q2() == 'c') || (instruction2.get_q2() == 'd')))
-                            && !(p.get_shape() == 'e' && ((instruction2.get_q1() == 'b') || (instruction2.get_q1() == 'd') || (instruction2.get_q2() == 'b') || (instruction2.get_q2() == 'd')))
-                            && !(p.get_shape() == 'w' && ((instruction2.get_q1() == 'a') || (instruction2.get_q1() == 'c') || (instruction2.get_q2() == 'a') || (instruction2.get_q2() == 'c')))) 
-                        {
-                            std::cout << std::setw(W) << time;
-                            std::cout << std::setw(W) << instruction2.get_name();
-                            std::cout << std::setw(W) << p.get_qsite(instruction2.get_q1());
-                            if (instruction2.get_q2() == ' ') {
-                                std::cout << std::setw(W) << ' ';  
-                            }
-                            else if ((instruction2.get_q2() == 'h') && (instruction2.get_name() == "Move")) {
-                                p.move_home(instruction2.get_q1());
-                                std::cout << std::setw(W) << p.get_qsite(instruction2.get_q1());
-                            }
-                            else if (instruction2.get_name() == "Move") {
-                                std::cout << std::setw(W) << p.get_qsite(instruction2.get_q2());
-                                p.apply_move(instruction2.get_q1(), instruction2.get_q2());
-                            }
-                            else {
-                                std::cout << std::setw(W) << p.get_qsite(instruction2.get_q2());
-                            }
-                            #ifdef DEBUG_OUTPUT_INSTRUCTIONS
-                            std::cout << std::setw(W) << instruction2.get_q1();
-                            std::cout << std::setw(W) << instruction2.get_q2();
-                            std::cout << std::setw(W) << p.get_shape();
-                            std::cout << std::setw(W) << p.get_type();
-                            #endif
-                            std::cout << std::endl;
-                        }
-                    } 
-                }
-                assert(instruction1.get_time() == instruction2.get_time());
-                time += instruction1.get_time();
+            unsigned int num_instructions = TI_model.get_Z_circuit_Z_type().size();
+
+            // Loop over instructions and apply them to plaquettes
+            for (unsigned int i=0; i<num_instructions; i++) {
+                apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time);
+                apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time);
+                assert(TI_model.get_Z_circuit_Z_type()[i].get_time() == TI_model.get_X_circuit_N_type()[i].get_time());
+                time += TI_model.get_Z_circuit_Z_type()[i].get_time();
             }
         }
     }

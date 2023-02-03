@@ -11,6 +11,7 @@
 
 namespace TISCC {
 
+// Consists of the stabilizer plaquettes of a surface code patch and defined operations on them
 class LogicalQubit {
 public:
     explicit LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& a);
@@ -31,8 +32,11 @@ private:
     // Test stabilizers
     void test_stabilizers(unsigned int dx, unsigned int dz);
 
-    // std::vector<unsigned int> data_qubits;
-    // std::vector<unsigned int> measure_qubits;
+    // Check to see if a given instruction is valid on a given plaquette 
+    bool is_instr_valid(const Instruction& instr, const Plaquette& p);
+
+    // Apply a given instruction to all plaquettes in a given vector
+    void apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time);
 };
 }
 
