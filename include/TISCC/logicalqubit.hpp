@@ -14,8 +14,13 @@ namespace TISCC {
 // Consists of the stabilizer plaquettes of a surface code patch and defined operations on them
 class LogicalQubit {
 public:
-    explicit LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& a);
-    void idle(unsigned int cycles, const GridManager& a);
+    // Constructor
+    explicit LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& grid);
+
+    // Operations
+    void idle(unsigned int cycles);
+
+    // 
     void print_stabilizers();
 
 private:
@@ -27,7 +32,7 @@ private:
     HardwareModel TI_model;
 
     // Define stabilizers
-    void init_stabilizers(unsigned int dx, unsigned int dz, const GridManager& a); 
+    void init_stabilizers(unsigned int dx, unsigned int dz, const GridManager& grid); 
 
     // Test stabilizers
     void test_stabilizers(unsigned int dx, unsigned int dz);

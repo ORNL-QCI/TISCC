@@ -9,7 +9,7 @@
 
 namespace TISCC {
 
-// This class stores indices to grid_ that define the site locations of qubits in a surface code plaquette
+// This class defines a set of native hardware operations and constructs circuits out of them
 class HardwareModel {
 public:
     // Constructor
@@ -24,18 +24,21 @@ private:
     // Hash table to map trapped-ion instructions to time (in microseconds)
     std::unordered_map<std::string, float> TI_ops;
 
-    // Vectors of instructions to hold stabilizer circuits
+    // Vectors of instructions to hold syndrome measurement circuits
     std::vector<Instruction> Z_Circuit_Z_Type;
     std::vector<Instruction> X_Circuit_N_Type;
 
-    // Set up the circuits that we intend to use
+    // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
+    void init_TI_ops();
+
+    // Helper functions to aid in compilation to hardware instructions
     void add_H(char qubit, std::vector<Instruction>& circuit);
     void idle_while_H(std::vector<Instruction>& circuit);
     void add_CNOT(char control, char target, std::vector<Instruction>& circuit);
-    void init_circuits();
+    void add_Move(char qubit1, char qubit2, std::vector<Instruction>& circuit);
 
-    // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
-    void init_TI_ops();
+    // Set up the circuits that we intend to use
+    void init_circuits();
 };
 
 }

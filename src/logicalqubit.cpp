@@ -7,15 +7,15 @@
 
 namespace TISCC 
 {
-    void LogicalQubit::init_stabilizers(unsigned int dx, unsigned int dz, const GridManager& a) {
+    void LogicalQubit::init_stabilizers(unsigned int dx, unsigned int dz, const GridManager& grid) {
         // Construct the 4-qubit plaquettes of the surface code
         for (unsigned int i=1; i<dz; i++) {
             for (unsigned int j=1; j<dx; j++) {
                 if ((i+j)%2 == 0) {
-                    z_plaquettes.push_back(a.get_plaquette(i, j, 'f', 'Z'));
+                    z_plaquettes.push_back(grid.get_plaquette(i, j, 'f', 'Z'));
                 }
                 else if ((i+j)%2 == 1) {
-                    x_plaquettes.push_back(a.get_plaquette(i, j, 'f', 'X'));
+                    x_plaquettes.push_back(grid.get_plaquette(i, j, 'f', 'X'));
                 }
             }
         }
@@ -24,24 +24,24 @@ namespace TISCC
         int gap_tmp = 0;
         // Left edge of surface code
         for (unsigned int i=1; i<dz; i+=2) {
-            x_plaquettes.push_back(a.get_plaquette(i, 0, 'w', 'X'));
+            x_plaquettes.push_back(grid.get_plaquette(i, 0, 'w', 'X'));
             if (i==dz-1) {gap_tmp = 1;}
         }
         int gap = gap_tmp; gap_tmp = 0;
         for (unsigned int i=1; i<dx; i+=2) {
             // Top edge of surface code 
             if (i!=dx-1) {
-                z_plaquettes.push_back(a.get_plaquette(0, i+1, 'n', 'Z'));
+                z_plaquettes.push_back(grid.get_plaquette(0, i+1, 'n', 'Z'));
                 if (i+1==dx-1) {gap_tmp = 1;}
             }
             // Bottom edge of surface code
             if ((gap==1) && (i==dx-1)) {continue;}
-            z_plaquettes.push_back(a.get_plaquette(dz, i+gap, 's', 'Z'));
+            z_plaquettes.push_back(grid.get_plaquette(dz, i+gap, 's', 'Z'));
         }
         gap = gap_tmp;
         // Right edge of surface code
         for (unsigned int i=1+gap; i<dz; i+=2) {
-            x_plaquettes.push_back(a.get_plaquette(i, dx, 'e', 'X'));
+            x_plaquettes.push_back(grid.get_plaquette(i, dx, 'e', 'X'));
         }
     }
 
@@ -86,8 +86,8 @@ namespace TISCC
         // TODO: Create a way to find all plaquettes containing a particular qubit
     }
 
-    LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& a) : TI_model() { 
-        init_stabilizers(dx, dz, a);
+    LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& grid) : TI_model() { 
+        init_stabilizers(dx, dz, grid);
         test_stabilizers(dx, dz);
         //print_stabilizers();
     }
@@ -154,7 +154,7 @@ namespace TISCC
         }
     }
 
-    void LogicalQubit::idle(unsigned int cycles, const GridManager& a) {
+    void LogicalQubit::idle(unsigned int cycles) {
         
         // Initialize time counter
         float time = 0;
@@ -170,9 +170,11 @@ namespace TISCC
 
             // Loop over instructions and apply them to plaquettes
             for (unsigned int i=0; i<num_instructions; i++) {
+                assert(TI_model.get_Z_circuit_Z_type()[i].get_time() == TI_model.get_X_circuit_N_type()[i].get_time());
                 apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time);
                 apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time);
-                assert(TI_model.get_Z_circuit_Z_type()[i].get_time() == TI_model.get_X_circuit_N_type()[i].get_time());
+
+                // Increment time counter
                 time += TI_model.get_Z_circuit_Z_type()[i].get_time();
             }
         }

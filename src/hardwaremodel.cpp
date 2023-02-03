@@ -5,10 +5,10 @@ namespace TISCC
 {
     // Initialize hash table to map native TI operations to times (in microseconds)
     void HardwareModel::init_TI_ops() {
+
+        // Single-site ops
         TI_ops["Initialize"] = 10;
         TI_ops["Measure"] = 120;
-        // Move is eight times the move time of 1.4us, since 8 is the longest distance traveled by our circuits
-        TI_ops["Move"] = 11.2;
         TI_ops["X_pi/2"] = 10;
         TI_ops["Y_pi/2"] = 10;
         TI_ops["Z_pi/2"] = 0;
@@ -18,7 +18,11 @@ namespace TISCC
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
-        // Bundle of Merge, Cool, Interact, Split
+
+        // A Move can be between any two adjacent sites
+        TI_ops["Move"] = 11.2;
+
+        // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
     }
 
@@ -42,6 +46,8 @@ namespace TISCC
         circuit.push_back(Instruction("X_-pi/4", target, ' ', TI_ops["X_-pi/4"]));
         circuit.push_back(Instruction("Z_-pi/4", target, ' ', TI_ops["Z_-pi/4"]));
     }
+
+    void HardwareModel::add_Move(char qubit1, char qubit2, std::vector<Instruction>& circuit) {}
 
     // Set up the circuits that we intend to use
         /* TODO:
