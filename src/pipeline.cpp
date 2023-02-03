@@ -1,9 +1,13 @@
 #include <TISCC/pipeline.hpp>
 #include <TISCC/gridmanager.hpp>
 #include <TISCC/logicalqubit.hpp>
+#include <TISCC/plaquette.hpp>
+#include <TISCC/hardwaremodel.hpp>
+#include <TISCC/instruction.hpp>
 
 #include <argparse/argparse.h>
 #include <iostream>
+#include <cassert>
 
 namespace TISCC 
 {
@@ -52,14 +56,10 @@ namespace TISCC
         unsigned int dz = parser.get<unsigned int>("z");
         unsigned int cycles = parser.get<unsigned int>("t");
 
-        // Initializing grid on the heap using GridManager object
+        // Initializing grid using GridManager object
         unsigned int nrows = dz+1; 
         unsigned int ncols = dx+1;
-        GridManager a(nrows, ncols);
-        a.print_grid();
-        // unsigned int b = 45;
-        // std::cout << a[b] << " " << a.grid(b) << " " << *(a.grid(b)) << std::endl;
-        // std::cout << a.get_row(b) << " " << a.get_col(b) << " " << a.get_idx(b) << " " << a.val_from_coords(a.get_row(b), a.get_col(b), a.get_idx(b)) << std::endl;
+        GridManager grid(nrows, ncols);
 
         // Operation-dependent logic
         if (parser.exists("o"))
@@ -67,10 +67,10 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
             if (s == "idle") {
                 // Initialize logical qubit using the grid
-                LogicalQubit lq(dx, dz, a);
+                LogicalQubit lq(dx, dz, grid);
 
                 // Perform 'idle' operation
-                lq.idle(cycles);
+                lq.idle(cycles, grid);
             }
         }
         else {std::cout << "Grid constructed and checks performed, but no valid operation selected. Quitting." << std::endl;}
