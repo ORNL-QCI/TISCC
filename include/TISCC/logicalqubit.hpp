@@ -41,7 +41,8 @@ private:
     bool is_instr_valid(const Instruction& instr, const Plaquette& p);
 
     // Apply a given instruction to all plaquettes in a given vector
-    void apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time);
+    void apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step,
+        std::vector<HW_Instruction>& idle_operation);
 };
 }
 

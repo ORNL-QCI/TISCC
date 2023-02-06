@@ -19,5 +19,24 @@ private:
     float time_; 
 };
 
+class HW_Instruction {
+public:
+    explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step) : 
+        name_(name), site1_(site1), site2_(site2), time_(time), step_(step) {};
+    const std::string& get_name() const {return name_;}
+    const unsigned int get_site1() const {return site1_;}
+    const unsigned int get_site2() const {return site2_;}
+    const float get_time() const {return time_;}
+    const unsigned int get_step() const {return step_;}
+private:
+    std::string name_;
+    unsigned int site1_;
+    unsigned int site2_;
+    float time_;
+    unsigned int step_;
+};
+
+// Comparison operator for use in sorting hardware instructions before printing them
+bool operator<(const HW_Instruction& i1, const HW_Instruction& i2);
 }
 #endif //TISCC_INSTRUCTION_HPP

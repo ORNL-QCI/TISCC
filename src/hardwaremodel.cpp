@@ -5,7 +5,6 @@ namespace TISCC
 {
     // Initialize hash table to map native TI operations to times (in microseconds)
     void HardwareModel::init_TI_ops() {
-
         // Single-site ops
         TI_ops["Initialize"] = 10;
         TI_ops["Measure"] = 120;
@@ -18,10 +17,8 @@ namespace TISCC
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
-
         // A Move can be between any two adjacent sites
         TI_ops["Move"] = 11.2;
-
         // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
     }
@@ -45,6 +42,15 @@ namespace TISCC
         circuit.push_back(Instruction("Z_-pi/4", control, ' ', TI_ops["Z_-pi/4"]));
         circuit.push_back(Instruction("X_-pi/4", target, ' ', TI_ops["X_-pi/4"]));
         circuit.push_back(Instruction("Z_-pi/4", target, ' ', TI_ops["Z_-pi/4"]));
+    }
+
+    // Helper function to add CNOT gate in terms of native TI gates to a circuit
+    void HardwareModel::CNOT(unsigned int c_site, unsigned int t_site, const GridManager& grid, unsigned int step, std::vector<HW_Instruction>& circuit) {
+        circuit.push_back(HW_Instruction("Y_-pi/4", t_site, 9999, TI_ops["Y_-pi/4"], step));
+        circuit.push_back(HW_Instruction("ZZ", c_site, t_site, TI_ops["ZZ"], step));
+        circuit.push_back(HW_Instruction("Z_-pi/4", c_site, 9999, TI_ops["Z_-pi/4"], step));
+        circuit.push_back(HW_Instruction("X_-pi/4", t_site, 9999, TI_ops["X_-pi/4"], step));
+        circuit.push_back(HW_Instruction("Z_-pi/4", t_site, 9999, TI_ops["Z_-pi/4"], step));
     }
 
     void HardwareModel::add_Move(char qubit1, char qubit2, std::vector<Instruction>& circuit) {}

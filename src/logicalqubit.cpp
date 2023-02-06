@@ -1,7 +1,10 @@
 #include <TISCC/logicalqubit.hpp>
+
 #include <unordered_map>
 #include <iomanip>
 #include <cassert>
+#include <algorithm>
+#include <limits>
 
 #define DEBUG_OUTPUT_INSTRUCTIONS
 
@@ -103,11 +106,11 @@ namespace TISCC
     }
 
     // Apply a given instruction to all plaquettes in a given vector
-    void LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time) {
-        // I/O settings
-        int W = 15;
-        std::cout << std::setprecision(1);
-        std::cout << std::setiosflags(std::ios::fixed);
+    void LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step, 
+        std::vector<HW_Instruction>& idle_operation) {
+
+        // Use the maximum possible unsigned int to designate dummy qsites
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
 
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {
@@ -115,40 +118,47 @@ namespace TISCC
             // Loop over plaquettes
             for (Plaquette& p : plaquettes) {
 
+                // Implementing multi-step move operation
+                // if (instr.get_name() == "CNOT") {
+                //     TI_model.CNOT(instr.get_q1(), instr.get_q2(), idle_operation);
+                // }
+
                 // Certain stabilizer shapes do not accomodate certain qubit labels
                 if (is_instr_valid(instr, p)) 
                 {
-                    /* Output data to file and apply ops to plaquettes */
-                    std::cout << std::setw(W) << time;
-                    std::cout << std::setw(W) << instr.get_name();
-                    std::cout << std::setw(W) << p.get_qsite(instr.get_q1());
-                    // Single-qubit gates
-                    if (instr.get_q2() == ' ') {
-                        std::cout << std::setw(W) << ' ';  
+                    // Apply ops to plaquettes and create hardware instruction
+                    // TODO: Add logic to enforce grid-based conditions on operations i.e. that 'O' is necessary for most ops.
+                    if (instr.get_q2() == ' ') { 
+                        HW_Instruction instruction = HW_Instruction(instr.get_name(), p.get_qsite(instr.get_q1()), uint_max, time, step);
+                        idle_operation.push_back(instruction);
                     }
                     // The 'h' designation tells a qubit to go to its home on the grid
                     else if ((instr.get_q2() == 'h') && (instr.get_name() == "Move")) {
+                        unsigned int old_site = p.get_qsite(instr.get_q1()); 
                         p.move_home(instr.get_q1());
-                        std::cout << std::setw(W) << p.get_qsite(instr.get_q1());
+                        HW_Instruction instruction = HW_Instruction(instr.get_name(), old_site, p.get_qsite(instr.get_q1()), time, step);
+                        idle_operation.push_back(instruction);
                     }
                     // Otherwise a move operation will target another qubit's qsite
                     else if (instr.get_name() == "Move") {
+                        unsigned int old_site = p.get_qsite(instr.get_q1());
                         p.apply_move(instr.get_q1(), instr.get_q2());
-                        std::cout << std::setw(W) << p.get_qsite(instr.get_q2());
+                        HW_Instruction instruction = HW_Instruction(instr.get_name(), old_site, p.get_qsite(instr.get_q1()), time, step);
+                        idle_operation.push_back(instruction);
                     }
                     // The only other case currently is ZZ, which targets an adjacent site
                     else if (instr.get_name() == "ZZ") {
-                        std::cout << std::setw(W) << p.get_qsite(instr.get_q2());
+                        HW_Instruction instruction = HW_Instruction(instr.get_name(), p.get_qsite(instr.get_q1()), uint_max, time, step);
+                        idle_operation.push_back(instruction);                        
                     }
-                    // 
                     else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
-                    #ifdef DEBUG_OUTPUT_INSTRUCTIONS
-                    std::cout << std::setw(W) << instr.get_q1();
-                    std::cout << std::setw(W) << instr.get_q2();
-                    std::cout << std::setw(W) << p.get_shape();
-                    std::cout << std::setw(W) << p.get_type();
-                    #endif
-                    std::cout << std::endl;
+                    
+                    // #ifdef DEBUG_OUTPUT_INSTRUCTIONS
+                    // std::cout << std::setw(W) << instr.get_q1();
+                    // std::cout << std::setw(W) << instr.get_q2();
+                    // std::cout << std::setw(W) << p.get_shape();
+                    // std::cout << std::setw(W) << p.get_type();
+                    // #endif
                 }
             }
         }
@@ -156,6 +166,14 @@ namespace TISCC
 
     void LogicalQubit::idle(unsigned int cycles) {
         
+        // I/O settings
+        int W = 15;
+        std::cout << std::setprecision(1);
+        std::cout << std::setiosflags(std::ios::fixed);
+
+        // Initialize master list of hardware instructions
+        std::vector<HW_Instruction> idle_operation;
+
         // Initialize time counter
         float time = 0;
         
@@ -171,13 +189,28 @@ namespace TISCC
             // Loop over instructions and apply them to plaquettes
             for (unsigned int i=0; i<num_instructions; i++) {
                 assert(TI_model.get_Z_circuit_Z_type()[i].get_time() == TI_model.get_X_circuit_N_type()[i].get_time());
-                apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time);
-                apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time);
+                apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time, i, idle_operation);
+                apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time, i, idle_operation);
 
                 // Increment time counter
                 time += TI_model.get_Z_circuit_Z_type()[i].get_time();
             }
         }
+
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::sort(idle_operation.begin(), idle_operation.end());
+
+        // Output HW instructions to file
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
+        for (const HW_Instruction& instruction : idle_operation) {
+            std::cout << std::setw(W) << instruction.get_time();
+            std::cout << std::setw(W) << instruction.get_name();
+            std::cout << std::setw(W) << instruction.get_site1();
+            if (instruction.get_site2() != uint_max) {std::cout << std::setw(W) << instruction.get_site2();}
+            else {std::cout << std::setw(W) << " ";}
+            std::cout << std::endl;
+        }
+
     }
 
 }

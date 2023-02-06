@@ -5,8 +5,6 @@
 
 namespace TISCC 
 {
-    unsigned int uint_max = std::numeric_limits<unsigned int>::max();
-
     // Constructor for GridManager
     GridManager::GridManager(unsigned int nrows, unsigned int ncols) {
         nrows_ = nrows;
@@ -71,6 +69,9 @@ namespace TISCC
 
         // Assign index of measure qubit 
         unsigned int m = index_from_coords(row, col, 1);
+
+        // Use the maximum possible unsigned int to designate non-existent qubits
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();   
 
         // Construct and return Plaquette objects
         if (shape== 'f') {
