@@ -171,7 +171,7 @@ namespace TISCC
         std::cout << std::setprecision(1);
         std::cout << std::setiosflags(std::ios::fixed);
 
-        // Initialize master list of hardware instructions
+        // Initialize master list of hardware (``site-level'') instructions
         std::vector<HW_Instruction> idle_operation;
 
         // Initialize time counter
@@ -186,7 +186,7 @@ namespace TISCC
             assert(TI_model.get_Z_circuit_Z_type().size() == TI_model.get_X_circuit_N_type().size());
             unsigned int num_instructions = TI_model.get_Z_circuit_Z_type().size();
 
-            // Loop over instructions and apply them to plaquettes
+            // Loop over ``qubit-level'' instructions and apply them to plaquettes
             for (unsigned int i=0; i<num_instructions; i++) {
                 assert(TI_model.get_Z_circuit_Z_type()[i].get_time() == TI_model.get_X_circuit_N_type()[i].get_time());
                 apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time, i, idle_operation);

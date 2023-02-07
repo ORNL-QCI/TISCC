@@ -5,6 +5,7 @@
 
 namespace TISCC {
 
+// The Instruction class represents a named instruction which acts for a duration on the qubit labels (a, b, c, d, or m) of a surface code plaquette
 class Instruction {
 public:
     explicit Instruction(std::string name, char q1, char q2, float time) : name_(name), q1_(q1), q2_(q2), time_(time) {};
@@ -19,6 +20,7 @@ private:
     float time_; 
 };
 
+// The HW_Instruction class represents a named instruction acting at a time at particular site(s) on the grid
 class HW_Instruction {
 public:
     explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step) : 
@@ -38,5 +40,7 @@ private:
 
 // Comparison operator for use in sorting hardware instructions before printing them
 bool operator<(const HW_Instruction& i1, const HW_Instruction& i2);
+
 }
+
 #endif //TISCC_INSTRUCTION_HPP

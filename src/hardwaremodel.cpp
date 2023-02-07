@@ -17,7 +17,7 @@ namespace TISCC
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
-        // A Move can be between any two adjacent sites
+        // A Move can be between any two adjacent sites (1.4 us). Here we do eight times this.
         TI_ops["Move"] = 11.2;
         // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
