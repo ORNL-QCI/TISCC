@@ -18,7 +18,7 @@ public:
     explicit LogicalQubit(unsigned int dx, unsigned int dz, const GridManager& grid);
 
     // Operations
-    void idle(unsigned int cycles);
+    void idle(unsigned int cycles, const GridManager& grid);
 
     // 
     void print_stabilizers();
@@ -41,8 +41,8 @@ private:
     bool is_instr_valid(const Instruction& instr, const Plaquette& p);
 
     // Apply a given instruction to all plaquettes in a given vector
-    void apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step,
-        std::vector<HW_Instruction>& idle_operation);
+    float apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step,
+        const GridManager& grid, std::vector<HW_Instruction>& idle_operation);
 };
 }
 

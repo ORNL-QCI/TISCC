@@ -96,6 +96,7 @@ namespace TISCC
     }
 
    // Check to see if a given instruction is valid on a given plaquette 
+   // TODO: This might belong in Plaquette (or somewhere else)
     bool LogicalQubit::is_instr_valid(const Instruction& instr, const Plaquette& p) {
         bool n_valid = !(p.get_shape() == 'n' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'b') || (instr.get_q2() == 'a') || (instr.get_q2() == 'b')));
         bool s_valid = !(p.get_shape() == 's' && ((instr.get_q1() == 'c') || (instr.get_q1() == 'd') || (instr.get_q2() == 'c') || (instr.get_q2() == 'd')));
@@ -105,12 +106,12 @@ namespace TISCC
         return return_val;
     }
 
-    // Apply a given instruction to all plaquettes in a given vector
-    void LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step, 
-        std::vector<HW_Instruction>& idle_operation) {
+    // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
+    float LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step, 
+        const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
 
-        // Use the maximum possible unsigned int to designate dummy qsites
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        // Create tmp variable for time
+        float time_tmp = 0;
 
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {
@@ -118,53 +119,38 @@ namespace TISCC
             // Loop over plaquettes
             for (Plaquette& p : plaquettes) {
 
-                // Implementing multi-step move operation
-                // if (instr.get_name() == "CNOT") {
-                //     TI_model.CNOT(instr.get_q1(), instr.get_q2(), idle_operation);
-                // }
-
                 // Certain stabilizer shapes do not accomodate certain qubit labels
                 if (is_instr_valid(instr, p)) 
                 {
-                    // Apply ops to plaquettes and create hardware instruction
-                    // TODO: Add logic to enforce grid-based conditions on operations i.e. that 'O' is necessary for most ops.
-                    if (instr.get_q2() == ' ') { 
-                        HW_Instruction instruction = HW_Instruction(instr.get_name(), p.get_qsite(instr.get_q1()), uint_max, time, step);
-                        idle_operation.push_back(instruction);
+                    
+                    // Add single-qubit instructions
+                    if ((instr.get_name() == "Initialize") && (instr.get_q2() == ' ')) {
+                        time_tmp = TI_model.add_init(p, instr.get_q1(), time, step, hw_master);
                     }
-                    // The 'h' designation tells a qubit to go to its home on the grid
-                    else if ((instr.get_q2() == 'h') && (instr.get_name() == "Move")) {
-                        unsigned int old_site = p.get_qsite(instr.get_q1()); 
-                        p.move_home(instr.get_q1());
-                        HW_Instruction instruction = HW_Instruction(instr.get_name(), old_site, p.get_qsite(instr.get_q1()), time, step);
-                        idle_operation.push_back(instruction);
+
+                    else if ((instr.get_name() == "Hadamard") && (instr.get_q2() == ' ')) {
+                        time_tmp = TI_model.add_H(p, instr.get_q1(), time, step, hw_master);
                     }
-                    // Otherwise a move operation will target another qubit's qsite
-                    else if (instr.get_name() == "Move") {
-                        unsigned int old_site = p.get_qsite(instr.get_q1());
-                        p.apply_move(instr.get_q1(), instr.get_q2());
-                        HW_Instruction instruction = HW_Instruction(instr.get_name(), old_site, p.get_qsite(instr.get_q1()), time, step);
-                        idle_operation.push_back(instruction);
+
+                    else if ((instr.get_name() == "Measure") && (instr.get_q2() == ' ')) {
+                        time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
                     }
-                    // The only other case currently is ZZ, which targets an adjacent site
-                    else if (instr.get_name() == "ZZ") {
-                        HW_Instruction instruction = HW_Instruction(instr.get_name(), p.get_qsite(instr.get_q1()), uint_max, time, step);
-                        idle_operation.push_back(instruction);                        
+
+                    // Add CNOT gate
+                    else if (instr.get_name() == "CNOT") {
+                        time_tmp = TI_model.add_CNOT(p, instr.get_q1(), instr.get_q2(), time, step, grid, hw_master);
                     }
+
                     else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
                     
-                    // #ifdef DEBUG_OUTPUT_INSTRUCTIONS
-                    // std::cout << std::setw(W) << instr.get_q1();
-                    // std::cout << std::setw(W) << instr.get_q2();
-                    // std::cout << std::setw(W) << p.get_shape();
-                    // std::cout << std::setw(W) << p.get_type();
-                    // #endif
                 }
             }
         }
+
+        return time_tmp;
     }
 
-    void LogicalQubit::idle(unsigned int cycles) {
+    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid) {
         
         // I/O settings
         int W = 15;
@@ -172,42 +158,47 @@ namespace TISCC
         std::cout << std::setiosflags(std::ios::fixed);
 
         // Initialize master list of hardware (``site-level'') instructions
-        std::vector<HW_Instruction> idle_operation;
+        std::vector<HW_Instruction> hw_master;
 
         // Initialize time counter
         float time = 0;
         
         // Loop over surface code cycles
         for (unsigned int cycle=0; cycle < cycles; cycle++) {
-            // TODO: Make sure that all plaquettes are re-set
+            // TODO: Enforce that all plaquettes are re-set
 
-            // To ensure synchronicity of the two different types of circuits we employ, we enforce that they contain the same number of instructions
-            // (and later that parallel instructions take the same amount of time)
+            // Enforce that the two circuits contain the same number of instructions
             assert(TI_model.get_Z_circuit_Z_type().size() == TI_model.get_X_circuit_N_type().size());
             unsigned int num_instructions = TI_model.get_Z_circuit_Z_type().size();
 
-            // Loop over ``qubit-level'' instructions and apply them to plaquettes
+            // Loop over ``qubit-level'' instructions and apply them to plaquettes while adding HW_Instructions to hw_master
             for (unsigned int i=0; i<num_instructions; i++) {
-                assert(TI_model.get_Z_circuit_Z_type()[i].get_time() == TI_model.get_X_circuit_N_type()[i].get_time());
-                apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time, i, idle_operation);
-                apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time, i, idle_operation);
+                float t1 = apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time, i, grid, hw_master);
+                float t2 = apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time, i, grid, hw_master);
 
                 // Increment time counter
-                time += TI_model.get_Z_circuit_Z_type()[i].get_time();
+                if (t1 == 0) {time = t2;}
+                else if (t2 == 0) {time = t1;}
+                else {assert(t1==t2); time = t1;}              
             }
         }
 
         // Sort master list of hardware instructions according to overloaded operator<
-        std::sort(idle_operation.begin(), idle_operation.end());
+        // std::sort(hw_master.begin(), hw_master.end());
 
         // Output HW instructions to file
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
-        for (const HW_Instruction& instruction : idle_operation) {
+        for (const HW_Instruction& instruction : hw_master) {
             std::cout << std::setw(W) << instruction.get_time();
             std::cout << std::setw(W) << instruction.get_name();
             std::cout << std::setw(W) << instruction.get_site1();
             if (instruction.get_site2() != uint_max) {std::cout << std::setw(W) << instruction.get_site2();}
             else {std::cout << std::setw(W) << " ";}
+            std::cout << std::setw(W) << instruction.get_step();
+            std::cout << std::setw(W) << instruction.get_q1();
+            std::cout << std::setw(W) << instruction.get_q2();
+            std::cout << std::setw(W) << instruction.get_shape();
+            std::cout << std::setw(W) << instruction.get_type();
             std::cout << std::endl;
         }
 

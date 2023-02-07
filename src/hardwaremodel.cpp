@@ -1,5 +1,7 @@
 #include <TISCC/hardwaremodel.hpp>
 
+#include <limits>
+
 
 namespace TISCC 
 {
@@ -17,88 +19,142 @@ namespace TISCC
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
-        // A Move can be between any two adjacent sites (1.4 us). Here we do eight times this.
-        TI_ops["Move"] = 11.2;
+        TI_ops["Move"] = 1.4;
         // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
     }
 
+                    // #ifdef DEBUG_OUTPUT_INSTRUCTIONS
+                    // std::cout << std::setw(W) << instr.get_q1();
+                    // std::cout << std::setw(W) << instr.get_q2();
+                    // std::cout << std::setw(W) << p.get_shape();
+                    // std::cout << std::setw(W) << p.get_type();
+                    // #endif
+
+   // Helper function to add the initialize HW_Instruction to a circuit
+    float HardwareModel::add_init(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) {
+        // TODO: Insert a check here to make sure there is an 'O' on the grid at the relevant qsite
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        // circuit.push_back(HW_Instruction("Initialize", p.get_qsite(qubit), uint_max, time, step))
+        circuit.push_back(HW_Instruction("Initialize", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        return time + TI_ops["Initialize"];
+    }
+
    // Helper function to add H gate in terms of native TI gates to a circuit
-    void HardwareModel::add_H(char qubit, std::vector<Instruction>& circuit) {
-        circuit.push_back(Instruction("Y_-pi/4", qubit, ' ', TI_ops["Y_-pi/4"]));
-        circuit.push_back(Instruction("Z_pi/4", qubit, ' ', TI_ops["Z_pi/4"]));
+    float HardwareModel::add_H(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) {
+        // TODO: Insert a check here to make sure there is an 'O' on the grid at the relevant qsite
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        // circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(qubit), uint_max, time, step));
+        // circuit.push_back(HW_Instruction("Z_pi/4", p.get_qsite(qubit), uint_max, time + TI_ops["Y_-pi/4"], step));
+        circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Z_pi/4", p.get_qsite(qubit), uint_max, time + TI_ops["Y_-pi/4"], step, qubit, ' ', p.get_shape(), p.get_type()));
+        return time + TI_ops["Y_-pi/4"] + TI_ops["Z_pi/4"];
     }
 
-    // Helper function to add the idle ops which complement an H gate (for use when waiting on another circuit)
-    void HardwareModel::idle_while_H(std::vector<Instruction>& circuit) {
-        circuit.push_back(Instruction("Idle", ' ', ' ', TI_ops["Y_-pi/4"]));
-        circuit.push_back(Instruction("Idle", ' ', ' ', TI_ops["Z_pi/4"]));
+    // Helper function to add the measure HW_Instruction to a circuit
+    float HardwareModel::add_meas(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) {
+        // TODO: Insert a check here to make sure there is an 'O' on the grid at the relevant qsite
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        // circuit.push_back(HW_Instruction("Measure", p.get_qsite(qubit), uint_max, time, step));
+        circuit.push_back(HW_Instruction("Measure", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        return time + TI_ops["Measure"];
+    }
+
+    // Move the measure qubit to the closest site adjacent to the data qubit
+    std::vector<unsigned int> HardwareModel::move_next_to(Plaquette& p, char control, char target, unsigned int step, 
+        const GridManager& grid, std::vector<HW_Instruction>& circuit, float& time) {
+
+        if (control == 'm') {
+            std::vector<unsigned int> path = grid.get_path(p.get_qsite(control), p.get_qsite(target));                 
+            for (unsigned int i=1; i<path.size(); i++) {
+                // circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step));
+                circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step, control, ' ', p.get_shape(), p.get_type()));
+            }
+            time += (path.size()-1)*TI_ops["Move"];
+            p.move_to_site(control, path.back());
+            return path;
+        }
+
+        else if (target == 'm') {
+            // Note we flip the entries to get_path in this case because we always move 'm'
+            std::vector<unsigned int> path = grid.get_path(p.get_qsite(target), p.get_qsite(control));
+            for (unsigned int i=1; i<path.size(); i++) {
+                // circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step));
+                circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step, target, ' ', p.get_shape(), p.get_type()));
+            }
+            time += (path.size()-1)*TI_ops["Move"];
+            p.move_to_site(target, path.back());
+            return path;
+        }
+        else  {
+            std::cout << "HardwareModel::move_next_to: CNOT is only implemented where either control or target has label 'm'." << std::endl;
+            abort();
+        }
     }
 
     // Helper function to add CNOT gate in terms of native TI gates to a circuit
-    void HardwareModel::add_CNOT(char control, char target, std::vector<Instruction>& circuit) {
-        circuit.push_back(Instruction("Y_-pi/4", target, ' ', TI_ops["Y_-pi/4"]));
-        circuit.push_back(Instruction("ZZ", control, target, TI_ops["ZZ"]));
-        circuit.push_back(Instruction("Z_-pi/4", control, ' ', TI_ops["Z_-pi/4"]));
-        circuit.push_back(Instruction("X_-pi/4", target, ' ', TI_ops["X_-pi/4"]));
-        circuit.push_back(Instruction("Z_-pi/4", target, ' ', TI_ops["Z_-pi/4"]));
-    }
+    float HardwareModel::add_CNOT(Plaquette& p, char control, char target, float time, unsigned int step, const GridManager& grid, 
+        std::vector<HW_Instruction>& circuit) {
+        // TODO: Insert a check here to make sure there is an 'O' on the grid at the target qsite
 
-    // Helper function to add CNOT gate in terms of native TI gates to a circuit
-    void HardwareModel::CNOT(unsigned int c_site, unsigned int t_site, const GridManager& grid, unsigned int step, std::vector<HW_Instruction>& circuit) {
-        circuit.push_back(HW_Instruction("Y_-pi/4", t_site, 9999, TI_ops["Y_-pi/4"], step));
-        circuit.push_back(HW_Instruction("ZZ", c_site, t_site, TI_ops["ZZ"], step));
-        circuit.push_back(HW_Instruction("Z_-pi/4", c_site, 9999, TI_ops["Z_-pi/4"], step));
-        circuit.push_back(HW_Instruction("X_-pi/4", t_site, 9999, TI_ops["X_-pi/4"], step));
-        circuit.push_back(HW_Instruction("Z_-pi/4", t_site, 9999, TI_ops["Z_-pi/4"], step));
-    }
+        // Dummy qsite for q2 in single-qubit operations
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
 
-    void HardwareModel::add_Move(char qubit1, char qubit2, std::vector<Instruction>& circuit) {}
+        // Perform initial rotation
+        // circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(target), uint_max, time, step));
+        circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
+        time += TI_ops["Y_-pi/4"];
+
+        // Move the measure qubit to the closest site adjacent to the data qubit (note that time is updated within this function)
+        std::vector<unsigned int> path = move_next_to(p, control, target, step, grid, circuit, time);
+
+        // Apply ZZ operation
+        // circuit.push_back(HW_Instruction("ZZ", p.get_qsite(control), p.get_qsite(target), time, step));
+        circuit.push_back(HW_Instruction("ZZ", p.get_qsite(control), p.get_qsite(target), time, step, control, target, p.get_shape(), p.get_type()));
+        time += TI_ops["ZZ"];
+
+        // Move the measure qubit back to its home base for further operations
+        p.move_home('m');
+        for (unsigned int i=1; i<path.size(); i++) {
+            // circuit.push_back(HW_Instruction("Move", path[path.size()-i], path[path.size()-i-1], time + (i-1)*TI_ops["Move"], step));
+            circuit.push_back(HW_Instruction("Move", path[path.size()-i], path[path.size()-i-1], time + (i-1)*TI_ops["Move"], step, 'm', ' ', p.get_shape(), p.get_type()));
+        }
+        time += (path.size()-1)*TI_ops["Move"];
+
+        // Perform final rotations
+        // circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(control), uint_max, time, step));
+        // circuit.push_back(HW_Instruction("X_-pi/4", p.get_qsite(target), uint_max, time, step));
+        circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(control), uint_max, time, step, control, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("X_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
+        time += TI_ops["Z_-pi/4"] + TI_ops["X_-pi/4"];
+        // circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(target), uint_max, time, step));
+        circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
+        return time + TI_ops["Z_-pi/4"];
+    }
 
     // Set up the circuits that we intend to use
-        /* TODO:
-            - Fix error wherein single-qubit rotations on 'm' will be applied to a plaquette 
-                even if the overarching CNOT does not apply to its shape
-            - Break Move operations down into the corresponding 1-site moves
-                - NOTE that right now Move destinations are always qubits not sites
-                - Should include them WITHIN the CNOT function above
-                    - Apply single-qubit gates with qubits at their homes
-                    - Move target to site adjacent to control
-                    - Apply ZZ gate to these two sites (there is an implied merge, cool, interact, split)
-                    - Move target 'home' and then apply remaining single-qubit gates
-                    - Note that two of them can be applied in parallel
-        */ 
+    // TODO: Place this in the LogicalQubit class
     void HardwareModel::init_circuits() {
 
         // Add instructions to the Z plaquette measurement circuit
-        Z_Circuit_Z_Type.push_back(Instruction("Initialize", 'm', ' ', TI_ops["Initialize"]));  
-        idle_while_H(Z_Circuit_Z_Type);
-        Z_Circuit_Z_Type.push_back(Instruction("Move", 'm', 'a', TI_ops["Move"]));
-        add_CNOT('a', 'm', Z_Circuit_Z_Type);
-        Z_Circuit_Z_Type.push_back(Instruction("Move", 'm', 'b', TI_ops["Move"]));
-        add_CNOT('b', 'm', Z_Circuit_Z_Type); 
-        Z_Circuit_Z_Type.push_back(Instruction("Move", 'm', 'c', TI_ops["Move"]));
-        add_CNOT('c', 'm', Z_Circuit_Z_Type);
-        Z_Circuit_Z_Type.push_back(Instruction("Move", 'm', 'd', TI_ops["Move"]));
-        add_CNOT('d', 'm', Z_Circuit_Z_Type);
-        Z_Circuit_Z_Type.push_back(Instruction("Move", 'm', 'h', TI_ops["Move"]));
-        idle_while_H(Z_Circuit_Z_Type);
-        Z_Circuit_Z_Type.push_back(Instruction("Measure", 'm', ' ', TI_ops["Measure"]));
+        Z_Circuit_Z_Type.push_back(Instruction("Initialize", 'm', ' ')); 
+        Z_Circuit_Z_Type.push_back(Instruction("Idle", ' ', ' '));   
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'a', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'b', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'c', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'd', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("Idle", ' ', ' ')); 
+        Z_Circuit_Z_Type.push_back(Instruction("Measure", 'm', ' '));
 
         // Add instructions to the X plaquette measurement circuit
-        X_Circuit_N_Type.push_back(Instruction("Initialize", 'm', ' ', TI_ops["Initialize"]));
-        add_H('m', X_Circuit_N_Type);
-        X_Circuit_N_Type.push_back(Instruction("Move", 'm', 'a', TI_ops["Move"]));
-        add_CNOT('m', 'a', X_Circuit_N_Type);
-        X_Circuit_N_Type.push_back(Instruction("Move", 'm', 'c', TI_ops["Move"]));
-        add_CNOT('m', 'c', X_Circuit_N_Type);
-        X_Circuit_N_Type.push_back(Instruction("Move", 'm', 'b', TI_ops["Move"]));
-        add_CNOT('m', 'b', X_Circuit_N_Type);
-        X_Circuit_N_Type.push_back(Instruction("Move", 'm', 'd', TI_ops["Move"]));
-        add_CNOT('m', 'd', X_Circuit_N_Type);
-        X_Circuit_N_Type.push_back(Instruction("Move", 'm', 'h', TI_ops["Move"]));
-        add_H('m', X_Circuit_N_Type);
-        X_Circuit_N_Type.push_back(Instruction("Measure", 'm', ' ', TI_ops["Measure"])); 
+        X_Circuit_N_Type.push_back(Instruction("Initialize", 'm', ' '));  
+        X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'a'));
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'c'));
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'b'));
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'd'));
+        X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
+        X_Circuit_N_Type.push_back(Instruction("Measure", 'm', ' '));
     }
 
     HardwareModel::HardwareModel() {

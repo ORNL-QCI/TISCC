@@ -2,6 +2,7 @@
 #include <TISCC/plaquette.hpp>
 
 #include <limits>
+#include <cassert>
 
 namespace TISCC 
 {
@@ -44,6 +45,58 @@ namespace TISCC
             abort();
         }
     }  
+
+    // Provide a path from one 'O' site to the nearest site adjacent to a neighboring 'O' site
+    std::vector<unsigned int> GridManager::get_path(unsigned int site1, unsigned int site2) const {
+        
+        // Constrain ourselves to the case that these are both 'O' sites
+        assert((grid_[site1] == 'O') && (grid_[site2] == 'O'));
+
+        std::vector<unsigned int> seq; 
+        seq.push_back(site1);
+
+        unsigned int idx1 = get_idx(site1);
+        unsigned int col1 = get_col(site1); 
+        unsigned int row1 = get_row(site1);
+
+        unsigned int idx2 = get_idx(site2);
+        unsigned int col2 = get_col(site2); 
+        unsigned int row2 = get_row(site2);
+
+        if ((idx1 == 1) && (idx2 == 5)) {
+            // NE 
+            if ((col2 == col1) && (row1 == row2)) {
+                seq.push_back(index_from_coords(row1, col1, idx1+1));
+                seq.push_back(index_from_coords(row1, col1, idx1+2));
+                seq.push_back(index_from_coords(row1, col1, idx1+3));
+            }
+            // NW
+            else if ((col2 == col1 - 1) && (row1 == row2)) {
+                seq.push_back(index_from_coords(row1, col1, idx1+1));
+                seq.push_back(index_from_coords(row1, col1, idx1+2));
+                seq.push_back(index_from_coords(row1, col1-1, 6));
+            }
+            // SE
+            else if ((col2 == col1) && (row2 == row1 + 1)) {
+                seq.push_back(index_from_coords(row1, col1, idx1-1));
+                seq.push_back(index_from_coords(row1+1, col1, 3));
+                seq.push_back(index_from_coords(row1+1, col1, 4));
+            }
+            // SW
+            else if ((col2 == col1 - 1) && (row2 == row1 + 1)) {
+                seq.push_back(index_from_coords(row1, col1, idx1-1));
+                seq.push_back(index_from_coords(row1+1, col1, 3));
+                seq.push_back(index_from_coords(row1+1, col1-1, 6));
+
+            }
+            else {
+                std::cout << "GridManager::get_path: Only paths to surrounding Op sites starting from the [1] position are implemented." << std::endl;
+                abort();
+            }
+        }
+
+        return seq;
+    }
 
     // Provide a plaquette object ``pinned" at a particular grid point 
     Plaquette GridManager::get_plaquette(unsigned int row, unsigned int col, char shape, char type) const {

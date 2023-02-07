@@ -3,6 +3,7 @@
 
 #include <TISCC/instruction.hpp>
 #include <TISCC/gridmanager.hpp>
+#include <TISCC/plaquette.hpp>
 
 #include<unordered_map>
 #include<string>
@@ -22,7 +23,11 @@ public:
     const std::vector<Instruction>& get_X_circuit_N_type() const {return X_Circuit_N_Type;}
 
     // Compile gates to hardware operations
-    void CNOT(unsigned int c_site, unsigned int t_site, const GridManager& grid, unsigned int step, std::vector<HW_Instruction>& circuit);
+    float add_init(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit);
+    float add_H(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit);
+    float add_meas(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit);
+    float add_CNOT(Plaquette& p, char control, char target, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit);
+
 
 private:
     // Hash table to map trapped-ion instructions to time (in microseconds)
@@ -35,14 +40,12 @@ private:
     // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
     void init_TI_ops();
 
-    // Helper functions to aid in compilation to hardware instructions
-    void add_H(char qubit, std::vector<Instruction>& circuit);
-    void idle_while_H(std::vector<Instruction>& circuit);
-    void add_CNOT(char control, char target, std::vector<Instruction>& circuit);
-    void add_Move(char qubit1, char qubit2, std::vector<Instruction>& circuit);
-
     // Set up the circuits that we intend to use
     void init_circuits();
+
+    // HW circuit helper function
+    std::vector<unsigned int> move_next_to(Plaquette& p, char control, char target, unsigned int step, const GridManager& grid, 
+        std::vector<HW_Instruction>& circuit, float& time);
 };
 
 }

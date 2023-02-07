@@ -31,6 +31,11 @@ public:
         mod_qsite(q1) = get_qsite(q2);
     }
 
+    // Move qubit to a specified site
+    void move_to_site(char q, unsigned int site) {
+        mod_qsite(q) = site;
+    }
+
     // Move qubit to its original location on the grid
     void move_home(char qubit); 
 

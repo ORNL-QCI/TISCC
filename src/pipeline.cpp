@@ -70,7 +70,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, grid);
 
                 // Perform 'idle' operation
-                lq.idle(cycles);
+                lq.idle(cycles, grid);
             }
         }
         else {std::cout << "Grid constructed and checks performed, but no valid operation selected. Quitting." << std::endl;}
