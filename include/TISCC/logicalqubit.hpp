@@ -7,6 +7,7 @@
 #include <TISCC/instruction.hpp>
 
 #include <vector>
+#include <set>
 #include <unordered_map>
 
 namespace TISCC {
@@ -43,6 +44,9 @@ private:
     // Apply a given instruction to all plaquettes in a given vector
     float apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step,
         const GridManager& grid, std::vector<HW_Instruction>& idle_operation);
+
+    // Function to output all qsites occupied by the surface code
+    std::set<unsigned int> occupied_sites();
 };
 }
 

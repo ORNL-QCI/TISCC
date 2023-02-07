@@ -5,8 +5,9 @@
 #include <cassert>
 #include <algorithm>
 #include <limits>
+#include <set>
 
-#define DEBUG_OUTPUT_INSTRUCTIONS
+//#define DEBUG_OUTPUT_INSTRUCTIONS
 
 namespace TISCC 
 {
@@ -124,7 +125,7 @@ namespace TISCC
                 {
                     
                     // Add single-qubit instructions
-                    if ((instr.get_name() == "Initialize") && (instr.get_q2() == ' ')) {
+                    if ((instr.get_name() == "Prepare_Z") && (instr.get_q2() == ' ')) {
                         time_tmp = TI_model.add_init(p, instr.get_q1(), time, step, hw_master);
                     }
 
@@ -132,7 +133,7 @@ namespace TISCC
                         time_tmp = TI_model.add_H(p, instr.get_q1(), time, step, hw_master);
                     }
 
-                    else if ((instr.get_name() == "Measure") && (instr.get_q2() == ' ')) {
+                    else if ((instr.get_name() == "Measure_Z") && (instr.get_q2() == ' ')) {
                         time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
                     }
 
@@ -148,6 +149,22 @@ namespace TISCC
         }
 
         return time_tmp;
+    }
+
+    // Function to return all qsites occupied by the surface code
+    std::set<unsigned int> LogicalQubit::occupied_sites() {
+        std::set<unsigned int> sites;
+        for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
+            for (const Plaquette& p : z_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+            for (const Plaquette& p : x_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+        }
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
+        sites.erase(uint_max);
+        return sites;
     }
 
     void LogicalQubit::idle(unsigned int cycles, const GridManager& grid) {
@@ -183,22 +200,35 @@ namespace TISCC
             }
         }
 
+        // Dump qsites 
+        for (unsigned int site : occupied_sites()) {
+            std::cout << std::setw(W) << -1.0;
+            std::cout << std::setw(W) << "Qubit_at";
+            std::cout << std::setw(W) << site;
+            std::cout << std::endl;
+        }
+
         // Sort master list of hardware instructions according to overloaded operator<
-        // std::sort(hw_master.begin(), hw_master.end());
+        std::sort(hw_master.begin(), hw_master.end());
 
         // Output HW instructions to file
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
         for (const HW_Instruction& instruction : hw_master) {
             std::cout << std::setw(W) << instruction.get_time();
             std::cout << std::setw(W) << instruction.get_name();
-            std::cout << std::setw(W) << instruction.get_site1();
-            if (instruction.get_site2() != uint_max) {std::cout << std::setw(W) << instruction.get_site2();}
-            else {std::cout << std::setw(W) << " ";}
+            if (instruction.get_site2() != uint_max) {
+                std::cout << std::setw(W) << instruction.get_site1() << ',' << instruction.get_site2();
+            }
+            else {
+                std::cout << std::setw(W) << instruction.get_site1();
+            }
+            #ifdef DEBUG_OUTPUT_INSTRUCTIONS
             std::cout << std::setw(W) << instruction.get_step();
             std::cout << std::setw(W) << instruction.get_q1();
             std::cout << std::setw(W) << instruction.get_q2();
             std::cout << std::setw(W) << instruction.get_shape();
             std::cout << std::setw(W) << instruction.get_type();
+            #endif
             std::cout << std::endl;
         }
 

@@ -8,8 +8,8 @@ namespace TISCC
     // Initialize hash table to map native TI operations to times (in microseconds)
     void HardwareModel::init_TI_ops() {
         // Single-site ops
-        TI_ops["Initialize"] = 10;
-        TI_ops["Measure"] = 120;
+        TI_ops["Prepare_Z"] = 10;
+        TI_ops["Measure_Z"] = 120;
         TI_ops["X_pi/2"] = 10;
         TI_ops["Y_pi/2"] = 10;
         TI_ops["Z_pi/2"] = 0;
@@ -22,22 +22,18 @@ namespace TISCC
         TI_ops["Move"] = 1.4;
         // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
+
+        // Possible ops
+        // {"Qubit_At", "Prepare_Z", "Measure_Z", "X_pi/2", "Y_pi/2", "Z_pi/2", "X_pi/4", "Y_pi/4", "Z_pi/4", "X_-pi/4", "Y_-pi/4", "Z_-pi/4", "Move", "ZZ"}
     }
 
-                    // #ifdef DEBUG_OUTPUT_INSTRUCTIONS
-                    // std::cout << std::setw(W) << instr.get_q1();
-                    // std::cout << std::setw(W) << instr.get_q2();
-                    // std::cout << std::setw(W) << p.get_shape();
-                    // std::cout << std::setw(W) << p.get_type();
-                    // #endif
-
-   // Helper function to add the initialize HW_Instruction to a circuit
+   // Helper function to add the Prepare_Z HW_Instruction to a circuit
     float HardwareModel::add_init(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) {
         // TODO: Insert a check here to make sure there is an 'O' on the grid at the relevant qsite
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();
-        // circuit.push_back(HW_Instruction("Initialize", p.get_qsite(qubit), uint_max, time, step))
-        circuit.push_back(HW_Instruction("Initialize", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
-        return time + TI_ops["Initialize"];
+        // circuit.push_back(HW_Instruction("Prepare_Z", p.get_qsite(qubit), uint_max, time, step))
+        circuit.push_back(HW_Instruction("Prepare_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        return time + TI_ops["Prepare_Z"];
     }
 
    // Helper function to add H gate in terms of native TI gates to a circuit
@@ -51,13 +47,13 @@ namespace TISCC
         return time + TI_ops["Y_-pi/4"] + TI_ops["Z_pi/4"];
     }
 
-    // Helper function to add the measure HW_Instruction to a circuit
+    // Helper function to add the Measure_Z HW_Instruction to a circuit
     float HardwareModel::add_meas(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) {
         // TODO: Insert a check here to make sure there is an 'O' on the grid at the relevant qsite
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();
-        // circuit.push_back(HW_Instruction("Measure", p.get_qsite(qubit), uint_max, time, step));
-        circuit.push_back(HW_Instruction("Measure", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
-        return time + TI_ops["Measure"];
+        // circuit.push_back(HW_Instruction("Measure_Z", p.get_qsite(qubit), uint_max, time, step));
+        circuit.push_back(HW_Instruction("Measure_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        return time + TI_ops["Measure_Z"];
     }
 
     // Move the measure qubit to the closest site adjacent to the data qubit
@@ -137,24 +133,24 @@ namespace TISCC
     void HardwareModel::init_circuits() {
 
         // Add instructions to the Z plaquette measurement circuit
-        Z_Circuit_Z_Type.push_back(Instruction("Initialize", 'm', ' ')); 
+        Z_Circuit_Z_Type.push_back(Instruction("Prepare_Z", 'm', ' ')); 
         Z_Circuit_Z_Type.push_back(Instruction("Idle", ' ', ' '));   
         Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'a', 'm'));
         Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'b', 'm'));
         Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'c', 'm'));
         Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'd', 'm'));
         Z_Circuit_Z_Type.push_back(Instruction("Idle", ' ', ' ')); 
-        Z_Circuit_Z_Type.push_back(Instruction("Measure", 'm', ' '));
+        Z_Circuit_Z_Type.push_back(Instruction("Measure_Z", 'm', ' '));
 
         // Add instructions to the X plaquette measurement circuit
-        X_Circuit_N_Type.push_back(Instruction("Initialize", 'm', ' '));  
+        X_Circuit_N_Type.push_back(Instruction("Prepare_Z", 'm', ' '));  
         X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
         X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'a'));
         X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'c'));
         X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'b'));
         X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'd'));
         X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
-        X_Circuit_N_Type.push_back(Instruction("Measure", 'm', ' '));
+        X_Circuit_N_Type.push_back(Instruction("Measure_Z", 'm', ' '));
     }
 
     HardwareModel::HardwareModel() {
