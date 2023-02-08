@@ -34,6 +34,10 @@ namespace TISCC
                 .description("Code distance along the time dimension (number of surface code cycles)")
                 .required(true);
         parser.add_argument()
+                .names({"-i", "--info"})
+                .description("Information to be queried (no operation will be performed). Options: {``instructions'', ``plaquettes'', ``grid''}")
+                .required(false);
+        parser.add_argument()
                 .names({"-o", "--operation"})
                 .description("Surface code operation to be compiled")
                 .required(false);
@@ -61,6 +65,27 @@ namespace TISCC
         unsigned int ncols = dx+1;
         GridManager grid(nrows, ncols);
 
+        // Query information (no operation will be performed)
+        if (parser.exists("i")) 
+        {
+            std::string s = parser.get<std::string>("i");
+            if (s == "instructions") {
+                HardwareModel TI_model;
+                TI_model.print_TI_ops();
+            }
+
+            else if (s == "plaquettes") {
+                LogicalQubit lq(dx, dz, grid);
+                lq.print_stabilizers();
+            }
+
+            else if (s == "grid") {
+                grid.print_grid();
+            }
+
+            return 0;
+        }
+
         // Operation-dependent logic
         if (parser.exists("o"))
         {
@@ -71,9 +96,10 @@ namespace TISCC
 
                 // Perform 'idle' operation
                 lq.idle(cycles, grid);
+
             }
         }
-        else {std::cout << "Grid constructed and checks performed, but no valid operation selected. Quitting." << std::endl;}
+        else {std::cout << "Grid constructed but no valid operation selected. Quitting." << std::endl;}
 
         return 0;
     }

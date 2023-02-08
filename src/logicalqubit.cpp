@@ -50,7 +50,32 @@ namespace TISCC
         }
     }
 
+    // Set up the circuits that we intend to use
+    void LogicalQubit::init_circuits() {
+
+        // Add instructions to the Z plaquette measurement circuit
+        Z_Circuit_Z_Type.push_back(Instruction("Prepare_Z", 'm', ' ')); 
+        Z_Circuit_Z_Type.push_back(Instruction("Idle", ' ', ' '));   
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'a', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'b', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'c', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("CNOT", 'd', 'm'));
+        Z_Circuit_Z_Type.push_back(Instruction("Idle", ' ', ' ')); 
+        Z_Circuit_Z_Type.push_back(Instruction("Measure_Z", 'm', ' '));
+
+        // Add instructions to the X plaquette measurement circuit
+        X_Circuit_N_Type.push_back(Instruction("Prepare_Z", 'm', ' '));  
+        X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'a'));
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'c'));
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'b'));
+        X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'd'));
+        X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
+        X_Circuit_N_Type.push_back(Instruction("Measure_Z", 'm', ' '));
+    }
+
     void LogicalQubit::print_stabilizers() {
+
         // Print all x stabilizers
         for (const Plaquette& p : x_plaquettes) {
             std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape() << std::endl;
@@ -62,6 +87,7 @@ namespace TISCC
         }
     }
 
+    // Test stabilizers (not fully implemented)
     void LogicalQubit::test_stabilizers(unsigned int dx, unsigned int dz) {
         unsigned int num_data_qubits = dx*dz;
         unsigned int num_measure_qubits = num_data_qubits-1;
@@ -93,19 +119,8 @@ namespace TISCC
 
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, GridManager& grid) : TI_model() { 
         init_stabilizers(dx, dz, grid);
+        init_circuits();
         test_stabilizers(dx, dz);
-        //print_stabilizers();
-    }
-
-   // Check to see if a given instruction is valid on a given plaquette 
-   // TODO: This might belong in Plaquette (or somewhere else)
-    bool LogicalQubit::is_instr_valid(const Instruction& instr, const Plaquette& p) {
-        bool n_valid = !(p.get_shape() == 'n' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'b') || (instr.get_q2() == 'a') || (instr.get_q2() == 'b')));
-        bool s_valid = !(p.get_shape() == 's' && ((instr.get_q1() == 'c') || (instr.get_q1() == 'd') || (instr.get_q2() == 'c') || (instr.get_q2() == 'd')));
-        bool e_valid = !(p.get_shape() == 'e' && ((instr.get_q1() == 'b') || (instr.get_q1() == 'd') || (instr.get_q2() == 'b') || (instr.get_q2() == 'd')));
-        bool w_valid = !(p.get_shape() == 'w' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'c') || (instr.get_q2() == 'a') || (instr.get_q2() == 'c')));
-        bool return_val = n_valid && s_valid && e_valid && w_valid;
-        return return_val;
     }
 
     // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
@@ -115,10 +130,6 @@ namespace TISCC
         // Create tmp variable for time
         float time_tmp = 0;
 
-        // Statements helpful for debugging
-        //std::cout << instr.get_name() << " " << instr.get_q1() << " " << instr.get_q2() << std::endl;
-        //grid.print_occ_sites();
-
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {
 
@@ -126,7 +137,7 @@ namespace TISCC
             for (Plaquette& p : plaquettes) {
 
                 // Certain stabilizer shapes do not accomodate certain qubit labels
-                if (is_instr_valid(instr, p)) 
+                if (p.is_instr_valid(instr)) 
                 {
                     
                     // Add single-qubit instructions
@@ -190,13 +201,13 @@ namespace TISCC
             // TODO: Enforce that all plaquettes are re-set
 
             // Enforce that the two circuits contain the same number of instructions
-            assert(TI_model.get_Z_circuit_Z_type().size() == TI_model.get_X_circuit_N_type().size());
-            unsigned int num_instructions = TI_model.get_Z_circuit_Z_type().size();
+            assert(Z_Circuit_Z_Type.size() == X_Circuit_N_Type.size());
+            unsigned int num_instructions = Z_Circuit_Z_Type.size();
 
             // Loop over ``qubit-level'' instructions and apply them to plaquettes while adding HW_Instructions to hw_master
             for (unsigned int i=0; i<num_instructions; i++) {
-                float t1 = apply_instruction(TI_model.get_Z_circuit_Z_type()[i], z_plaquettes, time, i, grid, hw_master);
-                float t2 = apply_instruction(TI_model.get_X_circuit_N_type()[i], x_plaquettes, time, i, grid, hw_master);
+                float t1 = apply_instruction(Z_Circuit_Z_Type[i], z_plaquettes, time, i, grid, hw_master);
+                float t2 = apply_instruction(X_Circuit_N_Type[i], x_plaquettes, time, i, grid, hw_master);
 
                 // Increment time counter
                 if (t1 == 0) {time = t2;}

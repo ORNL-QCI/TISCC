@@ -12,17 +12,12 @@ namespace TISCC
         else {std::cerr << "Plaquette::get_qsite: Invalid character given." << qubit << std::endl; abort();}
     }
 
-    // Move qubit 1 to location of qubit 2 (deprecated since we no longer allow qubits to occupy the same site)
-    // void Plaquette::apply_move(char q1, char q2) {
-    //     mod_qsite(q1) = get_qsite(q2);
-    // }
-
     // Move qubit to a specified site after checking validity and recording change on grid
     void Plaquette::move_to_site(char q, unsigned int site) {
 
         /* TODO: A qubit cannot sit at a junction
             - Will need to update HardwareModel to skip through junctions
-            - Will need to have twice the time for instructions that skip through junctions */
+            - Will need to have a separate time for instructions that skip through junctions */
         // if (grid_[site] == 'J') {
         //     std::cerr << "Plaquette::move_to_site: attempted move to a junction." << std::endl;
         //     abort();
@@ -59,15 +54,36 @@ namespace TISCC
         else {std::cerr << "Plaquette::mod_qsite: Invalid character given." << qubit << std::endl; abort();}
     }
 
-    // Move named qubit to its 'home' qsite on the grid (deprecated since we no longer allow qubits move arbitrary distances)
-    // Note: If this functionality is needed in the future, it should be moved into GridManager
-    // void Plaquette::move_home(char qubit) {
-    //     if (qubit == 'm') {
-    //         mod_qsite(qubit) = grid_.index_from_coords(row_, col_, 1);
-    //     }
-    //     else {
-    //         std::cerr << "Plaquette::move_home: Not yet implemented for non-'m' qubits." << std::endl; 
-    //         abort();
-    //     }
-    // }  
+    // Check whether a qubit is currently at its home location on the grid
+    bool Plaquette::is_home(char qubit) const {
+        if (qubit == 'm') {
+            return m_ == grid_.index_from_coords(row_, col_, 1);
+        }
+        else if (qubit == 'a') {
+            return a_ == grid_.index_from_coords(row_, col_-1, 5);
+        }
+        else if (qubit == 'b') {
+            return b_ == grid_.index_from_coords(row_, col_, 5);
+        }
+        else if (qubit == 'c') {
+            return c_ == grid_.index_from_coords(row_+1, col_-1, 5);
+        }
+        else if (qubit == 'd') {
+            return d_ == grid_.index_from_coords(row_+1, col_, 5);
+        }
+        else {
+            std::cerr << "Plaquette::is_home: Invalid qubit character given." << std::endl;
+            abort();
+        }
+    }
+
+   // Check to see if a given instruction is valid on this plaquette 
+    bool Plaquette::is_instr_valid(const Instruction& instr) const {
+        bool n_valid = !(shape_ == 'n' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'b') || (instr.get_q2() == 'a') || (instr.get_q2() == 'b')));
+        bool s_valid = !(shape_ == 's' && ((instr.get_q1() == 'c') || (instr.get_q1() == 'd') || (instr.get_q2() == 'c') || (instr.get_q2() == 'd')));
+        bool e_valid = !(shape_ == 'e' && ((instr.get_q1() == 'b') || (instr.get_q1() == 'd') || (instr.get_q2() == 'b') || (instr.get_q2() == 'd')));
+        bool w_valid = !(shape_ == 'w' && ((instr.get_q1() == 'a') || (instr.get_q1() == 'c') || (instr.get_q2() == 'a') || (instr.get_q2() == 'c')));
+        bool return_val = n_valid && s_valid && e_valid && w_valid;
+        return return_val;
+    }
 }

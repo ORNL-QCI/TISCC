@@ -2,6 +2,7 @@
 #define TISCC_PLAQUETTE_HPP
 
 #include <TISCC/gridmanager.hpp>
+#include <TISCC/instruction.hpp>
 
 #include <iostream>
 #include <vector>
@@ -26,15 +27,14 @@ public:
     unsigned int get_col() const {return col_;}
     char get_shape() const {return shape_;}
     char get_type() const {return type_;}
-
-    // Move qubit 1 to location of qubit 2 (deprecated since we no longer allow qubits to occupy the same site)
-    // void apply_move(char q1, char q2);
     
     // Move qubit to a specified site after checking validity and recording change on grid
     void move_to_site(char q, unsigned int site);
 
-    // Move qubit to its original location on the grid (deprecated since we no longer allow qubits move arbitrary distances)
-    // void move_home(char qubit); 
+    // Check whether a qubit is currently at its home location on the grid
+    bool is_home(char qubit) const;
+
+    bool is_instr_valid(const Instruction& instr) const;
 
     // Provide const access to the GridManager object for the grid that this plaquette lives on
     const GridManager& grid() const {return grid_;} 

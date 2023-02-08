@@ -21,7 +21,7 @@ public:
     // Operations
     void idle(unsigned int cycles, const GridManager& grid);
 
-    // 
+    // Print functions
     void print_stabilizers();
 
 private:
@@ -29,14 +29,21 @@ private:
     std::vector<Plaquette> x_plaquettes;
     std::vector<Plaquette> z_plaquettes;
 
+    // Vectors of instructions to hold syndrome measurement circuits
+    std::vector<Instruction> Z_Circuit_Z_Type;
+    std::vector<Instruction> X_Circuit_N_Type;
+
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;
 
     // Construct stabilizers and update set of occupied sites in grid
     void init_stabilizers(unsigned int dx, unsigned int dz, GridManager& grid); 
 
-    // Test stabilizers
+    // Test stabilizers (not fully implemented)
     void test_stabilizers(unsigned int dx, unsigned int dz);
+
+    // Set up the circuits that we intend to use
+    void init_circuits();
 
     // Check to see if a given instruction is valid on a given plaquette 
     bool is_instr_valid(const Instruction& instr, const Plaquette& p);
