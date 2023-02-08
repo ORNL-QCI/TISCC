@@ -46,7 +46,7 @@ namespace TISCC
         }
     }  
 
-    // Provide a path from one 'O' site to the nearest site adjacent to a neighboring 'O' site
+    // Provide a path from one 'O' site to the closest site next to a surrounding 'O' site
     std::vector<unsigned int> GridManager::get_path(unsigned int site1, unsigned int site2) const {
         
         // Constrain ourselves to the case that these are both 'O' sites
@@ -90,7 +90,7 @@ namespace TISCC
 
             }
             else {
-                std::cout << "GridManager::get_path: Only paths to surrounding Op sites starting from the [1] position are implemented." << std::endl;
+                std::cerr << "GridManager::get_path: Only paths to neighbor Op sites starting from the [1] position are implemented." << std::endl;
                 abort();
             }
         }
@@ -99,7 +99,7 @@ namespace TISCC
     }
 
     // Provide a plaquette object ``pinned" at a particular grid point 
-    Plaquette GridManager::get_plaquette(unsigned int row, unsigned int col, char shape, char type) const {
+    Plaquette GridManager::get_plaquette(unsigned int row, unsigned int col, char shape, char type) {
         /* Notes: 
             - shape defines either a four-qubit plaquette ('f') or a two-qubit plaquette with directionality {'n','s','e','w'}.
             - type defines whether it is an 'X' or a 'Z' plaquette. */
@@ -126,32 +126,42 @@ namespace TISCC
         // Use the maximum possible unsigned int to designate non-existent qubits
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();   
 
-        // Construct and return Plaquette objects
+        // Construct Plaquettes and label the relevant sites as occupied
         if (shape== 'f') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int b = index_from_coords(row, col, 5);
             unsigned int c = index_from_coords(row+1, col-1, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
+            std::set<unsigned int> sites{a, b, c, d, m};
+            occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(a,b,c,d,m,row,col,shape,type,*this);
         }
         else if (shape== 'n') {
             unsigned int c = index_from_coords(row+1, col-1, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
+            std::set<unsigned int> sites{c, d, m};
+            occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(uint_max,uint_max,c,d,m,row,col,shape,type,*this);
         }
         else if (shape== 's') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int b = index_from_coords(row, col, 5);
+            std::set<unsigned int> sites{a, b, m};
+            occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(a,b,uint_max,uint_max,m,row,col,shape,type,*this);
         }
         else if (shape== 'e') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int c = index_from_coords(row+1, col-1, 5);
+            std::set<unsigned int> sites{a, c, m};
+            occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(a,uint_max,c,uint_max,m,row,col,shape,type,*this);
         }
         else if (shape== 'w') {
             unsigned int b = index_from_coords(row, col, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
+            std::set<unsigned int> sites{b, d, m};
+            occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(uint_max,b,uint_max,d,m,row,col,shape,type,*this);
         }
         else {std::cerr << "GridManager::get_plaquette: Invalid input given." << std::endl; abort();}

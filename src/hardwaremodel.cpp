@@ -7,6 +7,7 @@ namespace TISCC
 {
     // Initialize hash table to map native TI operations to times (in microseconds)
     void HardwareModel::init_TI_ops() {
+
         // Single-site ops
         TI_ops["Prepare_Z"] = 10;
         TI_ops["Measure_Z"] = 120;
@@ -20,6 +21,7 @@ namespace TISCC
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
         TI_ops["Move"] = 1.4;
+        
         // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
 
