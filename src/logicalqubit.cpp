@@ -11,6 +11,7 @@
 
 namespace TISCC 
 {
+    // Construct stabilizers and update set of occupied sites in grid
     void LogicalQubit::init_stabilizers(unsigned int dx, unsigned int dz, GridManager& grid) {
         // Construct the 4-qubit plaquettes of the surface code
         for (unsigned int i=1; i<dz; i++) {
@@ -113,6 +114,10 @@ namespace TISCC
 
         // Create tmp variable for time
         float time_tmp = 0;
+
+        // Statements helpful for debugging
+        //std::cout << instr.get_name() << " " << instr.get_q1() << " " << instr.get_q2() << std::endl;
+        //grid.print_occ_sites();
 
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {

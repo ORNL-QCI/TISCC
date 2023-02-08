@@ -21,7 +21,7 @@ namespace TISCC
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
         TI_ops["Move"] = 1.4;
-        
+
         // Bundle of Merge, Cool, Interact (exp{-i*pi*ZZ/4}), Split operations that can occur between an 'O' site and any site adjacent to it
         TI_ops["ZZ"] = 2000;
 
@@ -58,7 +58,7 @@ namespace TISCC
         return time + TI_ops["Measure_Z"];
     }
 
-    // Move the measure qubit to the closest site adjacent to the data qubit
+    // Move the measure qubit to the closest site adjacent to the data qubit in question
     std::vector<unsigned int> HardwareModel::move_next_to(Plaquette& p, char control, char target, unsigned int step, 
         const GridManager& grid, std::vector<HW_Instruction>& circuit, float& time) {
 
@@ -67,9 +67,9 @@ namespace TISCC
             for (unsigned int i=1; i<path.size(); i++) {
                 // circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step));
                 circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step, control, ' ', p.get_shape(), p.get_type()));
+                p.move_to_site(control, path[i]);
             }
             time += (path.size()-1)*TI_ops["Move"];
-            p.move_to_site(control, path.back());
             return path;
         }
 
@@ -79,9 +79,9 @@ namespace TISCC
             for (unsigned int i=1; i<path.size(); i++) {
                 // circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step));
                 circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops["Move"], step, target, ' ', p.get_shape(), p.get_type()));
+                p.move_to_site(target, path[i]);
             }
             time += (path.size()-1)*TI_ops["Move"];
-            p.move_to_site(target, path.back());
             return path;
         }
         else  {
@@ -112,10 +112,10 @@ namespace TISCC
         time += TI_ops["ZZ"];
 
         // Move the measure qubit back to its home base for further operations
-        p.move_home('m');
         for (unsigned int i=1; i<path.size(); i++) {
             // circuit.push_back(HW_Instruction("Move", path[path.size()-i], path[path.size()-i-1], time + (i-1)*TI_ops["Move"], step));
             circuit.push_back(HW_Instruction("Move", path[path.size()-i], path[path.size()-i-1], time + (i-1)*TI_ops["Move"], step, 'm', ' ', p.get_shape(), p.get_type()));
+            p.move_to_site('m', path[path.size()-i-1]);
         }
         time += (path.size()-1)*TI_ops["Move"];
 

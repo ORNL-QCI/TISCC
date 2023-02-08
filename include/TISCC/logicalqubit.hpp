@@ -32,7 +32,7 @@ private:
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;
 
-    // Define stabilizers
+    // Construct stabilizers and update set of occupied sites in grid
     void init_stabilizers(unsigned int dx, unsigned int dz, GridManager& grid); 
 
     // Test stabilizers

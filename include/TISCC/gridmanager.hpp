@@ -46,24 +46,26 @@ public:
     // Accessor functions for private member variables
     unsigned int get_nrows() const {return nrows_;}
     unsigned int get_ncols() const {return ncols_;}
+    const std::set<unsigned int>& get_occ_sites() const {return occupied_sites;}
 
     // Provide a path from one 'O' site to the closest site next to a surrounding 'O' site
     std::vector<unsigned int> get_path(unsigned int site1, unsigned int site2) const;
 
-    // Return all sites adjacent to a given site
-    std::set<unsigned int> get_adjacent(unsigned int site) const;
+    // Return all sites adjacent to a given site (not yet implemented)
+    // std::set<unsigned int> get_adjacent(unsigned int site) const;
 
     // Check if a particular site is occupied
-    bool is_occupied(unsigned int site) const {return occupied_sites.find(site) != occupied_sites.end();}
+    bool is_occupied(unsigned int site) const {return (occupied_sites.find(site) != occupied_sites.end());}
 
-    // Flip occupation state of two sites i.e. ``move a qubit'' (relies there only ever being one qubit per site)
-    void move_qubit(unsigned int site1, unsigned int site2) {occupied_sites.erase(site1); occupied_sites.insert(site2);}
+    // Flip occupation state of two sites i.e. ``move a qubit'' (relies on there only ever being one qubit per site)
+    void move_qubit(unsigned int site1, unsigned int site2);
 
     // Provide a plaquette object ``pinned" at a particular grid point 
     Plaquette get_plaquette(unsigned int row, unsigned int col, char shape, char type);
 
-    // Print out grid
-    void print_grid();
+    // Methods for printing
+    void print_grid() const;
+    void print_occ_sites() const;
 
 private:
     SiteType* grid_;

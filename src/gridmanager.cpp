@@ -98,6 +98,22 @@ namespace TISCC
         return seq;
     }
 
+    // Flip occupation state of two sites i.e. ``move a qubit'' (correctness relies on there only ever being one qubit per site)
+    void GridManager::move_qubit(unsigned int site1, unsigned int site2) {
+
+        // Check validity of operation based on current state of occupied_sites
+        if (is_occupied(site1) && !is_occupied(site2)) {
+            //std::cerr << site1 << " " << is_occupied(site1) << " " << site2 << " " << is_occupied(site2) << std::endl;
+            occupied_sites.erase(site1); 
+            occupied_sites.insert(site2);
+        }
+        else {
+            //std::cerr << site1 << " " << is_occupied(site1) << " " << site2 << " " << is_occupied(site2) << std::endl;
+            std::cerr << "GridManager::move_qubit: operation inconsistent with state of occupied_sites set." << std::endl;
+            abort();
+        }
+    }
+
     // Provide a plaquette object ``pinned" at a particular grid point 
     Plaquette GridManager::get_plaquette(unsigned int row, unsigned int col, char shape, char type) {
         /* Notes: 
@@ -126,7 +142,7 @@ namespace TISCC
         // Use the maximum possible unsigned int to designate non-existent qubits
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();   
 
-        // Construct Plaquettes and label the relevant sites as occupied
+        // Construct Plaquettes and record the relevant sites as occupied
         if (shape== 'f') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int b = index_from_coords(row, col, 5);
@@ -168,7 +184,7 @@ namespace TISCC
     }
 
     // Print out grid
-    void GridManager::print_grid() {
+    void GridManager::print_grid() const {
         for (unsigned int i=0; i<nrows_; i++) {
             for (unsigned int j=0; j<ncols_; j++) {
                 std::cout << i << " " << j << " ";
@@ -177,6 +193,13 @@ namespace TISCC
                 }
                 std::cout << std::endl;
             }
+        }
+    }
+
+    // Print out occupied sites
+    void GridManager::print_occ_sites() const {
+        for (unsigned int i : occupied_sites) {
+            std::cout << i << std::endl;
         }
     }
 }
