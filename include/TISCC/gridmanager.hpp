@@ -2,6 +2,7 @@
 #define TISCC_GRIDMANAGER_HPP
 
 #include <TISCC/plaquette.hpp>
+#include <TISCC/instruction.hpp>
 
 #include <iostream>
 #include <vector>
@@ -62,6 +63,9 @@ public:
 
     // Provide a plaquette object ``pinned" at a particular grid point 
     Plaquette get_plaquette(unsigned int row, unsigned int col, char shape, char type);
+
+    // Routine that enforces the validity of hardware instructions
+    void check_hw_master_validity(const std::vector<HW_Instruction>& hw_master);
 
     // Methods for printing
     void print_grid() const;

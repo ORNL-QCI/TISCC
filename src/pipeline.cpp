@@ -165,7 +165,8 @@ namespace TISCC
                 // Make sure all of the same qsites are occupied
                 assert(occupied_sites == lq.occupied_sites());
 
-                //
+                // Test validity of final instruction list
+                grid.check_hw_master_validity(hw_master);
 
                 // Print hardware instructions
                 print_hw_master(hw_master, occupied_sites, debug);

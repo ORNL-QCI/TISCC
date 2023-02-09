@@ -244,6 +244,15 @@ namespace TISCC
         else {std::cerr << "GridManager::get_plaquette: Invalid input given." << std::endl; abort();}
     }
 
+    // Routine that enforces the validity of hardware instructions
+    void GridManager::check_hw_master_validity(const std::vector<HW_Instruction>& hw_master) {
+        for (const HW_Instruction& instruction : hw_master) {
+            if (instruction.get_name() == "Move") {
+                move_qubit(instruction.get_site1(), instruction.get_site2());
+            }
+        }
+    }
+
     // Print out grid
     void GridManager::print_grid() const {
         for (unsigned int i=0; i<nrows_; i++) {
