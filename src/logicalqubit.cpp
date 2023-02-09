@@ -11,6 +11,7 @@ namespace TISCC
 {
     // Construct stabilizers and update set of occupied sites in grid
     void LogicalQubit::init_stabilizers(unsigned int dx, unsigned int dz, GridManager& grid) {
+        
         // Construct the 4-qubit plaquettes of the surface code
         for (unsigned int i=1; i<dz; i++) {
             for (unsigned int j=1; j<dx; j++) {

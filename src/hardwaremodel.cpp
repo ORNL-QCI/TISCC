@@ -88,7 +88,7 @@ namespace TISCC
 
     // Move the measure qubit to the closest site adjacent to a data qubit
     void HardwareModel::move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, float& time,
-        const std::vector<unsigned int>& path) const {
+        const std::vector<unsigned int>& path, const GridManager& grid) const {
 
         // Validity check 
         if (p.get_qsite('m') != path[0]) {
@@ -96,9 +96,15 @@ namespace TISCC
             abort();
         }
 
-        // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity)
+        // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity on the grid)
+        unsigned int through_J = 0;
         for (unsigned int i=1; i<path.size(); i++) {
-            circuit.push_back(HW_Instruction("Move", path[i-1], path[i], time + (i-1)*TI_ops.at("Move"), step, 'm', ' ', p.get_shape(), p.get_type()));
+            if (grid[path[i]] == 'J') {
+                through_J = 1;
+                continue;
+            }
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time + (i-1-through_J)*TI_ops.at("Move"), step, 'm', ' ', p.get_shape(), p.get_type()));
+            if (through_J == 1) {through_J = 0;}
             p.move_to_site('m', path[i]);
         }
 
@@ -142,7 +148,7 @@ namespace TISCC
 
         // Retrieve path to data qubit and apply move_along_path
         std::vector<unsigned int> path = grid.get_path(p.get_qsite('m'), p.get_qsite(data_qubit));
-        move_along_path(p, step, circuit, time, path);
+        move_along_path(p, step, circuit, time, path, grid);
 
         // Apply ZZ operation
         circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, data_qubit, 'm', p.get_shape(), p.get_type()));
@@ -150,7 +156,7 @@ namespace TISCC
 
         // Move the measure qubit back to its home base for further operations
         reverse(path.begin(), path.end());
-        move_along_path(p, step, circuit, time, path);
+        move_along_path(p, step, circuit, time, path, grid);
 
         // Before final rotations, ensure control and target are home
         assert(p.is_home(control) && p.is_home(target)); 

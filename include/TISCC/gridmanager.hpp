@@ -51,8 +51,8 @@ public:
     // Provide a path from one 'O' site to the closest site next to a surrounding 'O' site
     std::vector<unsigned int> get_path(unsigned int site1, unsigned int site2) const;
 
-    // Return all sites adjacent to a given site (not yet implemented)
-    // std::set<unsigned int> get_adjacent(unsigned int site) const;
+    // Return all sites adjacent to a given site
+    std::set<unsigned int> get_adjacent(unsigned int site) const;
 
     // Check if a particular site is occupied
     bool is_occupied(unsigned int site) const {return (occupied_sites.find(site) != occupied_sites.end());}

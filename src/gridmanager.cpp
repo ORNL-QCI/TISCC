@@ -46,7 +46,7 @@ namespace TISCC
         }
     }  
 
-    // Provide a path from one 'O' site to the closest site next to a surrounding 'O' site
+    // Provide a path from one 'O' site to the closest site next to a surrounding 'O' site (includes junctions)
     std::vector<unsigned int> GridManager::get_path(unsigned int site1, unsigned int site2) const {
         
         // Constrain ourselves to the case that these are both 'O' sites
@@ -98,18 +98,79 @@ namespace TISCC
         return seq;
     }
 
+    // Return all sites adjacent to a given site
+    std::set<unsigned int> GridManager::get_adjacent(unsigned int site) const {
+        std::set<unsigned int> adjacent_sites;
+
+        unsigned int idx = get_idx(site);
+        unsigned int col = get_col(site);
+        unsigned int row = get_row(site);
+
+        if ((idx != 0) && (idx != 6)) {
+            adjacent_sites.insert(index_from_coords(row, col, idx-1));
+            adjacent_sites.insert(index_from_coords(row, col, idx+1));
+        }
+        else if (idx==0) {
+            adjacent_sites.insert(index_from_coords(row, col, idx+1));
+            if (row < nrows_ - 1) {
+                adjacent_sites.insert(index_from_coords(row+1, col, 3));
+            }
+        }
+        else if (idx==6) {
+            adjacent_sites.insert(index_from_coords(row, col, idx-1));
+            if (col < ncols_ - 1) {
+                adjacent_sites.insert(index_from_coords(row, col+1, 3));
+            }
+        }
+        if (idx == 3) {
+            if (row > 0) {
+                adjacent_sites.insert(index_from_coords(row-1, col, 0));
+            }
+            if (col > 0) {
+                adjacent_sites.insert(index_from_coords(row, col-1, 6));   
+            }
+        }
+
+        return adjacent_sites;
+    }
+
     // Flip occupation state of two sites i.e. ``move a qubit'' (correctness relies on there only ever being one qubit per site)
     void GridManager::move_qubit(unsigned int site1, unsigned int site2) {
 
-        // Check validity of operation based on current state of occupied_sites
+        // Make sure it does not move to a junction
+        if (grid_[site2] == 'J') {
+            std::cerr << "GridManager::move_qubit: A qubit cannot be moved to a junction." << std::endl;
+            abort();
+        }
+
+        // Check whether the target site is either (a) adjacent or (b) adjacent to an adjacent junction
+        std::set<unsigned int> adjacent = get_adjacent(site1);
+        if (adjacent.find(site2) == adjacent.end()) {
+            bool found_J = false;
+            for (unsigned int site : adjacent) {
+                if (grid_[site] == 'J') {
+                    found_J = true;
+                    std::set<unsigned int> adj_J = get_adjacent(site);
+                    if (adj_J.find(site2) == adj_J.end()) {
+                        std::cerr << "GridManager::move_qubit: Attempted to move to a site both not adjacent to starting site and not adjacent to the starting site's adjacent junction." << std::endl;
+                        abort();
+                    }
+                    else {continue;}
+                }
+            }
+            if (!found_J) {
+                std::cerr << "GridManager::move_qubit: Attempted move to non-adjacent site." << std::endl;
+                abort();
+            }
+        }
+
+        // Check validity of operation based on current state of occupied_sites. If valid, erase site 1 and add site2.
         if (is_occupied(site1) && !is_occupied(site2)) {
-            //std::cerr << site1 << " " << is_occupied(site1) << " " << site2 << " " << is_occupied(site2) << std::endl;
             occupied_sites.erase(site1); 
             occupied_sites.insert(site2);
         }
         else {
-            //std::cerr << site1 << " " << is_occupied(site1) << " " << site2 << " " << is_occupied(site2) << std::endl;
-            std::cerr << "GridManager::move_qubit: operation inconsistent with state of occupied_sites set." << std::endl;
+            std::cerr << "GridManager::move_qubit: Operation inconsistent with state of occupied_sites set." << std::endl;
             abort();
         }
     }

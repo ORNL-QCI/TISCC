@@ -38,7 +38,7 @@ private:
 
     // HW circuit helper function
     void move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, float& time,
-        const std::vector<unsigned int>& path) const;
+        const std::vector<unsigned int>& path, const GridManager& grid) const;
 };
 
 }

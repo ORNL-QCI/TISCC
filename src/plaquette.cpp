@@ -14,30 +14,7 @@ namespace TISCC
 
     // Move qubit to a specified site after checking validity and recording change on grid
     void Plaquette::move_to_site(char q, unsigned int site) {
-
-        /* TODO: A qubit cannot sit at a junction
-            - Will need to update HardwareModel to skip through junctions
-            - Will need to have a separate time for instructions that skip through junctions */
-        // if (grid_[site] == 'J') {
-        //     std::cerr << "Plaquette::move_to_site: attempted move to a junction." << std::endl;
-        //     abort();
-        // }
-
-        // For a move to be valid, it must target an unoccupied site (this is covered by grid_.move_qubit())
-        // if (grid_.is_occupied(site)) {
-        //     std::cerr << q << " " << site << std::endl;
-        //     std::cerr << "Plaquette::move_to_site: attempted move to occupied site." << std::endl;
-        //     abort();            
-        // }
         
-        /* TODO: For a move to be valid, it must target an adjacent site (skipping junctions)
-            - Must write a function to return the set of allowed moves from a given site */
-        // std::set<unsigned int> adjacent = grid_.get_adjacent(get_qsite(q));
-        // if (adjacent.find(site)==adjacent.end()) {
-        //     std::cerr << "Plaquette::move_to_site: attempted move to non-adjacent site." << std::endl;
-        //     abort();
-        // }
-
         // Update the site of the qubit and update the set of occupied sites in the grid
         grid_.move_qubit(get_qsite(q), site);
         mod_qsite(q) = site;

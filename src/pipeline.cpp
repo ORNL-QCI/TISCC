@@ -87,6 +87,10 @@ namespace TISCC
                 grid.print_grid();
             }
 
+            else {
+                std::cerr << "No valid query selected. Options: {instructions, plaquettes, grid}" << std::endl;
+            }
+            
             return 0;
         }
 
@@ -109,7 +113,7 @@ namespace TISCC
 
             }
         }
-        else {std::cout << "Grid constructed but no valid operation selected. Quitting." << std::endl;}
+        else {std::cerr << "No valid operation selected. Options: {idle}" << std::endl;}
 
         return 0;
     }
