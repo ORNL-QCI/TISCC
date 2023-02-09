@@ -7,8 +7,6 @@
 #include <limits>
 #include <set>
 
-//#define DEBUG_OUTPUT_INSTRUCTIONS
-
 namespace TISCC 
 {
     // Construct stabilizers and update set of occupied sites in grid
@@ -183,7 +181,7 @@ namespace TISCC
         return sites;
     }
 
-    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid) {
+    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid, bool debug) {
         
         // I/O settings
         int W = 15;
@@ -225,7 +223,7 @@ namespace TISCC
         }
 
         // Sort master list of hardware instructions according to overloaded operator<
-        std::sort(hw_master.begin(), hw_master.end());
+        std::stable_sort(hw_master.begin(), hw_master.end());
 
         // Output HW instructions to file
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
@@ -233,18 +231,18 @@ namespace TISCC
             std::cout << std::setw(W) << instruction.get_time();
             std::cout << std::setw(W) << instruction.get_name();
             if (instruction.get_site2() != uint_max) {
-                std::cout << std::setw(W) << instruction.get_site1() << ',' << instruction.get_site2();
+                std::cout << std::setw(W) << ((std::to_string(instruction.get_site1()) += ",") += std::to_string(instruction.get_site2()));
             }
             else {
                 std::cout << std::setw(W) << instruction.get_site1();
             }
-            #ifdef DEBUG_OUTPUT_INSTRUCTIONS
-            std::cout << std::setw(W) << instruction.get_step();
-            std::cout << std::setw(W) << instruction.get_q1();
-            std::cout << std::setw(W) << instruction.get_q2();
-            std::cout << std::setw(W) << instruction.get_shape();
-            std::cout << std::setw(W) << instruction.get_type();
-            #endif
+            if (debug) {
+                std::cout << std::setw(W) << instruction.get_step();
+                std::cout << std::setw(W) << instruction.get_q1();
+                std::cout << std::setw(W) << instruction.get_q2();
+                std::cout << std::setw(W) << instruction.get_shape();
+                std::cout << std::setw(W) << instruction.get_type();
+            }
             std::cout << std::endl;
         }
 

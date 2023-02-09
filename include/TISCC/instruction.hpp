@@ -21,8 +21,7 @@ private:
 // The HW_Instruction class represents a named instruction acting at a time at particular site(s) on the grid
 class HW_Instruction {
 public:
-    // explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step) : 
-    //     name_(name), site1_(site1), site2_(site2), time_(time), step_(step) {};
+    // We note that the latter four of these instructions are not strictly necessary but are stored for debugging output
     explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step, char q1, char q2, char shape, char type) : 
         name_(name), site1_(site1), site2_(site2), time_(time), step_(step), q1_(q1), q2_(q2), shape_(shape), type_(type) {};
     const std::string& get_name() const {return name_;}

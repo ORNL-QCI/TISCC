@@ -41,6 +41,10 @@ namespace TISCC
                 .names({"-o", "--operation"})
                 .description("Surface code operation to be compiled")
                 .required(false);
+        parser.add_argument()
+                .names({"-d", "--debug"})
+                .description("Provide extra output for the purpose of debugging")
+                .required(false);
         parser.enable_help();
         auto err = parser.parse(argc, argv);
         if (err)
@@ -86,6 +90,12 @@ namespace TISCC
             return 0;
         }
 
+        // If debugging output is requested, create a bool to be passed into the functions below
+        bool debug = false;
+        if (parser.exists("d")) {
+            debug = true;
+        }
+
         // Operation-dependent logic
         if (parser.exists("o"))
         {
@@ -95,7 +105,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, grid);
 
                 // Perform 'idle' operation
-                lq.idle(cycles, grid);
+                lq.idle(cycles, grid, debug);
 
             }
         }

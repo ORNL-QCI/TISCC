@@ -19,7 +19,7 @@ public:
     explicit LogicalQubit(unsigned int dx, unsigned int dz, GridManager& grid);
 
     // Operations
-    void idle(unsigned int cycles, const GridManager& grid);
+    void idle(unsigned int cycles, const GridManager& grid, bool debug);
 
     // Print functions
     void print_stabilizers();

@@ -49,7 +49,7 @@ namespace TISCC
 
     }
 
-   // Helper function to add H gate in terms of native TI gates to a circuit
+    // Helper function to add H gate in terms of native TI gates to a circuit
     float HardwareModel::add_H(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
@@ -145,7 +145,7 @@ namespace TISCC
         move_along_path(p, step, circuit, time, path);
 
         // Apply ZZ operation
-        circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, control, target, p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, data_qubit, 'm', p.get_shape(), p.get_type()));
         time += TI_ops.at("ZZ");
 
         // Move the measure qubit back to its home base for further operations
