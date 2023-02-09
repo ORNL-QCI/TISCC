@@ -21,20 +21,23 @@ private:
 // The HW_Instruction class represents a named instruction acting at a time at particular site(s) on the grid
 class HW_Instruction {
 public:
-    // We note that the latter four of these instructions are not strictly necessary but are stored for debugging output
+    // We note that the latter five of these variables are not strictly necessary but are stored for debugging output
     explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step, char q1, char q2, char shape, char type) : 
         name_(name), site1_(site1), site2_(site2), time_(time), step_(step), q1_(q1), q2_(q2), shape_(shape), type_(type) {};
+
+    // Accessors
     const std::string& get_name() const {return name_;}
     const unsigned int get_site1() const {return site1_;}
     const unsigned int get_site2() const {return site2_;}
     const float get_time() const {return time_;}
-    const unsigned int get_step() const {return step_;}
 
-    // These accessors and associated member variables are only being included now for the purpose of debugging
+    // Accessors for debugging output
+    const unsigned int get_step() const {return step_;}
     const char get_q1() const {return q1_;}
     const char get_q2() const {return q2_;}
     const char get_shape() const {return shape_;}
     const char get_type() const {return type_;}
+
 private:
     std::string name_;
     unsigned int site1_;

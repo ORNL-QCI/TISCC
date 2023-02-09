@@ -182,22 +182,13 @@ namespace TISCC
         return sites;
     }
 
-    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid, bool debug) {
-        
-        // I/O settings
-        int W = 15;
-        std::cout << std::setprecision(1);
-        std::cout << std::setiosflags(std::ios::fixed);
-
-        // Initialize master list of hardware (``site-level'') instructions
-        std::vector<HW_Instruction> hw_master;
+    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
 
         // Initialize time counter
         float time = 0;
         
         // Loop over surface code cycles
         for (unsigned int cycle=0; cycle < cycles; cycle++) {
-            // TODO: Enforce that all plaquettes are re-set
 
             // Enforce that the two circuits contain the same number of instructions
             assert(Z_Circuit_Z_Type.size() == X_Circuit_N_Type.size());
@@ -211,41 +202,14 @@ namespace TISCC
                 // Increment time counter
                 if (t1 == 0) {time = t2;}
                 else if (t2 == 0) {time = t1;}
-                else {assert(t1==t2); time = t1;}              
-            }
-        }
+                else {assert(t1==t2); time = t1;}  
 
-        // Dump qsites 
-        for (unsigned int site : occupied_sites()) {
-            std::cout << std::setw(W) << -1.0;
-            std::cout << std::setw(W) << "Qubit_at";
-            std::cout << std::setw(W) << site;
-            std::cout << std::endl;
+            }
+            
         }
 
         // Sort master list of hardware instructions according to overloaded operator<
         std::stable_sort(hw_master.begin(), hw_master.end());
-
-        // Output HW instructions to file
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
-        for (const HW_Instruction& instruction : hw_master) {
-            std::cout << std::setw(W) << instruction.get_time();
-            std::cout << std::setw(W) << instruction.get_name();
-            if (instruction.get_site2() != uint_max) {
-                std::cout << std::setw(W) << ((std::to_string(instruction.get_site1()) += ",") += std::to_string(instruction.get_site2()));
-            }
-            else {
-                std::cout << std::setw(W) << instruction.get_site1();
-            }
-            if (debug) {
-                std::cout << std::setw(W) << instruction.get_step();
-                std::cout << std::setw(W) << instruction.get_q1();
-                std::cout << std::setw(W) << instruction.get_q2();
-                std::cout << std::setw(W) << instruction.get_shape();
-                std::cout << std::setw(W) << instruction.get_type();
-            }
-            std::cout << std::endl;
-        }
 
     }
 

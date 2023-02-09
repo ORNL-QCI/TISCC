@@ -23,8 +23,9 @@ namespace TISCC
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
 
-        // Move is currently per-site. It probably needs to be revised and split into cases (i.e. across junctions)
-        TI_ops["Move"] = 1.4;
+        // Move is currently per-site for two types of sites: trapping zones (80 m/s over 420 um) and junctions (4 m/s over 420 um)
+        TI_ops["Move"] = 5.25;
+        TI_ops["Junction"] = 105;
 
         // Includes Merge, Cool, Interact, and Split 
         TI_ops["ZZ"] = 2000;
@@ -97,19 +98,18 @@ namespace TISCC
         }
 
         // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity on the grid)
+        // We note an assumption is that there are never two Junctions in a row on the grid
         unsigned int through_J = 0;
         for (unsigned int i=1; i<path.size(); i++) {
             if (grid[path[i]] == 'J') {
                 through_J = 1;
                 continue;
             }
-            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time + (i-1-through_J)*TI_ops.at("Move"), step, 'm', ' ', p.get_shape(), p.get_type()));
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_type()));
+            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
             if (through_J == 1) {through_J = 0;}
             p.move_to_site('m', path[i]);
         }
-
-        // Update time 
-        time += (path.size()-1)*TI_ops.at("Move");
 
     }
 
