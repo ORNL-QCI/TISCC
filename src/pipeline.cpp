@@ -153,7 +153,7 @@ namespace TISCC
                 // Initialize logical qubit using the grid
                 LogicalQubit lq(dx, dz, grid);
 
-                // Grab all of the initially occupied sites
+                // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
 
                 // Initialize vector of hardware instructions
@@ -162,11 +162,8 @@ namespace TISCC
                 // Perform 'idle' operation
                 lq.idle(cycles, grid, hw_master);
 
-                // Make sure all of the same qsites are occupied
-                assert(occupied_sites == lq.occupied_sites());
-
-                // Test validity of final instruction list
-                grid.check_hw_master_validity(hw_master);
+                // Enforce validity of final instruction list 
+                grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
                 print_hw_master(hw_master, occupied_sites, debug);

@@ -24,6 +24,8 @@ public:
     // We note that the latter five of these variables are not strictly necessary but are stored for debugging output
     explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step, char q1, char q2, char shape, char type) : 
         name_(name), site1_(site1), site2_(site2), time_(time), step_(step), q1_(q1), q2_(q2), shape_(shape), type_(type) {};
+    explicit HW_Instruction(const HW_Instruction& a, float time_offset) : name_(a.get_name()), site1_(a.get_site1()), site2_(a.get_site2()), time_(a.get_time() + time_offset),
+         step_(a.get_step()), q1_(a.get_q1()), q2_(a.get_q2()), shape_(a.get_shape()), type_(a.get_type()) {};
 
     // Accessors
     const std::string& get_name() const {return name_;}

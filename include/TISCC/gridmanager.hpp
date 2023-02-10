@@ -3,6 +3,7 @@
 
 #include <TISCC/plaquette.hpp>
 #include <TISCC/instruction.hpp>
+#include <TISCC/hardwaremodel.hpp>
 
 #include <iostream>
 #include <vector>
@@ -59,13 +60,13 @@ public:
     bool is_occupied(unsigned int site) const {return (occupied_sites.find(site) != occupied_sites.end());}
 
     // Flip occupation state of two sites i.e. ``move a qubit'' (relies on there only ever being one qubit per site)
-    void move_qubit(unsigned int site1, unsigned int site2);
+    unsigned int move_qubit(unsigned int site1, unsigned int site2);
 
     // Provide a plaquette object ``pinned" at a particular grid point 
     Plaquette get_plaquette(unsigned int row, unsigned int col, char shape, char type);
 
     // Routine that enforces the validity of hardware instructions
-    void check_hw_master_validity(const std::vector<HW_Instruction>& hw_master);
+    void enforce_hw_master_validity(std::vector<HW_Instruction>& hw_master);
 
     // Methods for printing
     void print_grid() const;

@@ -3,6 +3,8 @@
 
 #include <limits>
 #include <cassert>
+#include <map>
+#include <algorithm>
 
 namespace TISCC 
 {
@@ -135,7 +137,7 @@ namespace TISCC
     }
 
     // Flip occupation state of two sites i.e. ``move a qubit'' (correctness relies on there only ever being one qubit per site)
-    void GridManager::move_qubit(unsigned int site1, unsigned int site2) {
+    unsigned int GridManager::move_qubit(unsigned int site1, unsigned int site2) {
 
         // Make sure it does not move to a junction
         if (grid_[site2] == 'J') {
@@ -143,13 +145,16 @@ namespace TISCC
             abort();
         }
 
-        // Check whether the target site is either (a) adjacent or (b) adjacent to an adjacent junction
+        // Check whether the target site is either (a) adjacent or (b) adjacent to an adjacent junction (and if so, track that junction)
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max(); 
+        unsigned int junction = uint_max;
         std::set<unsigned int> adjacent = get_adjacent(site1);
         if (adjacent.find(site2) == adjacent.end()) {
             bool found_J = false;
             for (unsigned int site : adjacent) {
                 if (grid_[site] == 'J') {
                     found_J = true;
+                    junction = site;
                     std::set<unsigned int> adj_J = get_adjacent(site);
                     if (adj_J.find(site2) == adj_J.end()) {
                         std::cerr << "GridManager::move_qubit: Attempted to move to a site both not adjacent to starting site and not adjacent to the starting site's adjacent junction." << std::endl;
@@ -173,6 +178,10 @@ namespace TISCC
             std::cerr << "GridManager::move_qubit: Operation inconsistent with state of occupied_sites set." << std::endl;
             abort();
         }
+
+        // Return qsite corresponding to the junction passed through (if applicable)
+        return junction;
+
     }
 
     // Provide a plaquette object ``pinned" at a particular grid point 
@@ -245,12 +254,69 @@ namespace TISCC
     }
 
     // Routine that enforces the validity of hardware instructions
-    void GridManager::check_hw_master_validity(const std::vector<HW_Instruction>& hw_master) {
-        for (const HW_Instruction& instruction : hw_master) {
+    void GridManager::enforce_hw_master_validity(std::vector<HW_Instruction>& hw_master) {
+        
+        // Instantiate HardwareModel
+        HardwareModel TI_model;
+
+        // Initialize time counter and define a time_offset that will be used to resolve junction conflicts
+        float time = 0; 
+        float time_offset = TI_model.get_ops().at("Move") + TI_model.get_ops().at("Junction");
+
+        // Initialize junction tracker 
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max(); 
+        unsigned int junction = uint_max;
+        std::set<unsigned int> junctions;
+
+        // We shift time according to how many junction conflicts have been seen, with maximum one shift per time slice
+        unsigned int num_shifts = 0;
+        bool shift_yet = false;
+
+        // Loop over instructions
+        for (HW_Instruction& instruction : hw_master) {
+
+            // Update time (and update/reset other variables) when we reach a new time-slice
+            if (instruction.get_time() != time) {
+                time = instruction.get_time();
+                if (shift_yet == true) {
+                    num_shifts += 1;
+                    shift_yet = false;
+                }
+                junctions.clear();
+            }
+
+            // Perform the move_qubit operation (which contains validity checks) and obtain junction qsite if applicable
             if (instruction.get_name() == "Move") {
-                move_qubit(instruction.get_site1(), instruction.get_site2());
+                junction = move_qubit(instruction.get_site1(), instruction.get_site2());
+            }
+            else {
+                junction = uint_max;
+            }
+
+            // Check for junction conflicts in this time step and note a time shift if one is found
+            if (junction != uint_max) {
+                if (junctions.find(junction) == junctions.end()) {
+                    junctions.insert(junction);
+                }
+                else {
+                    if (!shift_yet) {
+                        shift_yet = true;
+                    }
+                    // If a collision is found, shift the time for this instruction
+                    instruction = HW_Instruction(instruction, (num_shifts+1)*time_offset);
+                    // std::cerr << "GridManager::check_hw_master_validity: Junction " << junction << " is being used more than once at t = " << time + num_shifts*time_offset << " us." << std::endl;
+                    continue;
+                }
+            }
+
+            // Update time by copying with time_offset
+            if (num_shifts != 0) {
+                instruction = HW_Instruction(instruction, num_shifts*time_offset); 
             }
         }
+
+        // Sort updated hw_master
+        std::stable_sort(hw_master.begin(), hw_master.end());
     }
 
     // Print out grid

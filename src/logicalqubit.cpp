@@ -77,12 +77,14 @@ namespace TISCC
 
         // Print all x stabilizers
         for (const Plaquette& p : x_plaquettes) {
-            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape() << std::endl;
+            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
+                 << " " << (p.grid()).index_from_coords(p.get_row(), p.get_col(), 3) << std::endl;
         }
 
         // Print all z stabilizers
         for (const Plaquette& p : z_plaquettes) {
-            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape() << std::endl;
+            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
+                 << " " << (p.grid()).index_from_coords(p.get_row(), p.get_col(), 3) << std::endl;
         }
     }
 

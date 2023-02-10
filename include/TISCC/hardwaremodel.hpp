@@ -11,6 +11,9 @@
 
 namespace TISCC {
 
+class Plaquette;
+class GridManager;
+
 // This class defines a set of native hardware operations and constructs circuits out of them
 class HardwareModel {
 public:

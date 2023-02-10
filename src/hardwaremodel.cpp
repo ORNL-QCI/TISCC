@@ -23,9 +23,12 @@ namespace TISCC
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 0;
 
-        // Move is currently per-site for two types of sites: trapping zones (80 m/s over 420 um) and junctions (4 m/s over 420 um)
-        TI_ops["Move"] = 5.25;
-        TI_ops["Junction"] = 105;
+        // Move is currently per-site for two types of sites: trapping zones and junctions
+        float trap_width = 420; // um
+        float move_velocity = 80; // m/s, see https://arxiv.org/pdf/2301.05279.pdf
+        float junction_move_velocity = 4; // m/s, see https://arxiv.org/pdf/2301.05279.pdf (it seems 4 m/s is safe but up to 6 m/s is possible)
+        TI_ops["Move"] = trap_width / move_velocity; // us
+        TI_ops["Junction"] = trap_width / junction_move_velocity;
 
         // Includes Merge, Cool, Interact, and Split 
         TI_ops["ZZ"] = 2000;
