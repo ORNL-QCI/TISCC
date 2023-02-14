@@ -184,10 +184,24 @@ namespace TISCC
         return sites;
     }
 
-    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
+    // Function to return all qsites occupied by data qubits on the surface code
+    /* TODO: Maybe combine this somehow with occupied_sites */
+    std::set<unsigned int> LogicalQubit::data_qsites() {
+        std::set<unsigned int> sites;
+        for (char qubit : {'a', 'b', 'c', 'd'}) {
+            for (const Plaquette& p : z_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+            for (const Plaquette& p : x_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+        }
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
+        sites.erase(uint_max);
+        return sites;
+    }
 
-        // Initialize time counter
-        float time = 0;
+    void LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float& time) {
         
         // Loop over surface code cycles
         for (unsigned int cycle=0; cycle < cycles; cycle++) {
@@ -213,6 +227,65 @@ namespace TISCC
         // Sort master list of hardware instructions according to overloaded operator<
         std::stable_sort(hw_master.begin(), hw_master.end());
 
+    }
+
+    void LogicalQubit::prepz(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float& time) {
+
+        // Get all occupied sites
+        std::set<unsigned int> sites = data_qsites();
+
+        // TODO: Maybe should check whether all data qubits are at their 'home' positions
+
+        // Loop over all occupied sites
+        for (unsigned int site : sites) {
+
+            // Perform validity check
+            if (grid[site] != 'O') {
+                std::cerr << "LogicalQubit::prepz: Can only Prepare Z at 'O' QSites." << std::endl;
+                abort();
+            }
+
+            // Push corresponding HW_Instruction onto the circuit
+            // TODO: update debugging output (?)
+            unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+            hw_master.push_back(HW_Instruction("Prepare_Z", site, uint_max, time, 0, 'X', ' ', 'X', 'X'));
+
+        }
+
+        // Increment time
+        time += TI_model.get_ops().at("Prepare_Z");
+    }
+
+    void LogicalQubit::prepx(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float& time) {
+
+        // Get all occupied sites
+        std::set<unsigned int> sites = data_qsites();
+
+        // Instantiate HardwareModel
+        HardwareModel TI_model;
+
+        // TODO: Maybe should check whether all data qubits are at their 'home' positions
+
+        // Loop over all occupied sites
+        for (unsigned int site : sites) {
+
+            // Perform validity check
+            if (grid[site] != 'O') {
+                std::cerr << "LogicalQubit::prepx: Can only Prepare X at 'O' QSites." << std::endl;
+                abort();
+            }
+
+            // Push corresponding HW_Instructions onto the circuit (out of order but later sorting will take care of it)
+            // TODO: update debugging output (?)
+            unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+            hw_master.push_back(HW_Instruction("Prepare_Z", site, uint_max, time, 0, 'X', ' ', 'X', 'X'));
+            hw_master.push_back(HW_Instruction("Y_-pi/4", site, uint_max, time + TI_model.get_ops().at("Prepare_Z"), 0, 'X', ' ', 'X', 'X'));
+            hw_master.push_back(HW_Instruction("Z_pi/4", site, uint_max, time + TI_model.get_ops().at("Prepare_Z") + TI_model.get_ops().at("Y_-pi/4"), 0, 'X', ' ', 'X', 'X'));
+
+        }
+
+        // Increment time
+        time += TI_model.get_ops().at("Prepare_Z") + TI_model.get_ops().at("Y_-pi/4") + TI_model.get_ops().at("Z_pi/4");
     }
 
 }

@@ -19,13 +19,18 @@ public:
     explicit LogicalQubit(unsigned int dx, unsigned int dz, GridManager& grid);
 
     // Operations
-    void idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master);
+    void idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float& time);
+    void prepz(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float& time);
+    void prepx(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float& time);
 
     // Print functions
     void print_stabilizers();
 
     // Function to output all qsites occupied by the surface code
     std::set<unsigned int> occupied_sites();
+
+    // Function to output all qsites occupied by data qubits on the surface code
+    std::set<unsigned int> data_qsites();
 
 private:
     // Vectors of X or Z plaquettes 

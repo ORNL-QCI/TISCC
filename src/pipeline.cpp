@@ -78,7 +78,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled")
+                .description("Surface code operation to be compiled. Options: {``idle'', ``prepz'', ``prepx''}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -150,6 +150,7 @@ namespace TISCC
         {
             std::string s = parser.get<std::string>("o");
             if (s == "idle") {
+
                 // Initialize logical qubit using the grid
                 LogicalQubit lq(dx, dz, grid);
 
@@ -160,7 +161,8 @@ namespace TISCC
                 std::vector<HW_Instruction> hw_master;
 
                 // Perform 'idle' operation
-                lq.idle(cycles, grid, hw_master);
+                float time = 0;
+                lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -168,7 +170,56 @@ namespace TISCC
                 // Print hardware instructions
                 print_hw_master(hw_master, occupied_sites, debug);
             }
-            else {std::cerr << "No valid operation selected. Options: {idle}" << std::endl;}
+
+            else if (s == "prepz") {
+                // Initialize logical qubit using the grid
+                LogicalQubit lq(dx, dz, grid);
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> occupied_sites = lq.occupied_sites();
+
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
+                // Perform 'prepz' and 'idle' operations
+                float time = 0;
+                lq.prepz(cycles, grid, hw_master, time);
+                time = 0; // Reset time because the above operation can be performed simultaneously with the below
+                lq.idle(cycles, grid, hw_master, time);
+
+                // Enforce validity of final instruction list 
+                grid.enforce_hw_master_validity(hw_master);
+
+                // Print hardware instructions
+                print_hw_master(hw_master, occupied_sites, debug);
+
+            }
+
+            else if (s == "prepx") {
+                // Initialize logical qubit using the grid
+                LogicalQubit lq(dx, dz, grid);
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> occupied_sites = lq.occupied_sites();
+
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
+                // Perform 'prepz' and 'idle' operations
+                float time = 0;
+                lq.prepx(cycles, grid, hw_master, time);
+                time = 0; // Reset time because the above operation can be performed simultaneously with the below
+                lq.idle(cycles, grid, hw_master, time);
+
+                // Enforce validity of final instruction list 
+                grid.enforce_hw_master_validity(hw_master);
+
+                // Print hardware instructions
+                print_hw_master(hw_master, occupied_sites, debug);
+
+            }
+
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx}" << std::endl;}
         }
 
         return 0;
