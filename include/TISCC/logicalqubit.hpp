@@ -16,7 +16,7 @@ namespace TISCC {
 class LogicalQubit {
 public:
     // Constructor
-    explicit LogicalQubit(unsigned int dx, unsigned int dz, GridManager& grid);
+    explicit LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid);
 
     // Operations
     float idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
@@ -47,7 +47,7 @@ private:
     HardwareModel TI_model;
 
     // Construct stabilizers and update set of occupied sites in grid
-    void init_stabilizers(unsigned int dx, unsigned int dz, GridManager& grid); 
+    void init_stabilizers(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid); 
 
     // Test stabilizers (not fully implemented)
     void test_stabilizers(unsigned int dx, unsigned int dz);

@@ -13,6 +13,7 @@ namespace TISCC {
 
 // Need to declare this in advance since the below Class depends on it
 class Plaquette;
+class HW_Instruction;
 
 // Provides access to an array representing a particular trapped-ion hardware architecture 
 class GridManager {
@@ -44,6 +45,9 @@ public:
     unsigned int get_idx(unsigned int i) const {return i%7;}
     unsigned int get_col(unsigned int i) const {return ((i-i%7)/7)%ncols_;}
     unsigned int get_row(unsigned int i) const {return (((i-i%7)/7)-get_col(i))/ncols_;}
+
+    // Get a qsite shifted on the grid
+    unsigned int shift_qsite(unsigned int i, int nrows, int ncols) const;
 
     // Accessor functions for private member variables
     unsigned int get_nrows() const {return nrows_;}

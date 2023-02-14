@@ -12,6 +12,7 @@ namespace TISCC {
 
 // Need to declare this in advance since the below Class depends on it
 class GridManager;
+class Instruction;
 
 // Stores the grid indices (qsites) occupied by named qubits of a surface code plaquette
 class Plaquette {

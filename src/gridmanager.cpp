@@ -48,6 +48,17 @@ namespace TISCC
         }
     }  
 
+    // Get a qsite shifted on the grid (index_from_coords handles validity checking)
+    unsigned int GridManager::shift_qsite(unsigned int i, int nrows, int ncols) const {
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max(); 
+        if (i == uint_max) {
+            return i;
+        }
+        else {
+            return index_from_coords(get_row(i) + nrows, get_col(i) + ncols, get_idx(i));
+        }
+    }
+
     // Provide a path from one 'O' site to the closest site next to a surrounding 'O' site (includes junctions)
     std::vector<unsigned int> GridManager::get_path(unsigned int site1, unsigned int site2) const {
         

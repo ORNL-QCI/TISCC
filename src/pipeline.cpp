@@ -62,15 +62,15 @@ namespace TISCC
         argparse::ArgumentParser parser(prog_name, "Trapped-Ion Surface Code Compiler");
         parser.add_argument()
                 .names({"-x", "--dx"})
-                .description("Code distance for X errors (Pauli weight of the minimum-weight logical X operator)")
+                .description("Single-tile code distance for X errors (Pauli weight of the minimum-weight logical X operator)")
                 .required(true);
         parser.add_argument()
                 .names({"-z", "--dz"})
-                .description("Code distance for Z errors (Pauli weight of the minimum-weight logical Z operator)")
+                .description("Single-tile code distance for Z errors (Pauli weight of the minimum-weight logical Z operator)")
                 .required(true);
         parser.add_argument()
                 .names({"-t", "--dt"})
-                .description("Code distance along the time dimension (number of surface code cycles)")
+                .description("Code distance along the time dimension (number of surface code cycles for a round of error correction)")
                 .required(true);
         parser.add_argument()
                 .names({"-i", "--info"})
@@ -78,7 +78,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -124,7 +124,7 @@ namespace TISCC
             }
 
             else if (s == "plaquettes") {
-                LogicalQubit lq(dx, dz, grid);
+                LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_stabilizers();
             }
 
@@ -151,8 +151,8 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
             if (s == "idle") {
 
-                // Initialize logical qubit using the grid
-                LogicalQubit lq(dx, dz, grid);
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
@@ -173,8 +173,8 @@ namespace TISCC
 
             else if (s == "prepz") {
 
-                // Initialize logical qubit using the grid
-                LogicalQubit lq(dx, dz, grid);
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
@@ -197,8 +197,8 @@ namespace TISCC
 
             else if (s == "prepx") {
 
-                // Initialize logical qubit using the grid
-                LogicalQubit lq(dx, dz, grid);
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
@@ -221,8 +221,8 @@ namespace TISCC
 
             else if (s == "measz") {
 
-                // Initialize logical qubit using the grid
-                LogicalQubit lq(dx, dz, grid);
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
@@ -244,8 +244,8 @@ namespace TISCC
 
             else if (s == "measx") {
 
-                // Initialize logical qubit using the grid
-                LogicalQubit lq(dx, dz, grid);
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
@@ -265,7 +265,67 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx}" << std::endl;}
+            else if (s == "extendx") {
+
+                // Construct grid with appropriate dimensions to hold two tiles side-by-side with a vertical strip of qubits in between
+                unsigned int nrows = dz+1; 
+                unsigned int ncols = 2*(dx+1);
+                GridManager grid_2(nrows, ncols);
+
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq1(dx, dz, 0, 0, grid_2);
+
+                // Initialize second logical qubit object to the right of the first
+                LogicalQubit lq2(dx, dz, 0, dx+1, grid_2);
+
+                // Initialize second logical qubit object to the right of the first, including a strip between
+                // LogicalQubit lq2(dx+1, dz, 0, (dx+1) - 1, grid_2);
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> lq1_occupied = lq1.occupied_sites();
+                std::set<unsigned int> occupied_sites = lq2.occupied_sites();
+                occupied_sites.insert(lq1_occupied.begin(), lq1_occupied.end());
+
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
+                // Prepare the physical qubits on lq2 in the X basis
+                float time = 0;
+                lq2.prepx(grid_2, hw_master, time);
+
+                // Perform 'idle' operation
+                time = lq2.idle(cycles, grid_2, hw_master, time);
+
+                // Enforce validity of final instruction list 
+                grid_2.enforce_hw_master_validity(hw_master);
+
+                // Shift (useful for debugging qubit placement on grid)
+                // for (HW_Instruction& i : hw_master) {
+                //     i = HW_Instruction(i, 0, -(dx+1), grid_2);
+                // }
+
+                // Print hardware instructions
+                print_hw_master(hw_master, occupied_sites, debug);
+            }
+
+            else if (s == "extendz") {
+
+                // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
+                unsigned int nrows = 2*(dz+1); 
+                unsigned int ncols = dx+1;
+                GridManager grid_2(nrows, ncols);
+
+                // Initialize logical qubit object using the grid
+                LogicalQubit lq1(dx, dz, 0, 0, grid_2);
+
+                // Initialize second logical qubit object to the bottom of the first
+                // LogicalQubit lq2(dx, dz, dz+1, 0, grid_2);
+
+                // Initialize second logical qubit object to the bottom of the first, including a strip between
+                LogicalQubit lq2(dx, dz+1, (dz+1) - 1, 0, grid_2);
+            }
+
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}
         }
 
         return 0;

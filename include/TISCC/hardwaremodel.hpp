@@ -11,8 +11,10 @@
 
 namespace TISCC {
 
+// Need to declare this in advance since the below Class depends on it
 class Plaquette;
 class GridManager;
+class HW_Instruction;
 
 // This class defines a set of native hardware operations and constructs circuits out of them
 class HardwareModel {
