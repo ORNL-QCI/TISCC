@@ -18,6 +18,12 @@ public:
     // Constructor
     explicit LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid);
 
+    // Accessors
+    unsigned int get_dx() {return dx_;}
+    unsigned int get_dz() {return dz_;}
+    unsigned int get_row() {return row_;}
+    unsigned int get_col() {return col_;}
+
     // Operations
     float idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
     float prepz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
@@ -35,6 +41,12 @@ public:
     std::set<unsigned int> data_qsites();
 
 private:
+    // Code distances
+    unsigned int dx_;
+    unsigned int dz_;
+    unsigned int row_;
+    unsigned int col_;
+
     // Vectors of X or Z plaquettes 
     std::vector<Plaquette> x_plaquettes;
     std::vector<Plaquette> z_plaquettes;
@@ -63,6 +75,10 @@ private:
         const GridManager& grid, std::vector<HW_Instruction>& idle_operation);
 
 };
+
+// 
+LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2);
+
 }
 
 #endif //TISCC_LOGICALQUBIT_HPP

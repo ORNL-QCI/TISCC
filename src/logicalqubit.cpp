@@ -118,7 +118,8 @@ namespace TISCC
         // TODO: Create a way to find all plaquettes containing a particular qubit
     }
 
-    LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : TI_model() { 
+    LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : 
+        TI_model(), dx_(dx), dz_(dz), row_(row), col_(col) { 
         init_stabilizers(dx, dz, row, col, grid);
         init_circuits();
         test_stabilizers(dx, dz);
@@ -331,4 +332,39 @@ namespace TISCC
 
     }
 
+LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
+
+    // Determine whether to merge horizontally or vertically and set parameters
+    if (lq1.get_row() == lq2.get_row()) {
+        // Constraints
+        assert(lq1.get_dz() == lq2.get_dz());
+        assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1);
+        // Merge horizontally
+        unsigned int dx = lq1.get_dx() + lq2.get_dx() + 1;
+        unsigned int dz = lq1.get_dz();
+        unsigned int row = lq1.get_row();
+        unsigned int col = lq1.get_col();
+        if (lq2.get_col() < lq1.get_col()) {col = lq2.get_col();}
+        return LogicalQubit(dx, dz, row, col, grid);
+    }
+    else if (lq1.get_col() == lq2.get_col()) {
+        // Constraints
+        assert(lq1.get_dx() == lq2.get_dx());
+        assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1);
+        // Merge vertically
+        unsigned int dx = lq1.get_dx();
+        unsigned int dz = lq1.get_dz() + lq2.get_dz() + 1;
+        unsigned int row = lq1.get_row();
+        unsigned int col = lq1.get_col();
+        if (lq2.get_row() < lq1.get_row()) {row = lq2.get_row();}   
+        return LogicalQubit(dx, dz, row, col, grid);     
+    }
+    else {
+        std::cerr << "merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+        abort();
+    }
+
+
+
+}
 }

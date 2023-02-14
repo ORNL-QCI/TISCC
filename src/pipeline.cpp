@@ -293,8 +293,12 @@ namespace TISCC
                 float time = 0;
                 lq2.prepx(grid_2, hw_master, time);
 
-                // Perform 'idle' operation
-                time = lq2.idle(cycles, grid_2, hw_master, time);
+                // Prepare strip of qubits in between
+
+                // Merge the qubits together
+
+                // Perform 'idle' operation on the merged qubit
+                // time = lq2.idle(cycles, grid_2, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid_2.enforce_hw_master_validity(hw_master);
