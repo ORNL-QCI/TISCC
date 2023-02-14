@@ -101,7 +101,7 @@ namespace TISCC
 
         // Push corresponding HW_Instructions onto the circuit
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();
-        circuit.push_back(HW_Instruction("Y_-pi/4", site, uint_max, time, 0, 'X', ' ', 'X', 'X'));
+        circuit.push_back(HW_Instruction("Y_-pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
         circuit.push_back(HW_Instruction("Z_pi/4", site, uint_max, time + TI_ops.at("Y_-pi/4"), step, 'X', ' ', 'X', 'X'));
 
         // Return updated time

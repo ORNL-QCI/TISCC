@@ -12,16 +12,16 @@
             0.0      Prepare_Z             29              0              m                             f              Z
             0.0      Prepare_Z             22              0              m                             w              X
             0.0      Prepare_Z             36              0              m                             e              X
-           10.0        Y_-pi/4             26              0              X                             X              X
-           10.0        Y_-pi/4             33              0              X                             X              X
-           10.0        Y_-pi/4             47              0              X                             X              X
-           10.0        Y_-pi/4             54              0              X                             X              X
+           10.0        Y_-pi/4             26              1              X                             X              X
+           10.0        Y_-pi/4             33              1              X                             X              X
+           10.0        Y_-pi/4             47              1              X                             X              X
+           10.0        Y_-pi/4             54              1              X                             X              X
            10.0        Y_-pi/4             22              1              m                             w              X
            10.0        Y_-pi/4             36              1              m                             e              X
-           20.0         Z_pi/4             26              0              X                             X              X
-           20.0         Z_pi/4             33              0              X                             X              X
-           20.0         Z_pi/4             47              0              X                             X              X
-           20.0         Z_pi/4             54              0              X                             X              X
+           20.0         Z_pi/4             26              1              X                             X              X
+           20.0         Z_pi/4             33              1              X                             X              X
+           20.0         Z_pi/4             47              1              X                             X              X
+           20.0         Z_pi/4             54              1              X                             X              X
            20.0         Z_pi/4             22              1              m                             w              X
            20.0         Z_pi/4             36              1              m                             e              X
            20.0        Y_-pi/4             29              2              m                             f              Z

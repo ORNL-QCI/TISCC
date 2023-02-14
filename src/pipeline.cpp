@@ -78,7 +78,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measx, measz}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -172,6 +172,7 @@ namespace TISCC
             }
 
             else if (s == "prepz") {
+
                 // Initialize logical qubit using the grid
                 LogicalQubit lq(dx, dz, grid);
 
@@ -183,7 +184,7 @@ namespace TISCC
 
                 // Perform 'prepz' and 'idle' operations
                 float time = 0;
-                lq.prepz(cycles, grid, hw_master, time);
+                lq.prepz(grid, hw_master, time);
                 time = lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
@@ -195,6 +196,7 @@ namespace TISCC
             }
 
             else if (s == "prepx") {
+
                 // Initialize logical qubit using the grid
                 LogicalQubit lq(dx, dz, grid);
 
@@ -204,10 +206,56 @@ namespace TISCC
                 // Initialize vector of hardware instructions
                 std::vector<HW_Instruction> hw_master;
 
-                // Perform 'prepz' and 'idle' operations
+                // Perform 'prepx' and 'idle' operations
                 float time = 0;
-                lq.prepx(cycles, grid, hw_master, time);
+                lq.prepx(grid, hw_master, time);
                 time = lq.idle(cycles, grid, hw_master, time);
+
+                // Enforce validity of final instruction list 
+                grid.enforce_hw_master_validity(hw_master);
+
+                // Print hardware instructions
+                print_hw_master(hw_master, occupied_sites, debug);
+
+            }
+
+            else if (s == "measz") {
+
+                // Initialize logical qubit using the grid
+                LogicalQubit lq(dx, dz, grid);
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> occupied_sites = lq.occupied_sites();
+
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
+                // Perform 'measz' operation
+                float time = 0;
+                time = lq.measz(grid, hw_master, time);
+
+                // Enforce validity of final instruction list 
+                grid.enforce_hw_master_validity(hw_master);
+
+                // Print hardware instructions
+                print_hw_master(hw_master, occupied_sites, debug);
+
+            }
+
+            else if (s == "measx") {
+
+                // Initialize logical qubit using the grid
+                LogicalQubit lq(dx, dz, grid);
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> occupied_sites = lq.occupied_sites();
+
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
+                // Perform 'measx' operation
+                float time = 0;
+                time = lq.measx(grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);

@@ -20,8 +20,10 @@ public:
 
     // Operations
     float idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    float prepz(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    float prepx(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
+    float prepz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
+    float prepx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
+    float measz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
+    float measx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
 
     // Print functions
     void print_stabilizers();

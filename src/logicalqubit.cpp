@@ -231,7 +231,7 @@ namespace TISCC
 
     }
 
-    float LogicalQubit::prepz(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+    float LogicalQubit::prepz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
 
         // Get all occupied sites
         std::set<unsigned int> sites = data_qsites();
@@ -249,10 +249,13 @@ namespace TISCC
 
         }
 
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
         return time_tmp;
     }
 
-    float LogicalQubit::prepx(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+    float LogicalQubit::prepx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
 
         // Get all occupied sites
         std::set<unsigned int> sites = data_qsites();
@@ -267,11 +270,65 @@ namespace TISCC
 
             // Add instructions
             time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-            time_tmp = TI_model.add_H(site, time_tmp, 0, grid, hw_master);
+            time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
 
         }
 
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
         return time_tmp;
+    }
+
+    float LogicalQubit::measz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+
+        // Get all occupied sites
+        std::set<unsigned int> sites = data_qsites();
+
+        // Create tmp variable for time
+        float time_tmp = 0;
+
+        // TODO: Maybe should check whether all data qubits are at their 'home' positions
+
+        // Loop over all occupied sites
+        for (unsigned int site : sites) {
+
+            // Add instructions
+            time_tmp = TI_model.add_meas(site, time, 0, grid, hw_master);
+
+        }
+
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
+        return time_tmp;
+
+    }
+
+    float LogicalQubit::measx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+
+        // Get all occupied sites
+        std::set<unsigned int> sites = data_qsites();
+
+        // Create tmp variable for time
+        float time_tmp = 0;
+
+        // TODO: Maybe should check whether all data qubits are at their 'home' positions
+
+        // Loop over all occupied sites
+        for (unsigned int site : sites) {
+
+            // Add instructions
+            time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+            time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+
+        }
+
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
+        return time_tmp;
+
     }
 
 }
