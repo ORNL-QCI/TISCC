@@ -35,7 +35,7 @@ namespace TISCC
 
     }
 
-    // Helper function to add the Prepare_Z HW_Instruction to a circuit
+    // Helper function to add the Prepare_Z HW_Instruction to a circuit given a plaquette and a qubit label
     float HardwareModel::add_init(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
@@ -53,7 +53,25 @@ namespace TISCC
 
     }
 
-    // Helper function to add H gate in terms of native TI gates to a circuit
+    // Helper function to add the Prepare_Z HW_Instruction to a circuit given a qsite
+    float HardwareModel::add_init(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_init: Can only Prepare Z at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instruction onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Prepare_Z", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Prepare_Z");
+
+    }
+
+    // Helper function to add H gate in terms of native TI gates to a circuit given a plaquette and a qubit label
     float HardwareModel::add_H(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
@@ -72,7 +90,26 @@ namespace TISCC
 
     }
 
-    // Helper function to add the Measure_Z HW_Instruction to a circuit
+    // Helper function to add H gate in terms of native TI gates to a circuit given a qsite
+    float HardwareModel::add_H(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+        
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_H: Can only apply Hadamard gates at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Y_-pi/4", site, uint_max, time, 0, 'X', ' ', 'X', 'X'));
+        circuit.push_back(HW_Instruction("Z_pi/4", site, uint_max, time + TI_ops.at("Y_-pi/4"), step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Y_-pi/4") + TI_ops.at("Z_pi/4");
+
+    }
+
+    // Helper function to add the Measure_Z HW_Instruction to a circuit given a plaquette and a qubit label
     float HardwareModel::add_meas(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
@@ -88,6 +125,21 @@ namespace TISCC
         // Return updated time
         return time + TI_ops.at("Measure_Z");
 
+    }
+
+    float HardwareModel::add_meas(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_meas: Can only apply Measure Z at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instruction onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Measure_Z", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Measure_Z");
     }
 
     // Move the measure qubit to the closest site adjacent to a data qubit
@@ -116,7 +168,7 @@ namespace TISCC
 
     }
 
-    // Helper function to add CNOT gate in terms of native TI gates to a circuit
+    // Helper function to add CNOT gate in terms of native TI gates to a circuit given a plaquette and qubit labels
     float HardwareModel::add_CNOT(Plaquette& p, char control, char target, float time, unsigned int step, const GridManager& grid, 
         std::vector<HW_Instruction>& circuit) const {
         

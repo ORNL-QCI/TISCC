@@ -74,11 +74,11 @@ namespace TISCC
                 .required(true);
         parser.add_argument()
                 .names({"-i", "--info"})
-                .description("Information to be queried (no operation will be performed). Options: {``instructions'', ``plaquettes'', ``grid''}")
+                .description("Information to be queried (no operation will be performed). Options: {instructions, plaquettes, grid}")
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {``idle'', ``prepz'', ``prepx''}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measx, measz}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -162,7 +162,7 @@ namespace TISCC
 
                 // Perform 'idle' operation
                 float time = 0;
-                lq.idle(cycles, grid, hw_master, time);
+                time = lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -184,8 +184,7 @@ namespace TISCC
                 // Perform 'prepz' and 'idle' operations
                 float time = 0;
                 lq.prepz(cycles, grid, hw_master, time);
-                time = 0; // Reset time because the above operation can be performed simultaneously with the below
-                lq.idle(cycles, grid, hw_master, time);
+                time = lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -208,8 +207,7 @@ namespace TISCC
                 // Perform 'prepz' and 'idle' operations
                 float time = 0;
                 lq.prepx(cycles, grid, hw_master, time);
-                time = 0; // Reset time because the above operation can be performed simultaneously with the below
-                lq.idle(cycles, grid, hw_master, time);
+                time = lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -219,7 +217,7 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx}" << std::endl;}
         }
 
         return 0;

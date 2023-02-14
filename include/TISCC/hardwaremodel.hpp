@@ -23,10 +23,13 @@ public:
     // Accessor functions
     const std::unordered_map<std::string, float>& get_ops() const {return TI_ops;}
 
-    // Compile gates to hardware operations
+    // Compile gates to hardware operations (one each for plaquette&qubit vs. site)
     float add_init(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
+    float add_init(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     float add_H(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
+    float add_H(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     float add_meas(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
+    float add_meas(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     float add_CNOT(Plaquette& p, char control, char target, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
 
     // Print TI_ops
