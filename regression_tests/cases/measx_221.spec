@@ -13,7 +13,7 @@
            10.0         Z_pi/4             33              0              X                             X              X
            10.0         Z_pi/4             47              0              X                             X              X
            10.0         Z_pi/4             54              0              X                             X              X
-           10.0      Measure_Z             26              1              X                             X              X
-           10.0      Measure_Z             33              1              X                             X              X
-           10.0      Measure_Z             47              1              X                             X              X
-           10.0      Measure_Z             54              1              X                             X              X
+           13.0      Measure_Z             26              1              X                             X              X
+           13.0      Measure_Z             33              1              X                             X              X
+           13.0      Measure_Z             47              1              X                             X              X
+           13.0      Measure_Z             54              1              X                             X              X

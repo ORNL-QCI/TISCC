@@ -15,13 +15,13 @@ namespace TISCC
         TI_ops["Measure_Z"] = 120;
         TI_ops["X_pi/2"] = 10;
         TI_ops["Y_pi/2"] = 10;
-        TI_ops["Z_pi/2"] = 0;
+        TI_ops["Z_pi/2"] = 3;
         TI_ops["X_pi/4"] = 10;
         TI_ops["Y_pi/4"] = 10;
-        TI_ops["Z_pi/4"] = 0;
+        TI_ops["Z_pi/4"] = 3;
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
-        TI_ops["Z_-pi/4"] = 0;
+        TI_ops["Z_-pi/4"] = 3;
 
         // Move is currently per-site for two types of sites: trapping zones and junctions
         float trap_width = 420; // um
@@ -238,7 +238,7 @@ namespace TISCC
         // Perform final rotations
         circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(control), uint_max, time, step, control, ' ', p.get_shape(), p.get_type()));
         circuit.push_back(HW_Instruction("X_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
-        time += TI_ops.at("Z_-pi/4") + TI_ops.at("X_-pi/4");
+        time += TI_ops.at("X_-pi/4");
         circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
 
         // Return updated time
