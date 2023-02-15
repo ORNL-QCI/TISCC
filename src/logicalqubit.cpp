@@ -125,6 +125,39 @@ namespace TISCC
         test_stabilizers(dx, dz);
     }
 
+    // Function to return all qsites occupied by the surface code
+    std::set<unsigned int> LogicalQubit::occupied_sites() {
+        std::set<unsigned int> sites;
+        for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
+            for (const Plaquette& p : z_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+            for (const Plaquette& p : x_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+        }
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
+        sites.erase(uint_max);
+        return sites;
+    }
+
+    // Function to return all qsites occupied by data qubits on the surface code
+    /* TODO: Maybe combine this somehow with occupied_sites by passing in a string with default value abcdm. */
+    std::set<unsigned int> LogicalQubit::data_qsites() {
+        std::set<unsigned int> sites;
+        for (char qubit : {'a', 'b', 'c', 'd'}) {
+            for (const Plaquette& p : z_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+            for (const Plaquette& p : x_plaquettes) {
+                sites.insert(p.get_qsite(qubit));
+            }
+        }
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
+        sites.erase(uint_max);
+        return sites;
+    }
+    
     // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
     float LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step, 
         const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
@@ -173,39 +206,6 @@ namespace TISCC
         return time_tmp;
     }
 
-    // Function to return all qsites occupied by the surface code
-    std::set<unsigned int> LogicalQubit::occupied_sites() {
-        std::set<unsigned int> sites;
-        for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
-            for (const Plaquette& p : z_plaquettes) {
-                sites.insert(p.get_qsite(qubit));
-            }
-            for (const Plaquette& p : x_plaquettes) {
-                sites.insert(p.get_qsite(qubit));
-            }
-        }
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
-        sites.erase(uint_max);
-        return sites;
-    }
-
-    // Function to return all qsites occupied by data qubits on the surface code
-    /* TODO: Maybe combine this somehow with occupied_sites */
-    std::set<unsigned int> LogicalQubit::data_qsites() {
-        std::set<unsigned int> sites;
-        for (char qubit : {'a', 'b', 'c', 'd'}) {
-            for (const Plaquette& p : z_plaquettes) {
-                sites.insert(p.get_qsite(qubit));
-            }
-            for (const Plaquette& p : x_plaquettes) {
-                sites.insert(p.get_qsite(qubit));
-            }
-        }
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
-        sites.erase(uint_max);
-        return sites;
-    }
-
     float LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
         
         // Loop over surface code cycles
@@ -236,8 +236,8 @@ namespace TISCC
 
     }
 
-    float LogicalQubit::prepz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
-
+    float LogicalQubit::transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+        
         // Get all occupied sites
         std::set<unsigned int> sites = data_qsites();
 
@@ -249,83 +249,24 @@ namespace TISCC
         // Loop over all occupied sites
         for (unsigned int site : sites) {
 
-            // Add instruction
-            time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+            // Add instructions by case
+            if (op == "prepz") {
+                time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+            }
 
-        }
+            else if (op == "prepx") {
+                time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+            }
 
-        // Sort master list of hardware instructions according to overloaded operator<
-        std::stable_sort(hw_master.begin(), hw_master.end());
+            else if (op == "measz") {
+                time_tmp = TI_model.add_meas(site, time, 0, grid, hw_master);
+            }
 
-        return time_tmp;
-    }
-
-    float LogicalQubit::prepx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
-
-        // Get all occupied sites
-        std::set<unsigned int> sites = data_qsites();
-
-        // Create tmp variable for time
-        float time_tmp = 0;
-
-        // TODO: Maybe should check whether all data qubits are at their 'home' positions
-
-        // Loop over all occupied sites
-        for (unsigned int site : sites) {
-
-            // Add instructions
-            time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-            time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-
-        }
-
-        // Sort master list of hardware instructions according to overloaded operator<
-        std::stable_sort(hw_master.begin(), hw_master.end());
-
-        return time_tmp;
-    }
-
-    float LogicalQubit::measz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
-
-        // Get all occupied sites
-        std::set<unsigned int> sites = data_qsites();
-
-        // Create tmp variable for time
-        float time_tmp = 0;
-
-        // TODO: Maybe should check whether all data qubits are at their 'home' positions
-
-        // Loop over all occupied sites
-        for (unsigned int site : sites) {
-
-            // Add instructions
-            time_tmp = TI_model.add_meas(site, time, 0, grid, hw_master);
-
-        }
-
-        // Sort master list of hardware instructions according to overloaded operator<
-        std::stable_sort(hw_master.begin(), hw_master.end());
-
-        return time_tmp;
-
-    }
-
-    float LogicalQubit::measx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
-
-        // Get all occupied sites
-        std::set<unsigned int> sites = data_qsites();
-
-        // Create tmp variable for time
-        float time_tmp = 0;
-
-        // TODO: Maybe should check whether all data qubits are at their 'home' positions
-
-        // Loop over all occupied sites
-        for (unsigned int site : sites) {
-
-            // Add instructions
-            time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-            time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+            else if (op == "measx") {
+                time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+            }
 
         }
 

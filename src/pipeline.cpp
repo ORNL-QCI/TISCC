@@ -118,6 +118,7 @@ namespace TISCC
         if (parser.exists("i")) 
         {
             std::string s = parser.get<std::string>("i");
+            
             if (s == "instructions") {
                 HardwareModel TI_model;
                 TI_model.print_TI_ops();
@@ -149,7 +150,9 @@ namespace TISCC
         if (parser.exists("o"))
         {
             std::string s = parser.get<std::string>("o");
-            if (s == "idle") {
+
+            // Single-qubit operations
+            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "test")) {
 
                 // Initialize logical qubit object using the grid
                 LogicalQubit lq(dx, dz, 0, 0, grid);
@@ -160,102 +163,23 @@ namespace TISCC
                 // Initialize vector of hardware instructions
                 std::vector<HW_Instruction> hw_master;
 
-                // Perform 'idle' operation
+                // Initialize time tracker
                 float time = 0;
-                time = lq.idle(cycles, grid, hw_master, time);
 
-                // Enforce validity of final instruction list 
-                grid.enforce_hw_master_validity(hw_master);
+                // Perform associated transversal operation
+                if (s != "idle") {
+                    lq.transversal_op(s, grid, hw_master, time);
+                }
 
-                // Print hardware instructions
-                print_hw_master(hw_master, occupied_sites, debug);
-            }
+                // Append an idle operation if applicable 
+                if ((s == "idle") || (s == "prepz") || (s == "prepx")) {
+                    time = lq.idle(cycles, grid, hw_master, time);
+                }
 
-            else if (s == "prepz") {
-
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-
-                // Grab all of the initially occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites();
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Perform 'prepz' and 'idle' operations
-                float time = 0;
-                lq.prepz(grid, hw_master, time);
-                time = lq.idle(cycles, grid, hw_master, time);
-
-                // Enforce validity of final instruction list 
-                grid.enforce_hw_master_validity(hw_master);
-
-                // Print hardware instructions
-                print_hw_master(hw_master, occupied_sites, debug);
-
-            }
-
-            else if (s == "prepx") {
-
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-
-                // Grab all of the initially occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites();
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Perform 'prepx' and 'idle' operations
-                float time = 0;
-                lq.prepx(grid, hw_master, time);
-                time = lq.idle(cycles, grid, hw_master, time);
-
-                // Enforce validity of final instruction list 
-                grid.enforce_hw_master_validity(hw_master);
-
-                // Print hardware instructions
-                print_hw_master(hw_master, occupied_sites, debug);
-
-            }
-
-            else if (s == "measz") {
-
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-
-                // Grab all of the initially occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites();
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Perform 'measz' operation
-                float time = 0;
-                time = lq.measz(grid, hw_master, time);
-
-                // Enforce validity of final instruction list 
-                grid.enforce_hw_master_validity(hw_master);
-
-                // Print hardware instructions
-                print_hw_master(hw_master, occupied_sites, debug);
-
-            }
-
-            else if (s == "measx") {
-
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-
-                // Grab all of the initially occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites();
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Perform 'measx' operation
-                float time = 0;
-                time = lq.measx(grid, hw_master, time);
+                // Placeholder input to help implement little test circuits
+                if (s == "test") {
+                    time = lq.test_circuits(grid, hw_master, time);
+                }
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -291,7 +215,7 @@ namespace TISCC
 
                 // Prepare the physical qubits on lq2 in the X basis
                 float time = 0;
-                lq2.prepx(grid_2, hw_master, time);
+                lq2.transversal_op("measx", grid_2, hw_master, time);
 
                 // Prepare strip of qubits in between
 
@@ -327,17 +251,6 @@ namespace TISCC
 
                 // Initialize second logical qubit object to the bottom of the first, including a strip between
                 LogicalQubit lq2(dx, dz+1, (dz+1) - 1, 0, grid_2);
-            }
-
-            // Placeholder input to help implement little test circuits
-            else if (s == "test") {
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-                std::vector<HW_Instruction> hw_master;
-                std::set<unsigned int> occupied_sites = lq.occupied_sites();
-                float time = 0;
-                time = lq.test_circuits(grid, hw_master, time);
-                grid.enforce_hw_master_validity(hw_master);
-                print_hw_master(hw_master, occupied_sites, debug);    
             }
 
             else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}
