@@ -1,0 +1,1 @@
+TISCC -x 3 -z 3 -t 3 -o "idle"
