@@ -34,6 +34,9 @@ public:
     float add_meas(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     float add_CNOT(Plaquette& p, char control, char target, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
 
+    // This is just a placeholder to apply a test gate with
+    float add_test(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
+
     // Print TI_ops
     void print_TI_ops() const;
 

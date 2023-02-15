@@ -119,7 +119,7 @@ namespace TISCC
     }
 
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : 
-        TI_model(), dx_(dx), dz_(dz), row_(row), col_(col) { 
+        dx_(dx), dz_(dz), row_(row), col_(col), TI_model() { 
         init_stabilizers(dx, dz, row, col, grid);
         init_circuits();
         test_stabilizers(dx, dz);
@@ -153,6 +153,10 @@ namespace TISCC
 
                     else if ((instr.get_name() == "Measure_Z") && (instr.get_q2() == ' ')) {
                         time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
+                    }
+
+                    else if ((instr.get_name() == "Test_Gate") && (instr.get_q2() == ' ')) {
+                        time_tmp = TI_model.add_test(p, instr.get_q1(), time, step, hw_master);
                     }
 
                     // Add CNOT gate
@@ -330,6 +334,36 @@ namespace TISCC
 
         return time_tmp;
 
+    }
+
+    // Placeholder function to help implement little test circuits
+    float LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+        // Bell state preparation
+        // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
+        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
+        // apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
+        // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 3, grid, hw_master);
+
+        // SWAP gate
+        // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
+        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
+        // time = apply_instruction(Instruction("CNOT", 'm', 'a'), z_plaquettes, time, 3, grid, hw_master);
+        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 4, grid, hw_master);
+        // time = apply_instruction(Instruction("Hadamard", 'm', ' '), z_plaquettes, time, 5, grid, hw_master);
+        // time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 6, grid, hw_master);
+        // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 6, grid, hw_master);
+
+        time = apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
+        time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
+        time = apply_instruction(Instruction("Test_Gate", 'a', ' '), z_plaquettes, time, 2, grid, hw_master);
+        time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
+        time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 4, grid, hw_master);
+
+        return time;
     }
 
 LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {

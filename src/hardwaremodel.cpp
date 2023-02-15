@@ -141,6 +141,25 @@ namespace TISCC
         // Return updated time
         return time + TI_ops.at("Measure_Z");
     }
+    
+    // This is just a placeholder to apply a test gate with
+    float HardwareModel::add_test(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
+        
+        // Perform validity check
+        if (p.grid()[p.get_qsite(qubit)] != 'O') {
+            std::cerr << "HardwareModel::add_test: Can only apply these gates at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Y_pi/2", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("X_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_pi/2"), step, qubit, ' ', p.get_shape(), p.get_type()));
+
+        // Return updated time
+        return time + TI_ops.at("Y_pi/2") + TI_ops.at("X_pi/2");
+
+    }
 
     // Move the measure qubit to the closest site adjacent to a data qubit
     void HardwareModel::move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, float& time,

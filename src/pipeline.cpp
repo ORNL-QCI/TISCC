@@ -329,6 +329,17 @@ namespace TISCC
                 LogicalQubit lq2(dx, dz+1, (dz+1) - 1, 0, grid_2);
             }
 
+            // Placeholder input to help implement little test circuits
+            else if (s == "test") {
+                LogicalQubit lq(dx, dz, 0, 0, grid);
+                std::vector<HW_Instruction> hw_master;
+                std::set<unsigned int> occupied_sites = lq.occupied_sites();
+                float time = 0;
+                time = lq.test_circuits(grid, hw_master, time);
+                grid.enforce_hw_master_validity(hw_master);
+                print_hw_master(hw_master, occupied_sites, debug);    
+            }
+
             else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}
         }
 
