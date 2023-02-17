@@ -157,7 +157,7 @@ namespace TISCC
         sites.erase(uint_max);
         return sites;
     }
-    
+
     // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
     float LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step, 
         const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
@@ -280,12 +280,12 @@ namespace TISCC
     // Placeholder function to help implement little test circuits
     float LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
         // Bell state preparation
-        // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
-        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
-        // apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
-        // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 3, grid, hw_master);
+        apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
+        time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
+        time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
+        time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
+        apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
+        time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 3, grid, hw_master);
 
         // SWAP gate
         // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
@@ -298,11 +298,11 @@ namespace TISCC
         // time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 6, grid, hw_master);
         // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 6, grid, hw_master);
 
-        time = apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
-        time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
-        time = apply_instruction(Instruction("Test_Gate", 'a', ' '), z_plaquettes, time, 2, grid, hw_master);
-        time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
-        time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 4, grid, hw_master);
+        // time = apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
+        // time = apply_instruction(Instruction("Test_Gate", 'a', ' '), z_plaquettes, time, 2, grid, hw_master);
+        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
+        // time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 4, grid, hw_master);
 
         return time;
     }

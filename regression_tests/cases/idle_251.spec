@@ -32,12 +32,12 @@
            10.0        Y_-pi/4             64              1              m                             w              X
            10.0        Y_-pi/4             36              1              m                             e              X
            10.0        Y_-pi/4             78              1              m                             e              X
-           20.0         Z_pi/4             50              1              m                             f              X
-           20.0         Z_pi/4             92              1              m                             f              X
-           20.0         Z_pi/4             22              1              m                             w              X
-           20.0         Z_pi/4             64              1              m                             w              X
-           20.0         Z_pi/4             36              1              m                             e              X
-           20.0         Z_pi/4             78              1              m                             e              X
+           20.0         Z_pi/2             50              1              m                             f              X
+           20.0         Z_pi/2             92              1              m                             f              X
+           20.0         Z_pi/2             22              1              m                             w              X
+           20.0         Z_pi/2             64              1              m                             w              X
+           20.0         Z_pi/2             36              1              m                             e              X
+           20.0         Z_pi/2             78              1              m                             e              X
            23.0        Y_-pi/4             29              2              m                             f              Z
            23.0        Y_-pi/4             71              2              m                             f              Z
            23.0        Y_-pi/4            113              2              m                             s              Z
@@ -278,12 +278,12 @@
          9480.0        Y_-pi/4             64              6              m                             w              X
          9480.0        Y_-pi/4             36              6              m                             e              X
          9480.0        Y_-pi/4             78              6              m                             e              X
-         9490.0         Z_pi/4             50              6              m                             f              X
-         9490.0         Z_pi/4             92              6              m                             f              X
-         9490.0         Z_pi/4             22              6              m                             w              X
-         9490.0         Z_pi/4             64              6              m                             w              X
-         9490.0         Z_pi/4             36              6              m                             e              X
-         9490.0         Z_pi/4             78              6              m                             e              X
+         9490.0         Z_pi/2             50              6              m                             f              X
+         9490.0         Z_pi/2             92              6              m                             f              X
+         9490.0         Z_pi/2             22              6              m                             w              X
+         9490.0         Z_pi/2             64              6              m                             w              X
+         9490.0         Z_pi/2             36              6              m                             e              X
+         9490.0         Z_pi/2             78              6              m                             e              X
          9493.0      Measure_Z             29              7              m                             f              Z
          9493.0      Measure_Z             71              7              m                             f              Z
          9493.0      Measure_Z            113              7              m                             s              Z

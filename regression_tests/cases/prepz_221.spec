@@ -14,8 +14,8 @@
             0.0      Prepare_Z             36              0              m                             e              X
            10.0        Y_-pi/4             22              1              m                             w              X
            10.0        Y_-pi/4             36              1              m                             e              X
-           20.0         Z_pi/4             22              1              m                             w              X
-           20.0         Z_pi/4             36              1              m                             e              X
+           20.0         Z_pi/2             22              1              m                             w              X
+           20.0         Z_pi/2             36              1              m                             e              X
            23.0        Y_-pi/4             29              2              m                             f              Z
            23.0        Y_-pi/4             33              2              a                             e              X
            33.0           Move          29,30              2              m                             f              Z
@@ -90,8 +90,8 @@
          9036.0        Z_-pi/4             47              5              d                             w              X
          9039.0        Y_-pi/4             22              6              m                             w              X
          9039.0        Y_-pi/4             36              6              m                             e              X
-         9049.0         Z_pi/4             22              6              m                             w              X
-         9049.0         Z_pi/4             36              6              m                             e              X
+         9049.0         Z_pi/2             22              6              m                             w              X
+         9049.0         Z_pi/2             36              6              m                             e              X
          9052.0      Measure_Z             29              7              m                             f              Z
          9052.0      Measure_Z             22              7              m                             w              X
          9052.0      Measure_Z             36              7              m                             e              X

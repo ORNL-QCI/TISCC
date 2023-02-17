@@ -27,10 +27,6 @@ public:
     // Operations
     float idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
     float transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    // float prepz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    // float prepx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    // float measz(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    // float measx(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
 
     // Placeholder function to help implement little test circuits
     float test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
