@@ -1,8 +1,7 @@
 # Regression test suite for `tiscc`
 
 ## Basic usage
-1. Make sure to have initialized submodules (`git submodule init && git submodule update --remote`) and built in either
-`build`,`cmake-build-debug` or `cmake-build-release` (or edit the top of `suite.py` to specify a particular location).
+1. Make sure to have built in either `build`,`cmake-build-debug` or `cmake-build-release` (or edit the top of `suite.py` to specify a particular location).
 2. Enter the `regression_tests` directory and run `./suite.py`
 
 The output will show if some tests are failing.
@@ -33,4 +32,4 @@ forwarded over.
 
 ### Attribution
 
-Everything in this directory (including most of this README file) was originally written by George Watkins for the [liblsqecc package] (https://github.com/latticesurgery-com/liblsqecc).
+Everything in this directory (including most of this README file) was originally written by George Watkins for the [liblsqecc package](https://github.com/latticesurgery-com/liblsqecc).
