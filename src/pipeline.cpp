@@ -9,6 +9,9 @@
 #include <iostream>
 #include <cassert>
 #include <limits>
+#include <algorithm>
+#include <set>
+#include <iterator>
 
 namespace TISCC 
 {
@@ -115,7 +118,10 @@ namespace TISCC
         GridManager grid(nrows, ncols);
 
         // Query information (no operation will be performed)
-        if (parser.exists("i")) 
+        if ((parser.exists("i")) && (parser.exists("o"))) {
+            std::cerr << "The -i and -o flags are mutually exclusive." << std::endl;
+        }
+        else if (parser.exists("i"))
         {
             std::string s = parser.get<std::string>("i");
             
@@ -191,35 +197,61 @@ namespace TISCC
 
             else if (s == "extendx") {
 
+                // Two cases: odd vs. even dx determine whether we need one or two strips of qubits between 
+                unsigned int extra_strip = 0;
+                if (dx%2==0) {
+                    extra_strip = 1;
+                }
+
                 // Construct grid with appropriate dimensions to hold two tiles side-by-side with a vertical strip of qubits in between
                 unsigned int nrows = dz+1; 
-                unsigned int ncols = 2*(dx+1);
+                unsigned int ncols = 2*(dx+1) + extra_strip;
                 GridManager grid_2(nrows, ncols);
 
                 // Initialize logical qubit object using the grid
                 LogicalQubit lq1(dx, dz, 0, 0, grid_2);
 
                 // Initialize second logical qubit object to the right of the first
-                LogicalQubit lq2(dx, dz, 0, dx+1, grid_2);
-
-                // Initialize second logical qubit object to the right of the first, including a strip between
-                // LogicalQubit lq2(dx+1, dz, 0, (dx+1) - 1, grid_2);
-
-                // Grab all of the initially occupied sites (to be used in printing)
-                std::set<unsigned int> lq1_occupied = lq1.occupied_sites();
-                std::set<unsigned int> occupied_sites = lq2.occupied_sites();
-                occupied_sites.insert(lq1_occupied.begin(), lq1_occupied.end());
+                LogicalQubit lq2(dx, dz, 0, dx+1+extra_strip, grid_2);
 
                 // Initialize vector of hardware instructions
                 std::vector<HW_Instruction> hw_master;
 
                 // Prepare the physical qubits on lq2 in the X basis
                 float time = 0;
-                lq2.transversal_op("measx", grid_2, hw_master, time);
+                lq2.transversal_op("prepx", grid_2, hw_master, time);             
 
-                // Prepare strip of qubits in between
+                // Create a merged qubit
+                LogicalQubit lq = merge(lq1, lq2, grid_2);
 
-                // Merge the qubits together
+                // std::cout << "Logical Qubit 1:" << std::endl;
+                // lq1.print_stabilizers();
+
+                // std::cout << "Logical Qubit 2:" << std::endl;
+                // lq2.print_stabilizers();
+
+                // std::cout << "Logical Qubit (merged):" << std::endl;
+                // lq.print_stabilizers();
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> all_qsites = lq.occupied_sites();
+
+                // Grab all of the data qsites on the strip using set_difference (this currently doesn't work)
+                std::set<unsigned int> data_qsites = lq.data_qsites();
+                std::set<unsigned int> data_qsites_tmp;
+                std::set_difference(data_qsites.begin(), data_qsites.end(), lq1.data_qsites().begin(), lq1.data_qsites().end(),
+                    std::insert_iterator<std::set<unsigned int>>(data_qsites_tmp, data_qsites_tmp.end()));
+                std::set<unsigned int> data_qsites_strip;
+                std::set_difference(data_qsites_tmp.begin(), data_qsites_tmp.end(), lq2.data_qsites().begin(), lq2.data_qsites().end(),
+                    std::insert_iterator<std::set<unsigned int>>(data_qsites_strip, data_qsites_strip.end()));
+
+                // Prepare qsites on the strip
+                float time_tmp = 0;
+                HardwareModel TI_model;
+                for (unsigned int site : data_qsites_strip) {
+                    time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                    time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                }
 
                 // Perform 'idle' operation on the merged qubit
                 // time = lq2.idle(cycles, grid_2, hw_master, time);
@@ -233,13 +265,19 @@ namespace TISCC
                 // }
 
                 // Print hardware instructions
-                print_hw_master(hw_master, occupied_sites, debug);
+                print_hw_master(hw_master, all_qsites, debug);
             }
 
             else if (s == "extendz") {
 
+                // Two cases: odd vs. even dz determine whether we need one or two strips of qubits between 
+                unsigned int extra_strip = 0;
+                if (dz%2==0) {
+                    extra_strip = 1;
+                }
+
                 // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
-                unsigned int nrows = 2*(dz+1); 
+                unsigned int nrows = 2*(dz+1) + extra_strip; 
                 unsigned int ncols = dx+1;
                 GridManager grid_2(nrows, ncols);
 
@@ -247,10 +285,43 @@ namespace TISCC
                 LogicalQubit lq1(dx, dz, 0, 0, grid_2);
 
                 // Initialize second logical qubit object to the bottom of the first
-                // LogicalQubit lq2(dx, dz, dz+1, 0, grid_2);
+                LogicalQubit lq2(dx, dz, dz+1+extra_strip, 0, grid_2);
 
                 // Initialize second logical qubit object to the bottom of the first, including a strip between
-                LogicalQubit lq2(dx, dz+1, (dz+1) - 1, 0, grid_2);
+                // LogicalQubit lq2(dx, dz+1, (dz+1) - 1, 0, grid_2);
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> lq1_occupied = lq1.occupied_sites();
+                std::set<unsigned int> occupied_sites = lq2.occupied_sites();
+                occupied_sites.insert(lq1_occupied.begin(), lq1_occupied.end());
+
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
+                // Prepare the physical qubits on lq2 in the Z basis
+                float time = 0;
+                lq2.transversal_op("prepz", grid_2, hw_master, time);
+
+                // Prepare strip of qubits in between (also add them to occupied_sites list)
+
+                // Merge the qubits together
+                LogicalQubit lq = merge(lq1, lq2, grid_2);
+
+                std::cout << "Logical Qubit 1:" << std::endl;
+                lq1.print_stabilizers();
+
+                std::cout << "Logical Qubit 2:" << std::endl;
+                lq2.print_stabilizers();
+
+                std::cout << "Logical Qubit (merged):" << std::endl;
+                lq.print_stabilizers();
+
+                // Perform 'idle' operation on the merged qubit
+                // time = lq2.idle(cycles, grid_2, hw_master, time);
+
+                // Enforce validity of final instruction list 
+                grid_2.enforce_hw_master_validity(hw_master);
+
             }
 
             else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}

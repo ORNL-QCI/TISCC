@@ -76,8 +76,8 @@ private:
 
 };
 
-// 
-LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2);
+// Construct and return a logical qubit that represents the merged product of two input logical qubits
+LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid);
 
 }
 

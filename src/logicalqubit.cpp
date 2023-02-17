@@ -307,33 +307,39 @@ namespace TISCC
         return time;
     }
 
+// Construct and return a logical qubit that represents the merged product of two input logical qubits
 LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 
     // Determine whether to merge horizontally or vertically and set parameters
+
+    // If they are horizontally displaced,
     if (lq1.get_row() == lq2.get_row()) {
-        // Constraints
+
+        // We require them to have the same code distance
         assert(lq1.get_dz() == lq2.get_dz());
-        assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1);
+
         // Merge horizontally
-        unsigned int dx = lq1.get_dx() + lq2.get_dx() + 1;
-        unsigned int dz = lq1.get_dz();
-        unsigned int row = lq1.get_row();
-        unsigned int col = lq1.get_col();
-        if (lq2.get_col() < lq1.get_col()) {col = lq2.get_col();}
-        return LogicalQubit(dx, dz, row, col, grid);
+        unsigned int extra_strip = 0;
+        if (lq1.get_dx()%2 == 0) {extra_strip = 1;}
+        assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1 + extra_strip);
+        return LogicalQubit(lq1.get_dx() + lq2.get_dx() + 1 + extra_strip, lq1.get_dz(), lq1.get_row(), lq1.get_col(), grid);
+
     }
+
+    // Otherwise, if they are vertically displaced,
     else if (lq1.get_col() == lq2.get_col()) {
-        // Constraints
+
+        // We require them to have the same x code distance
         assert(lq1.get_dx() == lq2.get_dx());
-        assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1);
+
         // Merge vertically
-        unsigned int dx = lq1.get_dx();
-        unsigned int dz = lq1.get_dz() + lq2.get_dz() + 1;
-        unsigned int row = lq1.get_row();
-        unsigned int col = lq1.get_col();
-        if (lq2.get_row() < lq1.get_row()) {row = lq2.get_row();}   
-        return LogicalQubit(dx, dz, row, col, grid);     
+        unsigned int extra_strip = 0;
+        if (lq1.get_dz()%2 == 0) {extra_strip = 1;} 
+        assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1 + extra_strip);
+        return LogicalQubit(lq1.get_dx(), lq1.get_dz() + lq2.get_dz() + 1 + extra_strip, lq1.get_row(), lq1.get_col(), grid); 
+
     }
+
     else {
         std::cerr << "merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
         abort();
