@@ -277,6 +277,19 @@ namespace TISCC
 
     }
 
+    std::set<unsigned int> LogicalQubit::get_strip(LogicalQubit& lq1, LogicalQubit& lq2) {
+        std::set<unsigned int> data = data_qsites();
+        std::set<unsigned int> lq1_data = lq1.data_qsites();
+        std::set<unsigned int> lq2_data = lq2.data_qsites();
+        std::set<unsigned int> strip;
+        for (unsigned int lq_site : data) {
+            if ((lq1_data.find(lq_site) == lq1_data.end()) && (lq2_data.find(lq_site) == lq2_data.end())) {
+                strip.insert(lq_site);
+            }
+        }
+        return strip;
+    }
+
     // Placeholder function to help implement little test circuits
     float LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
         // Bell state preparation

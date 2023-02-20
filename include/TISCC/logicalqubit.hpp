@@ -40,6 +40,9 @@ public:
     // Function to output all qsites occupied by data qubits on the surface code
     std::set<unsigned int> data_qsites();
 
+    // Helper function to return the data qubits from this patch that are NOT occupied by two others
+    std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
+
 private:
     // Code distances
     unsigned int dx_;

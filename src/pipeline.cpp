@@ -236,33 +236,23 @@ namespace TISCC
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
-                // Grab all of the data qsites on the strip using set_difference (this currently doesn't work)
-                std::set<unsigned int> data_qsites = lq.data_qsites();
-                std::set<unsigned int> data_qsites_tmp;
-                std::set_difference(data_qsites.begin(), data_qsites.end(), lq1.data_qsites().begin(), lq1.data_qsites().end(),
-                    std::insert_iterator<std::set<unsigned int>>(data_qsites_tmp, data_qsites_tmp.end()));
-                std::set<unsigned int> data_qsites_strip;
-                std::set_difference(data_qsites_tmp.begin(), data_qsites_tmp.end(), lq2.data_qsites().begin(), lq2.data_qsites().end(),
-                    std::insert_iterator<std::set<unsigned int>>(data_qsites_strip, data_qsites_strip.end()));
+                // Grab all of the qsites on the `strip' between lq1 and lq2
+                std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
                 // Prepare qsites on the strip
                 float time_tmp = 0;
                 HardwareModel TI_model;
-                for (unsigned int site : data_qsites_strip) {
-                    time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                    time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                for (unsigned int site : strip) {
+                    std::cout << site << std::endl;
+                    time_tmp = TI_model.add_init(site, time, 0, grid_2, hw_master);
+                    time_tmp = TI_model.add_H(site, time_tmp, 1, grid_2, hw_master);
                 }
 
                 // Perform 'idle' operation on the merged qubit
-                // time = lq2.idle(cycles, grid_2, hw_master, time);
+                time = lq.idle(cycles, grid_2, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid_2.enforce_hw_master_validity(hw_master);
-
-                // Shift (useful for debugging qubit placement on grid)
-                // for (HW_Instruction& i : hw_master) {
-                //     i = HW_Instruction(i, 0, -(dx+1), grid_2);
-                // }
 
                 // Print hardware instructions
                 print_hw_master(hw_master, all_qsites, debug);
@@ -307,20 +297,37 @@ namespace TISCC
                 // Merge the qubits together
                 LogicalQubit lq = merge(lq1, lq2, grid_2);
 
-                std::cout << "Logical Qubit 1:" << std::endl;
-                lq1.print_stabilizers();
+                // std::cout << "Logical Qubit 1:" << std::endl;
+                // lq1.print_stabilizers();
 
-                std::cout << "Logical Qubit 2:" << std::endl;
-                lq2.print_stabilizers();
+                // std::cout << "Logical Qubit 2:" << std::endl;
+                // lq2.print_stabilizers();
 
-                std::cout << "Logical Qubit (merged):" << std::endl;
-                lq.print_stabilizers();
+                // std::cout << "Logical Qubit (merged):" << std::endl;
+                // lq.print_stabilizers();
+
+                // Grab all of the initially occupied sites (to be used in printing)
+                std::set<unsigned int> all_qsites = lq.occupied_sites();
+
+                // Grab all of the qsites on the `strip' between lq1 and lq2
+                std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
+
+                // Prepare qsites on the strip
+                float time_tmp = 0;
+                HardwareModel TI_model;
+                for (unsigned int site : strip) {
+                    std::cout << site << std::endl;
+                    time_tmp = TI_model.add_init(site, time, 0, grid_2, hw_master);
+                }
 
                 // Perform 'idle' operation on the merged qubit
-                // time = lq2.idle(cycles, grid_2, hw_master, time);
+                time = lq2.idle(cycles, grid_2, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid_2.enforce_hw_master_validity(hw_master);
+
+                // Print hardware instructions
+                print_hw_master(hw_master, all_qsites, debug);
 
             }
 
