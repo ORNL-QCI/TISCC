@@ -224,14 +224,14 @@ namespace TISCC
                 // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid_2);
 
-                std::cout << "Logical Qubit 1:" << std::endl;
-                lq1.print_stabilizers();
+                // std::cout << "Logical Qubit 1:" << std::endl;
+                // lq1.print_stabilizers();
 
-                std::cout << "Logical Qubit 2:" << std::endl;
-                lq2.print_stabilizers();
+                // std::cout << "Logical Qubit 2:" << std::endl;
+                // lq2.print_stabilizers();
 
-                std::cout << "Logical Qubit (merged):" << std::endl;
-                lq.print_stabilizers();
+                // std::cout << "Logical Qubit (merged):" << std::endl;
+                // lq.print_stabilizers();
 
                 // Grab all of the larger patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
