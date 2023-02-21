@@ -277,6 +277,7 @@ namespace TISCC
 
     }
 
+    // Helper function to return the data qubits from this patch that are NOT occupied by two others
     std::set<unsigned int> LogicalQubit::get_strip(LogicalQubit& lq1, LogicalQubit& lq2) {
         std::set<unsigned int> data = data_qsites();
         std::set<unsigned int> lq1_data = lq1.data_qsites();

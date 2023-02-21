@@ -224,26 +224,25 @@ namespace TISCC
                 // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid_2);
 
-                // std::cout << "Logical Qubit 1:" << std::endl;
-                // lq1.print_stabilizers();
+                std::cout << "Logical Qubit 1:" << std::endl;
+                lq1.print_stabilizers();
 
-                // std::cout << "Logical Qubit 2:" << std::endl;
-                // lq2.print_stabilizers();
+                std::cout << "Logical Qubit 2:" << std::endl;
+                lq2.print_stabilizers();
 
-                // std::cout << "Logical Qubit (merged):" << std::endl;
-                // lq.print_stabilizers();
+                std::cout << "Logical Qubit (merged):" << std::endl;
+                lq.print_stabilizers();
 
-                // Grab all of the initially occupied sites (to be used in printing)
+                // Grab all of the larger patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
-                // Prepare qsites on the strip
+                // Prepare qsites on the strip in the X basis
                 float time_tmp = 0;
                 HardwareModel TI_model;
                 for (unsigned int site : strip) {
-                    std::cout << site << std::endl;
                     time_tmp = TI_model.add_init(site, time, 0, grid_2, hw_master);
                     time_tmp = TI_model.add_H(site, time_tmp, 1, grid_2, hw_master);
                 }
@@ -277,14 +276,6 @@ namespace TISCC
                 // Initialize second logical qubit object to the bottom of the first
                 LogicalQubit lq2(dx, dz, dz+1+extra_strip, 0, grid_2);
 
-                // Initialize second logical qubit object to the bottom of the first, including a strip between
-                // LogicalQubit lq2(dx, dz+1, (dz+1) - 1, 0, grid_2);
-
-                // Grab all of the initially occupied sites (to be used in printing)
-                std::set<unsigned int> lq1_occupied = lq1.occupied_sites();
-                std::set<unsigned int> occupied_sites = lq2.occupied_sites();
-                occupied_sites.insert(lq1_occupied.begin(), lq1_occupied.end());
-
                 // Initialize vector of hardware instructions
                 std::vector<HW_Instruction> hw_master;
 
@@ -292,9 +283,7 @@ namespace TISCC
                 float time = 0;
                 lq2.transversal_op("prepz", grid_2, hw_master, time);
 
-                // Prepare strip of qubits in between (also add them to occupied_sites list)
-
-                // Merge the qubits together
+                // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid_2);
 
                 // std::cout << "Logical Qubit 1:" << std::endl;
@@ -306,18 +295,16 @@ namespace TISCC
                 // std::cout << "Logical Qubit (merged):" << std::endl;
                 // lq.print_stabilizers();
 
-                // Grab all of the initially occupied sites (to be used in printing)
+                // Grab all of the larger patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
-                // Prepare qsites on the strip
-                float time_tmp = 0;
+                // Prepare qsites on the strip in the Z basis
                 HardwareModel TI_model;
                 for (unsigned int site : strip) {
-                    std::cout << site << std::endl;
-                    time_tmp = TI_model.add_init(site, time, 0, grid_2, hw_master);
+                    TI_model.add_init(site, time, 0, grid_2, hw_master);
                 }
 
                 // Perform 'idle' operation on the merged qubit
@@ -328,7 +315,6 @@ namespace TISCC
 
                 // Print hardware instructions
                 print_hw_master(hw_master, all_qsites, debug);
-
             }
 
             else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}
