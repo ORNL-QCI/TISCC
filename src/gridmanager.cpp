@@ -1,10 +1,12 @@
 #include <TISCC/gridmanager.hpp>
 #include <TISCC/plaquette.hpp>
 
+#include <iomanip>
 #include <limits>
 #include <cassert>
 #include <map>
 #include <algorithm>
+#include <iostream>
 
 namespace TISCC 
 {
@@ -332,11 +334,27 @@ namespace TISCC
 
     // Print out grid
     void GridManager::print_grid() const {
+
+        // I/O settings
+        int W = 5;
+        std::cout << std::setprecision(1);
+        std::cout << std::setiosflags(std::ios::fixed);
+
+        std::cout << std::setw(W) << "Row";
+        std::cout << std::setw(W) << "Col";
+        std::cout << std::setw(35) << "Qsites (repeating unit: MOMJMOM)" << std::endl;
+
         for (unsigned int i=0; i<nrows_; i++) {
             for (unsigned int j=0; j<ncols_; j++) {
-                std::cout << i << " " << j << " ";
+
+                // Print out row and column
+                std::cout << std::setw(W) << i;
+                std::cout << std::setw(W) << j;
+                std::cout << std::setw(W);
+
+                // Print out qsites of repeating unit
                 for (unsigned int k=0; k<7; k++) {
-                    std::cout << grid_[(i*ncols_+j)*7+k];
+                    std::cout << (i*ncols_+j)*7+k << " ";
                 }
                 std::cout << std::endl;
             }

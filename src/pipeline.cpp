@@ -87,11 +87,10 @@ namespace TISCC
                 .names({"-d", "--debug"})
                 .description("Provide extra output for the purpose of debugging")
                 .required(false);
-        // TODO: Implement resource counting and make available via this flag
-        // parser.add_argument()
-        //         .names({"-r", "--resources"})
-        //         .description("Provide resource estimates")
-        //         .required(false);
+        parser.add_argument()
+                .names({"-r", "--resources"})
+                .description("Provide resource estimates")
+                .required(false);
         
         parser.enable_help();
         auto err = parser.parse(argc, argv);
@@ -112,10 +111,10 @@ namespace TISCC
         unsigned int dz = parser.get<unsigned int>("z");
         unsigned int cycles = parser.get<unsigned int>("t");
 
-        // Initializing grid using GridManager object
-        unsigned int nrows = dz+1; 
-        unsigned int ncols = dx+1;
-        GridManager grid(nrows, ncols);
+        // Designate the number rows and columns for a single tile
+        // Note: We add one or two buffer strips of qubits depending on whether the code distance is even or odd
+        unsigned int nrows = dz+1+!(dz%2); 
+        unsigned int ncols = dx+1+!(dx%2);
 
         // Query information (no operation will be performed)
         if ((parser.exists("i")) && (parser.exists("o"))) {
@@ -125,17 +124,24 @@ namespace TISCC
         {
             std::string s = parser.get<std::string>("i");
             
+            /* TODO: This option does not depend on any grid allocation, so it should be decoupled from 
+                command line options related to that. */
             if (s == "instructions") {
                 HardwareModel TI_model;
                 TI_model.print_TI_ops();
             }
 
+            /* TODO: It would probably make more sense to print the measure qsite rather than the junction. */
             else if (s == "plaquettes") {
+                GridManager grid(nrows, ncols);
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_stabilizers();
             }
 
+            /* TODO: A better output format for the grid might be row, col, and a list of qsites.
+                - Perhaps a commented header could describe the format and the repeating unit. */            
             else if (s == "grid") {
+                GridManager grid(nrows, ncols);
                 grid.print_grid();
             }
 
@@ -146,7 +152,7 @@ namespace TISCC
             return 0;
         }
 
-        // If debugging output is requested, create a bool pass into functions below
+        // If debugging output is requested, create a bool to pass into functions below
         bool debug = false;
         if (parser.exists("d")) {
             debug = true;
@@ -157,8 +163,11 @@ namespace TISCC
         {
             std::string s = parser.get<std::string>("o");
 
-            // Single-qubit operations
+            // Single-tile operations
             if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "test")) {
+                
+                // Initializing grid using GridManager object. 
+                GridManager grid(nrows, ncols);
 
                 // Initialize logical qubit object using the grid
                 LogicalQubit lq(dx, dz, 0, 0, grid);
@@ -187,13 +196,48 @@ namespace TISCC
                     time = lq.test_circuits(grid, hw_master, time);
                 }
 
-                // Enforce validity of final instruction list 
+                // Enforce validity of final instruction list
+                /* TODO: 
+                    - Instead of 'enforcing' hardware validity in this fashion, maybe the circuits itself 
+                    should contain Idles in locations where we know waiting might need to occur.
+                    - However, what we have might make more sense since then a user does not need to account 
+                    for validity up front, but rather the compiler 'makes it work' given hardware constraints. */ 
                 grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
                 print_hw_master(hw_master, occupied_sites, debug);
 
             }
+
+            // Two-qubit operations
+            // else if ((s == "contractx") || (s == "contractz") || (s == "mergex") || (s == "mergez") || 
+            //     (s == "bellmeasx") || (s == "bellmeasz") || (s == "extendx") || (s == "extendz")) {
+
+            // }
+
+            // else if (s == "contractx") {
+
+            // }
+
+            // else if (s == "contractz") {
+
+            // }
+
+            // else if (s == "mergex") {
+
+            // }
+
+            // else if (s == "mergez") {
+
+            // }
+
+            // else if (s == "bellmeasurex") {
+
+            // }
+
+            // else if (s == "bellmeasurez") {
+
+            // }
 
             else if (s == "extendx") {
 
@@ -206,23 +250,23 @@ namespace TISCC
                 // Construct grid with appropriate dimensions to hold two tiles side-by-side with a vertical strip of qubits in between
                 unsigned int nrows = dz+1; 
                 unsigned int ncols = 2*(dx+1) + extra_strip;
-                GridManager grid_2(nrows, ncols);
+                GridManager grid(nrows, ncols);
 
                 // Initialize logical qubit object using the grid
-                LogicalQubit lq1(dx, dz, 0, 0, grid_2);
+                LogicalQubit lq1(dx, dz, 0, 0, grid);
 
                 // Initialize second logical qubit object to the right of the first
-                LogicalQubit lq2(dx, dz, 0, dx+1+extra_strip, grid_2);
+                LogicalQubit lq2(dx, dz, 0, dx+1+extra_strip, grid);
 
                 // Initialize vector of hardware instructions
                 std::vector<HW_Instruction> hw_master;
 
                 // Prepare the physical qubits on lq2 in the X basis
                 float time = 0;
-                lq2.transversal_op("prepx", grid_2, hw_master, time);             
+                lq2.transversal_op("prepx", grid, hw_master, time);             
 
                 // Create a merged qubit
-                LogicalQubit lq = merge(lq1, lq2, grid_2);
+                LogicalQubit lq = merge(lq1, lq2, grid);
 
                 // std::cout << "Logical Qubit 1:" << std::endl;
                 // lq1.print_stabilizers();
@@ -243,15 +287,15 @@ namespace TISCC
                 float time_tmp = 0;
                 HardwareModel TI_model;
                 for (unsigned int site : strip) {
-                    time_tmp = TI_model.add_init(site, time, 0, grid_2, hw_master);
-                    time_tmp = TI_model.add_H(site, time_tmp, 1, grid_2, hw_master);
+                    time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                    time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
                 }
 
                 // Perform 'idle' operation on the merged qubit
-                time = lq.idle(cycles, grid_2, hw_master, time);
+                time = lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
-                grid_2.enforce_hw_master_validity(hw_master);
+                grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
                 print_hw_master(hw_master, all_qsites, debug);
@@ -268,23 +312,23 @@ namespace TISCC
                 // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
                 unsigned int nrows = 2*(dz+1) + extra_strip; 
                 unsigned int ncols = dx+1;
-                GridManager grid_2(nrows, ncols);
+                GridManager grid(nrows, ncols);
 
                 // Initialize logical qubit object using the grid
-                LogicalQubit lq1(dx, dz, 0, 0, grid_2);
+                LogicalQubit lq1(dx, dz, 0, 0, grid);
 
                 // Initialize second logical qubit object to the bottom of the first
-                LogicalQubit lq2(dx, dz, dz+1+extra_strip, 0, grid_2);
+                LogicalQubit lq2(dx, dz, dz+1+extra_strip, 0, grid);
 
                 // Initialize vector of hardware instructions
                 std::vector<HW_Instruction> hw_master;
 
                 // Prepare the physical qubits on lq2 in the Z basis
                 float time = 0;
-                lq2.transversal_op("prepz", grid_2, hw_master, time);
+                lq2.transversal_op("prepz", grid, hw_master, time);
 
                 // Create a merged qubit
-                LogicalQubit lq = merge(lq1, lq2, grid_2);
+                LogicalQubit lq = merge(lq1, lq2, grid);
 
                 // std::cout << "Logical Qubit 1:" << std::endl;
                 // lq1.print_stabilizers();
@@ -304,14 +348,14 @@ namespace TISCC
                 // Prepare qsites on the strip in the Z basis
                 HardwareModel TI_model;
                 for (unsigned int site : strip) {
-                    TI_model.add_init(site, time, 0, grid_2, hw_master);
+                    TI_model.add_init(site, time, 0, grid, hw_master);
                 }
 
                 // Perform 'idle' operation on the merged qubit
-                time = lq2.idle(cycles, grid_2, hw_master, time);
+                time = lq2.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
-                grid_2.enforce_hw_master_validity(hw_master);
+                grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
                 print_hw_master(hw_master, all_qsites, debug);

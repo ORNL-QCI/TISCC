@@ -1,19 +1,19 @@
-           -1.0       Qubit_at             22
-           -1.0       Qubit_at             26
            -1.0       Qubit_at             29
            -1.0       Qubit_at             33
            -1.0       Qubit_at             36
-           -1.0       Qubit_at             47
-           -1.0       Qubit_at             54
-            0.0        Y_-pi/4             26
+           -1.0       Qubit_at             40
+           -1.0       Qubit_at             43
+           -1.0       Qubit_at             61
+           -1.0       Qubit_at             68
             0.0        Y_-pi/4             33
-            0.0        Y_-pi/4             47
-            0.0        Y_-pi/4             54
-           10.0         Z_pi/2             26
+            0.0        Y_-pi/4             40
+            0.0        Y_-pi/4             61
+            0.0        Y_-pi/4             68
            10.0         Z_pi/2             33
-           10.0         Z_pi/2             47
-           10.0         Z_pi/2             54
-           13.0      Measure_Z             26
+           10.0         Z_pi/2             40
+           10.0         Z_pi/2             61
+           10.0         Z_pi/2             68
            13.0      Measure_Z             33
-           13.0      Measure_Z             47
-           13.0      Measure_Z             54
+           13.0      Measure_Z             40
+           13.0      Measure_Z             61
+           13.0      Measure_Z             68
