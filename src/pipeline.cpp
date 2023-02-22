@@ -241,32 +241,17 @@ namespace TISCC
 
             else if (s == "extendx") {
 
-                // Two cases: odd vs. even dx determine whether we need one or two strips of qubits between 
-                unsigned int extra_strip = 0;
-                if (dx%2==0) {
-                    extra_strip = 1;
-                }
-
-                // Construct grid with appropriate dimensions to hold two tiles side-by-side with a vertical strip of qubits in between
-                unsigned int nrows = dz+1; 
-                unsigned int ncols = 2*(dx+1) + extra_strip;
-                GridManager grid(nrows, ncols);
+                // Construct grid with room for two tiles arranged horizontally
+                GridManager grid(nrows, 2*ncols);
 
                 // Initialize logical qubit object using the grid
                 LogicalQubit lq1(dx, dz, 0, 0, grid);
 
                 // Initialize second logical qubit object to the right of the first
-                LogicalQubit lq2(dx, dz, 0, dx+1+extra_strip, grid);
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Prepare the physical qubits on lq2 in the X basis
-                float time = 0;
-                lq2.transversal_op("prepx", grid, hw_master, time);             
+                LogicalQubit lq2(dx, dz, 0, ncols, grid);
 
                 // Create a merged qubit
-                LogicalQubit lq = merge(lq1, lq2, grid);
+                LogicalQubit lq = merge(lq1, lq2, grid);           
 
                 // std::cout << "Logical Qubit 1:" << std::endl;
                 // lq1.print_stabilizers();
@@ -277,11 +262,18 @@ namespace TISCC
                 // std::cout << "Logical Qubit (merged):" << std::endl;
                 // lq.print_stabilizers();
 
-                // Grab all of the larger patch's occupied sites (to be used in printing)
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;  
+
+                // Grab all of the merged patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
+
+                // Prepare the physical qubits on lq2 in the X basis
+                float time = 0;
+                lq2.transversal_op("prepx", grid, hw_master, time);
 
                 // Prepare qsites on the strip in the X basis
                 float time_tmp = 0;
@@ -303,29 +295,14 @@ namespace TISCC
 
             else if (s == "extendz") {
 
-                // Two cases: odd vs. even dz determine whether we need one or two strips of qubits between 
-                unsigned int extra_strip = 0;
-                if (dz%2==0) {
-                    extra_strip = 1;
-                }
-
                 // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
-                unsigned int nrows = 2*(dz+1) + extra_strip; 
-                unsigned int ncols = dx+1;
-                GridManager grid(nrows, ncols);
+                GridManager grid(2*nrows, ncols);
 
                 // Initialize logical qubit object using the grid
                 LogicalQubit lq1(dx, dz, 0, 0, grid);
 
                 // Initialize second logical qubit object to the bottom of the first
-                LogicalQubit lq2(dx, dz, dz+1+extra_strip, 0, grid);
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Prepare the physical qubits on lq2 in the Z basis
-                float time = 0;
-                lq2.transversal_op("prepz", grid, hw_master, time);
+                LogicalQubit lq2(dx, dz, nrows, 0, grid);
 
                 // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid);
@@ -339,11 +316,18 @@ namespace TISCC
                 // std::cout << "Logical Qubit (merged):" << std::endl;
                 // lq.print_stabilizers();
 
+                // Initialize vector of hardware instructions
+                std::vector<HW_Instruction> hw_master;
+
                 // Grab all of the larger patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
+
+                // Prepare the physical qubits on lq2 in the Z basis
+                float time = 0;
+                lq2.transversal_op("prepz", grid, hw_master, time);
 
                 // Prepare qsites on the strip in the Z basis
                 HardwareModel TI_model;
