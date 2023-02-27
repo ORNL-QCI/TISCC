@@ -337,25 +337,43 @@ namespace TISCC
 
         // IO Settings
         std::cout.precision(3);
-        std::cout << std::scientific;
 
         // Instantiate HardwareModel
         HardwareModel TI_model;
 
         // Obtain linear dimensions of the grid (four trapping zone widths per row or column)
-        double z_dim = nrows_ * 4 * TI_model.get_trap_width() / 1000000; // m
-        double x_dim = ncols_ * 4 * TI_model.get_trap_width() / 1000000;
+        double cell_width = TI_model.get_cell_width() / 1000000; // convert to meters
+        double z_dim = nrows_ * cell_width; 
+        double x_dim = ncols_ * cell_width;
+
+        // Total number of sites
+        unsigned int n_sites = nrows_*ncols_*7;
 
         // Computation time
         double time = hw_master.back().get_time();
         double time_tmp = 0;
 
+        // Map to compute zone-seconds per op
+        std::unordered_map<std::string, double> op_vol;
+        for (const auto & [ key, value ] : TI_model.get_ops()) {
+            op_vol[key] = 0;
+        }
+
         // Loop over instructions
         for (const HW_Instruction& instruction : hw_master) {
 
-            if (instruction.get_time() == time) {
+            // If the instruction is a move, figure out if it is a junction move
+            std::string name = instruction.get_name();
+            if (name == "Move") {
+                std::set<unsigned int> adjacent = get_adjacent(instruction.get_site1());
+                if (adjacent.find(instruction.get_site2()) == adjacent.end()) {name = "Junction";}
+            }
 
-                // Get longest operation in last slice
+            // Add contribution to volume per op
+            op_vol[name]++;
+
+            // Get longest operation in last slice
+            if (instruction.get_time() == time) {
                 if (TI_model.get_ops().at(instruction.get_name()) > time_tmp) {
                     time_tmp = TI_model.get_ops().at(instruction.get_name());
                 }
@@ -363,12 +381,43 @@ namespace TISCC
 
         }
 
+        // Print out gate counts and compute zone-seconds for each operation
+        std::cout << std::fixed;
+        double total = 0;
+        for (auto & [ key, value ] : op_vol) {
+            if (value != 0) {
+                std::cout << key << ": " << int(value) << std::fixed << std::endl; 
+                value = value * TI_model.get_ops().at(key) / 1000000;
+                if (key == "Move") {
+                    value = value * 2;
+                }
+                else if (key == "Junction") {
+                    value = value * 3;
+                }
+                total += value;
+            }
+        }
+
         // Add longest operation in last slice to computation time
         time += time_tmp;
 
+        // Rescale 
+        time = time/1000000; // s
+
         // Print out resource counts
-        std::cout << "Total computation time: " << time/1000000 << " s." << std::endl;
-        std::cout << "Total grid area: " << x_dim*z_dim << " m^2." << std::endl;
+        std::cout << std::scientific;
+        std::cout << "Grid area: " << x_dim*z_dim << " m^2." << std::endl;
+        std::cout << "Computation time: " << time << " s." << std::endl;
+        std::cout << "Space-time volume: " << time * x_dim * z_dim << " s*m^2." << std::endl;
+        std::cout << "Trapping zones: " << n_sites << std::endl;
+        std::cout << "Trapping zone-seconds: " << n_sites*time << " zone*s" << std::endl;
+        std::cout << "Trapping zone-seconds (active): " << total << " zone*s" << std::endl;
+        std::cout << "Active zone-seconds (%): " << std::fixed << 100 * total / (n_sites*time) << std::endl;
+        for (auto & [ key, value ] : op_vol) {
+            if (value != 0) {
+                std::cout << key << " zone-seconds (%): " << std::fixed << 100 * value / (n_sites*time) << std::endl;
+            }
+        }
 
     }
 

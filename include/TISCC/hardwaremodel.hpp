@@ -42,10 +42,12 @@ public:
 
     // Accessors
     double get_trap_width() const {return trap_width;}
+    double get_cell_width() const {return cell_width;}
 
 private:
     // Parameters of the hardware model
     double trap_width; // us
+    double cell_width; // us
 
     // Hash table to map trapped-ion instructions to time (in microseconds)
     std::unordered_map<std::string, double> TI_ops;

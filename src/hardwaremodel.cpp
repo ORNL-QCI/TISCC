@@ -245,6 +245,7 @@ namespace TISCC
     }
 
     HardwareModel::HardwareModel() : trap_width(420.0) {
+        cell_width = 4*trap_width;
         init_TI_ops();
     }
 
