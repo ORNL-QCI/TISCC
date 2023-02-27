@@ -1,1 +1,1 @@
-TISCC -x 2 -z 2 -t 1 -o "prepx" -d
+TISCC -x 2 -z 2 -t 1 -o "prepx" -d -p

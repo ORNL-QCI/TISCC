@@ -1,1 +1,1 @@
-TISCC -x 2 -z 5 -t 1 -o "idle" -d
+TISCC -x 2 -z 5 -t 1 -o "idle" -d -p

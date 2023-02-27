@@ -25,11 +25,11 @@ public:
     unsigned int get_col() {return col_;}
 
     // Operations
-    float idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
-    float transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
+    double idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
+    double transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
     // Placeholder function to help implement little test circuits
-    float test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time);
+    double test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
     // Print functions
     void print_stabilizers();
@@ -74,7 +74,7 @@ private:
     bool is_instr_valid(const Instruction& instr, const Plaquette& p);
 
     // Apply a given instruction to all plaquettes in a given vector
-    float apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step,
+    double apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step,
         const GridManager& grid, std::vector<HW_Instruction>& idle_operation);
 
 };

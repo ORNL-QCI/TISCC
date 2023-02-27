@@ -88,8 +88,12 @@ namespace TISCC
                 .description("Provide extra output for the purpose of debugging")
                 .required(false);
         parser.add_argument()
+                .names({"-p", "--printgates"})
+                .description("Print the time-resolved gate sequence for the operation given")
+                .required(false);
+        parser.add_argument()
                 .names({"-r", "--resources"})
-                .description("Provide resource estimates")
+                .description("Provide resource analysis for the operation given")
                 .required(false);
         
         parser.enable_help();
@@ -179,7 +183,7 @@ namespace TISCC
                 std::vector<HW_Instruction> hw_master;
 
                 // Initialize time tracker
-                float time = 0;
+                double time = 0;
 
                 // Perform associated transversal operation
                 if (s != "idle") {
@@ -205,7 +209,14 @@ namespace TISCC
                 grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
-                print_hw_master(hw_master, occupied_sites, debug);
+                if (parser.exists("p")) {
+                    print_hw_master(hw_master, occupied_sites, debug);
+                }
+
+                // Count resources
+                if (parser.exists("r")) {
+                    grid.resource_counter(hw_master);
+                }
 
             }
 
@@ -272,11 +283,11 @@ namespace TISCC
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
                 // Prepare the physical qubits on lq2 in the X basis
-                float time = 0;
+                double time = 0;
                 lq2.transversal_op("prepx", grid, hw_master, time);
 
                 // Prepare qsites on the strip in the X basis
-                float time_tmp = 0;
+                double time_tmp = 0;
                 HardwareModel TI_model;
                 for (unsigned int site : strip) {
                     time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
@@ -289,8 +300,16 @@ namespace TISCC
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
 
+
                 // Print hardware instructions
-                print_hw_master(hw_master, all_qsites, debug);
+                if (parser.exists("p")) {
+                    print_hw_master(hw_master, all_qsites, debug);
+                }
+
+                // Count resources
+                if (parser.exists("r")) {
+                    grid.resource_counter(hw_master);
+                }
             }
 
             else if (s == "extendz") {
@@ -326,7 +345,7 @@ namespace TISCC
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
                 // Prepare the physical qubits on lq2 in the Z basis
-                float time = 0;
+                double time = 0;
                 lq2.transversal_op("prepz", grid, hw_master, time);
 
                 // Prepare qsites on the strip in the Z basis
@@ -342,7 +361,14 @@ namespace TISCC
                 grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
-                print_hw_master(hw_master, all_qsites, debug);
+                if (parser.exists("p")) {
+                    print_hw_master(hw_master, all_qsites, debug);
+                }
+
+                // Count resources
+                if (parser.exists("r")) {
+                    grid.resource_counter(hw_master);
+                }
             }
 
             else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}

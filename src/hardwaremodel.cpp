@@ -24,9 +24,8 @@ namespace TISCC
         TI_ops["Z_-pi/4"] = 3;
 
         // Move is currently per-site for two types of sites: trapping zones and junctions
-        float trap_width = 420; // um
-        float move_velocity = 80; // m/s, see https://arxiv.org/pdf/2301.05279.pdf
-        float junction_move_velocity = 4; // m/s, see https://arxiv.org/pdf/2301.05279.pdf (it seems 4 m/s is safe but up to 6 m/s is possible)
+        double move_velocity = 80; // m/s, see https://arxiv.org/pdf/2301.05279.pdf
+        double junction_move_velocity = 4; // m/s, see https://arxiv.org/pdf/2301.05279.pdf (it seems 4 m/s is safe but up to 6 m/s is possible)
         TI_ops["Move"] = trap_width / move_velocity; // us
         TI_ops["Junction"] = trap_width / junction_move_velocity;
 
@@ -36,7 +35,7 @@ namespace TISCC
     }
 
     // Helper function to add the Prepare_Z HW_Instruction to a circuit given a plaquette and a qubit label
-    float HardwareModel::add_init(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_init(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
         if (p.grid()[p.get_qsite(qubit)] != 'O') {
@@ -54,7 +53,7 @@ namespace TISCC
     }
 
     // Helper function to add the Prepare_Z HW_Instruction to a circuit given a qsite
-    float HardwareModel::add_init(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_init(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
         if (grid[site] != 'O') {
@@ -72,7 +71,7 @@ namespace TISCC
     }
 
     // Helper function to add H gate in terms of native TI gates to a circuit given a plaquette and a qubit label
-    float HardwareModel::add_H(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_H(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
         if (p.grid()[p.get_qsite(qubit)] != 'O') {
@@ -91,7 +90,7 @@ namespace TISCC
     }
 
     // Helper function to add H gate in terms of native TI gates to a circuit given a qsite
-    float HardwareModel::add_H(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_H(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
         if (grid[site] != 'O') {
@@ -110,7 +109,7 @@ namespace TISCC
     }
 
     // Helper function to add the Measure_Z HW_Instruction to a circuit given a plaquette and a qubit label
-    float HardwareModel::add_meas(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_meas(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
         if (p.grid()[p.get_qsite(qubit)] != 'O') {
@@ -127,7 +126,7 @@ namespace TISCC
 
     }
 
-    float HardwareModel::add_meas(unsigned int site, float time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_meas(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
         // Perform validity check
         if (grid[site] != 'O') {
             std::cerr << "HardwareModel::add_meas: Can only apply Measure Z at 'O' QSites." << std::endl;
@@ -143,7 +142,7 @@ namespace TISCC
     }
     
     // This is just a placeholder to apply a test gate with
-    float HardwareModel::add_test(const Plaquette& p, char qubit, float time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_test(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
         if (p.grid()[p.get_qsite(qubit)] != 'O') {
@@ -162,7 +161,7 @@ namespace TISCC
     }
 
     // Move the measure qubit to the closest site adjacent to a data qubit
-    void HardwareModel::move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, float& time,
+    void HardwareModel::move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
         const std::vector<unsigned int>& path, const GridManager& grid) const {
 
         // Validity check 
@@ -188,7 +187,7 @@ namespace TISCC
     }
 
     // Helper function to add CNOT gate in terms of native TI gates to a circuit given a plaquette and qubit labels
-    float HardwareModel::add_CNOT(Plaquette& p, char control, char target, float time, unsigned int step, const GridManager& grid, 
+    double HardwareModel::add_CNOT(Plaquette& p, char control, char target, double time, unsigned int step, const GridManager& grid, 
         std::vector<HW_Instruction>& circuit) const {
         
         // This function currently requires one of the qubits to be 'm'
@@ -245,7 +244,7 @@ namespace TISCC
         return time + TI_ops.at("Z_-pi/4");
     }
 
-    HardwareModel::HardwareModel() {
+    HardwareModel::HardwareModel() : trap_width(420.0) {
         init_TI_ops();
     }
 

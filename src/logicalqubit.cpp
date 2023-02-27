@@ -142,7 +142,7 @@ namespace TISCC
     }
 
     // Function to return all qsites occupied by data qubits on the surface code
-    /* TODO: Maybe combine this somehow with occupied_sites by passing in a string with default value abcdm. */
+    /* TODO: Combine this somehow with occupied_sites by passing in a string with default value abcdm. */
     std::set<unsigned int> LogicalQubit::data_qsites() {
         std::set<unsigned int> sites;
         for (char qubit : {'a', 'b', 'c', 'd'}) {
@@ -159,11 +159,11 @@ namespace TISCC
     }
 
     // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
-    float LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, float time, unsigned int step, 
+    double LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step, 
         const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
 
         // Create tmp variable for time
-        float time_tmp = 0;
+        double time_tmp = 0;
 
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {
@@ -206,7 +206,7 @@ namespace TISCC
         return time_tmp;
     }
 
-    float LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+    double LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         
         // Loop over surface code cycles
         for (unsigned int cycle=0; cycle < cycles; cycle++) {
@@ -217,8 +217,8 @@ namespace TISCC
 
             // Loop over ``qubit-level'' instructions and apply them to plaquettes while adding HW_Instructions to hw_master
             for (unsigned int i=0; i<num_instructions; i++) {
-                float t1 = apply_instruction(Z_Circuit_Z_Type[i], z_plaquettes, time, i, grid, hw_master);
-                float t2 = apply_instruction(X_Circuit_N_Type[i], x_plaquettes, time, i, grid, hw_master);
+                double t1 = apply_instruction(Z_Circuit_Z_Type[i], z_plaquettes, time, i, grid, hw_master);
+                double t2 = apply_instruction(X_Circuit_N_Type[i], x_plaquettes, time, i, grid, hw_master);
 
                 // Increment time counter
                 if (t1 == 0) {time = t2;}
@@ -236,15 +236,15 @@ namespace TISCC
 
     }
 
-    float LogicalQubit::transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+    double LogicalQubit::transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         
         // Get all occupied sites
         std::set<unsigned int> sites = data_qsites();
 
         // Create tmp variable for time
-        float time_tmp = 0;
+        double time_tmp = 0;
 
-        // TODO: Maybe should check whether all data qubits are at their 'home' positions
+        // TODO: Check whether all data qubits are at their 'home' positions
 
         // Loop over all occupied sites
         for (unsigned int site : sites) {
@@ -292,7 +292,7 @@ namespace TISCC
     }
 
     // Placeholder function to help implement little test circuits
-    float LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, float time) {
+    double LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         // Bell state preparation
         apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
         time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);

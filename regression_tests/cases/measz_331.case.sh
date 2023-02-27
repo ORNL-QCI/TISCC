@@ -1,1 +1,1 @@
-TISCC -x 3 -z 3 -t 1 -o "measz"
+TISCC -x 3 -z 3 -t 1 -o "measz" -p

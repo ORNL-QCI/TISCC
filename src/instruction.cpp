@@ -3,7 +3,7 @@
 namespace TISCC 
 {
     // This constructor is for shifting the time of an instruction by a given time offset
-    HW_Instruction::HW_Instruction(const HW_Instruction& a, float time_offset) : name_(a.get_name()), site1_(a.get_site1()), site2_(a.get_site2()), time_(a.get_time() + time_offset),
+    HW_Instruction::HW_Instruction(const HW_Instruction& a, double time_offset) : name_(a.get_name()), site1_(a.get_site1()), site2_(a.get_site2()), time_(a.get_time() + time_offset),
         step_(a.get_step()), q1_(a.get_q1()), q2_(a.get_q2()), shape_(a.get_shape()), type_(a.get_type()) {};
 
     // This constructor is for shifting the sites targeted by all instructions by a number of rows and columns on the grid

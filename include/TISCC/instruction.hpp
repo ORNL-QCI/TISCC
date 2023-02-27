@@ -27,11 +27,11 @@ private:
 class HW_Instruction {
 public:
     // Primary constructor. We note that the latter four of these variables are not strictly necessary but are stored for debugging output
-    explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, float time, unsigned int step, char q1, char q2, char shape, char type) : 
+    explicit HW_Instruction(std::string name, unsigned int site1, unsigned int site2, double time, unsigned int step, char q1, char q2, char shape, char type) : 
         name_(name), site1_(site1), site2_(site2), time_(time), step_(step), q1_(q1), q2_(q2), shape_(shape), type_(type) {};
 
     // This constructor is for shifting the time of an instruction by a given time offset
-    explicit HW_Instruction(const HW_Instruction& a, float time_offset);
+    explicit HW_Instruction(const HW_Instruction& a, double time_offset);
 
     // This constructor is for shifting the sites targeted an instruction by a number of rows and columns on the grid
     explicit HW_Instruction(const HW_Instruction& a, int row_offset, int col_offset, const GridManager& grid);
@@ -40,7 +40,7 @@ public:
     const std::string& get_name() const {return name_;}
     const unsigned int get_site1() const {return site1_;}
     const unsigned int get_site2() const {return site2_;}
-    const float get_time() const {return time_;}
+    const double get_time() const {return time_;}
 
     // Accessors for debugging output
     const unsigned int get_step() const {return step_;}
@@ -53,7 +53,7 @@ private:
     std::string name_;
     unsigned int site1_;
     unsigned int site2_;
-    float time_;
+    double time_;
     unsigned int step_;
     char q1_;
     char q2_;

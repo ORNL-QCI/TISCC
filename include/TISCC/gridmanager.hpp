@@ -72,6 +72,9 @@ public:
     // Routine that enforces the validity of hardware instructions
     void enforce_hw_master_validity(std::vector<HW_Instruction>& hw_master);
 
+    // Routine that counts resources
+    void resource_counter(const std::vector<HW_Instruction>& hw_master) const;
+
     // Methods for printing
     void print_grid() const;
     void print_occ_sites() const;

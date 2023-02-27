@@ -273,8 +273,8 @@ namespace TISCC
         HardwareModel TI_model;
 
         // Initialize time counter and define a time_offset that will be used to resolve junction conflicts
-        float time = 0; 
-        float time_offset = TI_model.get_ops().at("Move") + TI_model.get_ops().at("Junction");
+        double time = 0; 
+        double time_offset = TI_model.get_ops().at("Move") + TI_model.get_ops().at("Junction");
 
         // Initialize junction tracker 
         unsigned int uint_max = std::numeric_limits<unsigned int>::max(); 
@@ -330,6 +330,46 @@ namespace TISCC
 
         // Sort updated hw_master
         std::stable_sort(hw_master.begin(), hw_master.end());
+    }
+
+    // Routine that counts resources
+    void GridManager::resource_counter(const std::vector<HW_Instruction>& hw_master) const {
+
+        // IO Settings
+        std::cout.precision(3);
+        std::cout << std::scientific;
+
+        // Instantiate HardwareModel
+        HardwareModel TI_model;
+
+        // Obtain linear dimensions of the grid (four trapping zone widths per row or column)
+        double z_dim = nrows_ * 4 * TI_model.get_trap_width() / 1000000; // m
+        double x_dim = ncols_ * 4 * TI_model.get_trap_width() / 1000000;
+
+        // Computation time
+        double time = hw_master.back().get_time();
+        double time_tmp = 0;
+
+        // Loop over instructions
+        for (const HW_Instruction& instruction : hw_master) {
+
+            if (instruction.get_time() == time) {
+
+                // Get longest operation in last slice
+                if (TI_model.get_ops().at(instruction.get_name()) > time_tmp) {
+                    time_tmp = TI_model.get_ops().at(instruction.get_name());
+                }
+            }
+
+        }
+
+        // Add longest operation in last slice to computation time
+        time += time_tmp;
+
+        // Print out resource counts
+        std::cout << "Total computation time: " << time/1000000 << " s." << std::endl;
+        std::cout << "Total grid area: " << x_dim*z_dim << " m^2." << std::endl;
+
     }
 
     // Print out grid
