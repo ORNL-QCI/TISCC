@@ -166,6 +166,9 @@ namespace TISCC
             // Initialize vector of hardware instructions
             std::vector<HW_Instruction> hw_master;
 
+            // Initialize hardware model
+            HardwareModel TI_model;
+
             // Initialize time tracker
             double time = 0;
 
@@ -218,7 +221,7 @@ namespace TISCC
 
             }
 
-            // Horizontal two-patch operations 
+            // Horizontal two-tile operations 
             else if ((s == "contractx") || (s == "mergex") || (s == "bellmeasx") || (s == "extendx") ||
                 (s == "splitx") || (s == "bellprepx")) {
                 
@@ -240,16 +243,24 @@ namespace TISCC
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);        
 
-                // std::cout << "Logical Qubit 1:" << std::endl;
-                // lq1.print_stabilizers();
+                // Debugging output
+                if (debug) {
+                    std::cout << "Logical Qubit 1:" << std::endl;
+                    lq1.print_stabilizers();
 
-                // std::cout << "Logical Qubit 2:" << std::endl;
-                // lq2.print_stabilizers();
+                    std::cout << "Logical Qubit 2:" << std::endl;
+                    lq2.print_stabilizers();
 
-                // std::cout << "Logical Qubit (merged):" << std::endl;
-                // lq.print_stabilizers();
+                    std::cout << "Logical Qubit (merged):" << std::endl;
+                    lq.print_stabilizers();
 
-                // Operation-specific operations
+                    std::cout << "Data qubits on strip:" << std::endl;
+                    for (unsigned int site : strip) {
+                        std::cout << site << std::endl;
+                    }
+                }
+
+                // Operation-specific instructions
                 if (s == "extendx") {
 
                     // Prepare the physical qubits on lq2 in the X basis
@@ -257,7 +268,6 @@ namespace TISCC
 
                     // Prepare qsites on the strip in the X basis
                     double time_tmp = 0;
-                    HardwareModel TI_model;
                     for (unsigned int site : strip) {
                         time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
                         time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
@@ -265,6 +275,25 @@ namespace TISCC
 
                     // Perform 'idle' operation on the merged qubit
                     time = lq.idle(cycles, grid, hw_master, time);
+
+                }
+
+                else if (s == "contractx") {
+
+                    // Perform measure x on the half to be cropped
+                    lq2.transversal_op("measx", grid, hw_master, time);
+
+                    // Perform measure x on the strip
+                    double time_tmp = 0;
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+                    }
+
+                    // Perform idle on remaining patch
+                    time = lq1.idle(cycles, grid, hw_master, time);
+
+                    // Pauli (X) correction depending on measurement outcome (X^m) (assumed to be tracked in software for now)
 
                 }
 
@@ -299,21 +328,30 @@ namespace TISCC
                 // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid);
 
-                // std::cout << "Logical Qubit 1:" << std::endl;
-                // lq1.print_stabilizers();
-
-                // std::cout << "Logical Qubit 2:" << std::endl;
-                // lq2.print_stabilizers();
-
-                // std::cout << "Logical Qubit (merged):" << std::endl;
-                // lq.print_stabilizers();
-
                 // Grab all of the larger patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
+                // Debugging output
+                if (debug) {
+                    std::cout << "Logical Qubit 1:" << std::endl;
+                    lq1.print_stabilizers();
+
+                    std::cout << "Logical Qubit 2:" << std::endl;
+                    lq2.print_stabilizers();
+
+                    std::cout << "Logical Qubit (merged):" << std::endl;
+                    lq.print_stabilizers();
+
+                    std::cout << "Data qubits on strip:" << std::endl;
+                    for (unsigned int site : strip) {
+                        std::cout << site << std::endl;
+                    }
+                }
+
+                // Operation-specific instructions
                 if (s == "extendz") {
 
                     // Prepare the physical qubits on lq2 in the Z basis
@@ -327,6 +365,23 @@ namespace TISCC
 
                     // Perform 'idle' operation on the merged qubit
                     time = lq2.idle(cycles, grid, hw_master, time);
+
+                }
+
+                else if (s == "contractz") {
+
+                    // Perform measure z on the half to be cropped
+                    lq2.transversal_op("measz", grid, hw_master, time);
+
+                    // Perform measure z on the strip
+                    for (unsigned int site : strip) {
+                        TI_model.add_meas(site, time, 0, grid, hw_master);
+                    }
+
+                    // Perform idle on remaining patch
+                    time = lq1.idle(cycles, grid, hw_master, time);
+
+                    // Pauli (Z) correction depending on measurement outcome (Z^m) (assumed to be tracked in software for now)
 
                 }
 
