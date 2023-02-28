@@ -290,6 +290,8 @@ namespace TISCC
                     // Perform 'idle' operation on the merged qubit
                     time = lq.idle(cycles, grid, hw_master, time);
 
+                    // Pauli (X) correction depending on measurement outcome (X^m on final patch) (?) (see merge with uninitialized patch notes)
+
                 }
 
                 else if (s == "contractx") {
@@ -307,7 +309,24 @@ namespace TISCC
                     // Perform idle on remaining patch
                     time = lq1.idle(cycles, grid, hw_master, time);
 
-                    // Pauli (X) correction depending on measurement outcome (X^m) (assumed to be tracked in software for now)
+                    // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (assumed to be tracked in software for now)
+
+                }
+
+                else if (s == "bellmeasx") {
+
+                    // Prepare qsites on the strip in the X basis
+                    double time_tmp = 0;
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                    }
+
+                    // Perform 'idle' operation on the merged qubit
+                    time = lq.idle(cycles, grid, hw_master, time);
+
+                    // Measure out the whole merged patch
+                    time = lq.transversal_op("measx", grid, hw_master, time);
 
                 }
 
@@ -391,6 +410,8 @@ namespace TISCC
                     // Perform 'idle' operation on the merged qubit
                     time = lq2.idle(cycles, grid, hw_master, time);
 
+                    // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (?) (see merge with uninitialized patch notes)
+
                 }
 
                 else if (s == "contractz") {
@@ -407,6 +428,21 @@ namespace TISCC
                     time = lq1.idle(cycles, grid, hw_master, time);
 
                     // Pauli (Z) correction depending on measurement outcome (Z^m) (assumed to be tracked in software for now)
+
+                }
+
+                else if (s == "bellmeasz") {
+
+                    // Prepare qsites on the strip in the Z basis
+                    for (unsigned int site : strip) {
+                        TI_model.add_init(site, time, 0, grid, hw_master);
+                    }
+
+                    // Perform 'idle' operation on the merged qubit
+                    time = lq.idle(cycles, grid, hw_master, time);
+
+                    // Measure out the whole merged patch
+                    time = lq.transversal_op("measz", grid, hw_master, time);
 
                 }
 
