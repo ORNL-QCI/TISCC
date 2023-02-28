@@ -261,7 +261,21 @@ namespace TISCC
                 }
 
                 // Operation-specific instructions
-                if (s == "extendx") {
+                if (s == "mergex") {
+
+                    // Prepare qsites on the strip in the X basis
+                    double time_tmp = 0;
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                    }
+
+                    // Perform 'idle' operation on the merged qubit
+                    time = lq.idle(cycles, grid, hw_master, time);
+
+                }
+
+                else if (s == "extendx") {
 
                     // Prepare the physical qubits on lq2 in the X basis
                     lq2.transversal_op("prepx", grid, hw_master, time);
@@ -352,13 +366,24 @@ namespace TISCC
                 }
 
                 // Operation-specific instructions
-                if (s == "extendz") {
+                if (s == "mergez") {
+
+                    // Prepare qsites on the strip in the Z basis
+                    for (unsigned int site : strip) {
+                        TI_model.add_init(site, time, 0, grid, hw_master);
+                    }
+
+                    // Perform 'idle' operation on the merged qubit
+                    time = lq.idle(cycles, grid, hw_master, time);
+
+                }
+
+                else if (s == "extendz") {
 
                     // Prepare the physical qubits on lq2 in the Z basis
                     lq2.transversal_op("prepz", grid, hw_master, time);
 
                     // Prepare qsites on the strip in the Z basis
-                    HardwareModel TI_model;
                     for (unsigned int site : strip) {
                         TI_model.add_init(site, time, 0, grid, hw_master);
                     }
