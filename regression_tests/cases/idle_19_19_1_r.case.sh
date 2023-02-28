@@ -1,0 +1,1 @@
+TISCC -x 19 -z 19 -t 1 -o "idle" -r

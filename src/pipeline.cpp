@@ -81,7 +81,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -141,9 +141,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_stabilizers();
             }
-
-            /* TODO: A better output format for the grid might be row, col, and a list of qsites.
-                - Perhaps a commented header could describe the format and the repeating unit. */            
+          
             else if (s == "grid") {
                 GridManager grid(nrows, ncols);
                 grid.print_grid();
@@ -165,6 +163,12 @@ namespace TISCC
         // Operation-dependent logic
         if (parser.exists("o"))
         {
+            // Initialize vector of hardware instructions
+            std::vector<HW_Instruction> hw_master;
+
+            // Initialize time tracker
+            double time = 0;
+
             std::string s = parser.get<std::string>("o");
 
             // Single-tile operations
@@ -178,12 +182,6 @@ namespace TISCC
 
                 // Grab all of the initially occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = lq.occupied_sites();
-
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
-                // Initialize time tracker
-                double time = 0;
 
                 // Perform associated transversal operation
                 if (s != "idle") {
@@ -220,38 +218,10 @@ namespace TISCC
 
             }
 
-            // Two-qubit operations
-            // else if ((s == "contractx") || (s == "contractz") || (s == "mergex") || (s == "mergez") || 
-            //     (s == "bellmeasx") || (s == "bellmeasz") || (s == "extendx") || (s == "extendz")) {
-
-            // }
-
-            // else if (s == "contractx") {
-
-            // }
-
-            // else if (s == "contractz") {
-
-            // }
-
-            // else if (s == "mergex") {
-
-            // }
-
-            // else if (s == "mergez") {
-
-            // }
-
-            // else if (s == "bellmeasurex") {
-
-            // }
-
-            // else if (s == "bellmeasurez") {
-
-            // }
-
-            else if (s == "extendx") {
-
+            // Horizontal two-patch operations 
+            else if ((s == "contractx") || (s == "mergex") || (s == "bellmeasx") || (s == "extendx") ||
+                (s == "splitx") || (s == "bellprepx")) {
+                
                 // Construct grid with room for two tiles arranged horizontally
                 GridManager grid(nrows, 2*ncols);
 
@@ -262,7 +232,13 @@ namespace TISCC
                 LogicalQubit lq2(dx, dz, 0, ncols, grid);
 
                 // Create a merged qubit
-                LogicalQubit lq = merge(lq1, lq2, grid);           
+                LogicalQubit lq = merge(lq1, lq2, grid);   
+
+                // Grab all of the merged patch's occupied sites (to be used in printing)
+                std::set<unsigned int> all_qsites = lq.occupied_sites();
+
+                // Grab all of the qsites on the `strip' between lq1 and lq2
+                std::set<unsigned int> strip = lq.get_strip(lq1, lq2);        
 
                 // std::cout << "Logical Qubit 1:" << std::endl;
                 // lq1.print_stabilizers();
@@ -273,33 +249,27 @@ namespace TISCC
                 // std::cout << "Logical Qubit (merged):" << std::endl;
                 // lq.print_stabilizers();
 
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;  
+                // Operation-specific operations
+                if (s == "extendx") {
 
-                // Grab all of the merged patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites();
+                    // Prepare the physical qubits on lq2 in the X basis
+                    lq2.transversal_op("prepx", grid, hw_master, time);
 
-                // Grab all of the qsites on the `strip' between lq1 and lq2
-                std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
+                    // Prepare qsites on the strip in the X basis
+                    double time_tmp = 0;
+                    HardwareModel TI_model;
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                    }
 
-                // Prepare the physical qubits on lq2 in the X basis
-                double time = 0;
-                lq2.transversal_op("prepx", grid, hw_master, time);
+                    // Perform 'idle' operation on the merged qubit
+                    time = lq.idle(cycles, grid, hw_master, time);
 
-                // Prepare qsites on the strip in the X basis
-                double time_tmp = 0;
-                HardwareModel TI_model;
-                for (unsigned int site : strip) {
-                    time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                    time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
                 }
-
-                // Perform 'idle' operation on the merged qubit
-                time = lq.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
-
 
                 // Print hardware instructions
                 if (parser.exists("p")) {
@@ -310,9 +280,12 @@ namespace TISCC
                 if (parser.exists("r")) {
                     grid.resource_counter(hw_master);
                 }
+ 
             }
 
-            else if (s == "extendz") {
+            // Vertical two-patch operations
+            else if ((s == "contractz") || (s == "mergez") || (s == "bellmeasz") || (s == "extendz") ||
+                (s == "splitz") || (s == "bellprepz")) {
 
                 // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
                 GridManager grid(2*nrows, ncols);
@@ -335,27 +308,27 @@ namespace TISCC
                 // std::cout << "Logical Qubit (merged):" << std::endl;
                 // lq.print_stabilizers();
 
-                // Initialize vector of hardware instructions
-                std::vector<HW_Instruction> hw_master;
-
                 // Grab all of the larger patch's occupied sites (to be used in printing)
                 std::set<unsigned int> all_qsites = lq.occupied_sites();
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
 
-                // Prepare the physical qubits on lq2 in the Z basis
-                double time = 0;
-                lq2.transversal_op("prepz", grid, hw_master, time);
+                if (s == "extendz") {
 
-                // Prepare qsites on the strip in the Z basis
-                HardwareModel TI_model;
-                for (unsigned int site : strip) {
-                    TI_model.add_init(site, time, 0, grid, hw_master);
+                    // Prepare the physical qubits on lq2 in the Z basis
+                    lq2.transversal_op("prepz", grid, hw_master, time);
+
+                    // Prepare qsites on the strip in the Z basis
+                    HardwareModel TI_model;
+                    for (unsigned int site : strip) {
+                        TI_model.add_init(site, time, 0, grid, hw_master);
+                    }
+
+                    // Perform 'idle' operation on the merged qubit
+                    time = lq2.idle(cycles, grid, hw_master, time);
+
                 }
-
-                // Perform 'idle' operation on the merged qubit
-                time = lq2.idle(cycles, grid, hw_master, time);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -369,9 +342,10 @@ namespace TISCC
                 if (parser.exists("r")) {
                     grid.resource_counter(hw_master);
                 }
+
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}" << std::endl;}
         }
 
         return 0;

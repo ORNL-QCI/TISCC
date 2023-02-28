@@ -333,6 +333,7 @@ namespace TISCC
     }
 
     // Routine that counts resources
+    // TODO: Re-think whether this belongs as a GridManager member function
     void GridManager::resource_counter(const std::vector<HW_Instruction>& hw_master) const {
 
         // IO Settings
@@ -362,7 +363,8 @@ namespace TISCC
         // Loop over instructions
         for (const HW_Instruction& instruction : hw_master) {
 
-            // If the instruction is a move, figure out if it is a junction move
+            /* If the instruction is a move, figure out if it is a junction move
+            (we have assumed all input instructions are valid, so any non-adjacent move is a junction move) */
             std::string name = instruction.get_name();
             if (name == "Move") {
                 std::set<unsigned int> adjacent = get_adjacent(instruction.get_site1());
@@ -431,7 +433,7 @@ namespace TISCC
 
         std::cout << std::setw(W) << "Row";
         std::cout << std::setw(W) << "Col";
-        std::cout << std::setw(35) << "Qsites (repeating unit: MOMJMOM)" << std::endl;
+        std::cout << std::setw(33) << "Qsites (repeating unit: MOMJMOM)" << std::endl;
 
         for (unsigned int i=0; i<nrows_; i++) {
             for (unsigned int j=0; j<ncols_; j++) {
@@ -443,7 +445,7 @@ namespace TISCC
 
                 // Print out qsites of repeating unit
                 for (unsigned int k=0; k<7; k++) {
-                    std::cout << (i*ncols_+j)*7+k << " ";
+                    std::cout << std::setw(W-1) << (i*ncols_+j)*7+k << " ";
                 }
                 std::cout << std::endl;
             }
