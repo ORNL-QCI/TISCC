@@ -290,7 +290,7 @@ namespace TISCC
                     // Perform 'idle' operation on the merged qubit
                     time = lq.idle(cycles, grid, hw_master, time);
 
-                    // Pauli (X) correction depending on measurement outcome (X^m on final patch) (?) (see merge with uninitialized patch notes)
+                    // Pauli (X) correction depending on measurement outcome (X^m on final patch) (?) (see notes. i am not convinced this is needed as long as the correct mapping from two to one-qubit states is used.)
 
                 }
 
@@ -335,8 +335,8 @@ namespace TISCC
                     // Measure qsites on the strip in the X basis
                     double time_tmp = 0;
                     for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time_tmp, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time, 1, grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
                     }
 
                     // Perform 'idle' operation on each separate qubit
@@ -347,22 +347,22 @@ namespace TISCC
 
                 else if (s == "bellprepx") {
 
-                    // Prepare x and do an idle on the merged patch
+                    // Prepare X and do an idle on the merged patch
                     lq.transversal_op("prepx", grid, hw_master, time);
                     time = lq.idle(cycles, grid, hw_master, time);
 
                     // Measure qsites on the strip in the X basis
                     double time_tmp = 0;
                     for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time_tmp, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time, 1, grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
                     }
 
                     // Perform 'idle' operation on each separate qubit
                     lq1.idle(cycles, grid, hw_master, time);
                     time = lq2.idle(cycles, grid, hw_master, time);
 
-                    // Pauli X correction depending on measurement outcome
+                    // Pauli Z correction depending on measurement outcome (assumed to be tracked in software for now) (see notes)
 
                     /* TODO: consider whether this op can be done in a single `time step'. */
 
@@ -448,7 +448,7 @@ namespace TISCC
                     // Perform 'idle' operation on the merged qubit
                     time = lq2.idle(cycles, grid, hw_master, time);
 
-                    // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (?) (see merge with uninitialized patch notes)
+                    // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (?) (see notes. i am not convinced this is needed as long as the correct mapping from two to one-qubit states is used.)
 
                 }
 
@@ -499,7 +499,7 @@ namespace TISCC
 
                 else if (s == "bellprepz") {
 
-                    // Prepare x and idle on the merged patch
+                    // Prepare Z and idle on the merged patch
                     lq.transversal_op("prepz", grid, hw_master, time);
                     time = lq.idle(cycles, grid, hw_master, time);
 
@@ -512,7 +512,7 @@ namespace TISCC
                     lq1.idle(cycles, grid, hw_master, time);
                     time = lq2.idle(cycles, grid, hw_master, time);
 
-                    // Pauli Z correction depending on measurement outcome
+                    // Pauli X correction depending on measurement outcome (see notes) (assumed to be tracked in software for now)
 
                     /* TODO: consider whether this op can be done in a single `time step'. */
 
