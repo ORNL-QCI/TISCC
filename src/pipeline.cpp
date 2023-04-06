@@ -77,7 +77,7 @@ namespace TISCC
                 .required(true);
         parser.add_argument()
                 .names({"-i", "--info"})
-                .description("Information to be queried (no operation will be performed). Options: {instructions, plaquettes, grid}")
+                .description("Information to be queried (no operation will be performed). Options: {instructions, plaquettes, grid, parity}")
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
@@ -147,8 +147,14 @@ namespace TISCC
                 grid.print_grid();
             }
 
+            else if (s == "parity") {
+                GridManager grid(nrows, ncols);
+                LogicalQubit lq(dx, dz, 0, 0, grid);
+                lq.parity_check_matrix();
+            }
+
             else {
-                std::cerr << "No valid query selected. Options: {instructions, plaquettes, grid}" << std::endl;
+                std::cerr << "No valid query selected. Options: {instructions, plaquettes, grid, parity}" << std::endl;
             }
             
             return 0;

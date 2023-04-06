@@ -1,6 +1,6 @@
 #include <TISCC/logicalqubit.hpp>
 
-#include <unordered_map>
+#include <map>
 #include <iomanip>
 #include <cassert>
 #include <algorithm>
@@ -75,17 +75,72 @@ namespace TISCC
 
     void LogicalQubit::print_stabilizers() {
 
-        // Print all x stabilizers
-        for (const Plaquette& p : x_plaquettes) {
-            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
-                 << " " << (p.grid()).index_from_coords(p.get_row(), p.get_col(), 1) << std::endl;
-        }
-
         // Print all z stabilizers
         for (const Plaquette& p : z_plaquettes) {
             std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
                  << " " << (p.grid()).index_from_coords(p.get_row(), p.get_col(), 1) << std::endl;
         }
+
+        // Print all x stabilizers
+        for (const Plaquette& p : x_plaquettes) {
+            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
+                 << " " << (p.grid()).index_from_coords(p.get_row(), p.get_col(), 1) << std::endl;
+        }
+    }
+
+    // Construct and print parity check matrix. rows are plaquettes and columns refer to qsites (repeated twice)
+    void LogicalQubit::parity_check_matrix() {
+
+        // Construct qsites to indices map
+        std::map<unsigned int, unsigned int> qsite_to_index;
+        std::set<unsigned int> data = data_qsites();
+        unsigned int counter = 0;
+        for (unsigned int site: data) {
+            qsite_to_index[site] = counter;
+            counter++;
+        }
+
+        // Construct parity check matrix
+        std::vector<std::vector<bool> > parity_check(x_plaquettes.size() + z_plaquettes.size(), std::vector<bool>(2*data.size(), 0));
+
+        // Iterate over z stabilizers
+        counter = 0;
+        for (const Plaquette& p : z_plaquettes) {
+            for (char qubit : {'a', 'b', 'c', 'd'}) {
+                if (qsite_to_index.count(p.get_qsite(qubit))) 
+                    parity_check[counter][qsite_to_index[p.get_qsite(qubit)]] = 1;
+            }
+            counter++;
+        }
+
+       // Iterate over x stabilizers
+        for (const Plaquette& p : x_plaquettes) {
+            for (char qubit : {'a', 'b', 'c', 'd'}) {
+                if (qsite_to_index.count(p.get_qsite(qubit))) 
+                    parity_check[counter][data.size() + qsite_to_index[p.get_qsite(qubit)]] = 1;
+            }
+            counter++;
+        }
+
+        // Print map
+        std::cout << "Map from column indices to qsites:" << std::endl;
+        for (std::pair<unsigned int, unsigned int> pair : qsite_to_index) {
+            std::cout << pair.second << " " << pair.first << std::endl;
+        }
+        for (std::pair<unsigned int, unsigned int> pair : qsite_to_index) {
+            std::cout << qsite_to_index.size() + pair.second << " " << pair.first << std::endl;
+        }
+
+        // Print matrix
+        std::cout << "Parity check matrix (columns in same order as given by print_stabilizers function):" << std::endl;
+        for (unsigned int i = 0; i<parity_check.size(); i++) {
+            for (unsigned int j = 0; j<parity_check[i].size(); j++) {
+                std::cout << parity_check[i][j];
+            }
+            std::cout << std::endl;
+        }
+
+
     }
 
     // Test stabilizers (not fully implemented)
