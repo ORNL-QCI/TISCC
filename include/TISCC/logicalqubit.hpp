@@ -33,7 +33,7 @@ public:
 
     // Print functions
     void print_stabilizers();
-    void parity_check_matrix();
+    void parity_check_matrix(const GridManager& grid);
 
     // Function to output all qsites occupied by the surface code
     std::set<unsigned int> occupied_sites();

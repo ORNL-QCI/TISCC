@@ -89,7 +89,7 @@ namespace TISCC
     }
 
     // Construct and print parity check matrix. rows are plaquettes and columns refer to qsites (repeated twice)
-    void LogicalQubit::parity_check_matrix() {
+    void LogicalQubit::parity_check_matrix(const GridManager& grid) {
 
         // Construct qsites to indices map
         std::map<unsigned int, unsigned int> qsite_to_index;
@@ -100,8 +100,8 @@ namespace TISCC
             counter++;
         }
 
-        // Construct parity check matrix
-        std::vector<std::vector<bool> > parity_check(x_plaquettes.size() + z_plaquettes.size(), std::vector<bool>(2*data.size(), 0));
+        // Construct parity check matrix to represent both stabilizers and observables
+        std::vector<std::vector<bool> > parity_check(x_plaquettes.size() + z_plaquettes.size() + 2, std::vector<bool>(2*data.size(), 0));
 
         // Iterate over z stabilizers
         counter = 0;
@@ -122,6 +122,18 @@ namespace TISCC
             counter++;
         }
 
+        // Obtain observables
+        for (unsigned int qsite : data) {
+            // The col_'th column of the grid contains the left-most column of data qubits contained in the surface code patch
+            if (grid.get_col(qsite) == col_) {
+                parity_check[counter][qsite_to_index[qsite]] = 1;
+            }
+            // The (row_+1)'th row of the grid contains the top-most row of data qubits contained in the surface code patch
+            if (grid.get_row(qsite) == row_+1) {
+                parity_check[counter+1][data.size() + qsite_to_index[qsite]] = 1;
+            }
+        }
+
         // Print map
         std::cout << "Map from column indices to qsites:" << std::endl;
         for (std::pair<unsigned int, unsigned int> pair : qsite_to_index) {
@@ -132,15 +144,14 @@ namespace TISCC
         }
 
         // Print matrix
-        std::cout << "Parity check matrix (columns in same order as given by print_stabilizers function):" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Parity check matrix (rows in same order as given by print_stabilizers function):" << std::endl;
         for (unsigned int i = 0; i<parity_check.size(); i++) {
             for (unsigned int j = 0; j<parity_check[i].size(); j++) {
                 std::cout << parity_check[i][j];
             }
             std::cout << std::endl;
         }
-
-
     }
 
     // Test stabilizers (not fully implemented)
