@@ -302,6 +302,23 @@ namespace TISCC
 
     }
 
+    // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
+    void LogicalQubit::xz_swap() {
+
+        // Every X operator becomes a Z operator and vice versa
+
+        // Thus, Z are horizontal and X are vertical
+
+        // Thus, Z stabilizer circuits need to be N type and X stabilizer circuits need to be Z type
+
+        // x_plaquettes and z_plaquettes vectors should be swapped and dx and dz should be swapped
+
+        // Z_Circuit_N_Type and X_Circuit_Z_Type should be created and used for any subsequent operation
+
+        // A patch rotation needs to be required after this, because other operations (such as merge) will no longer be compatible with this patch
+
+    }
+
     double LogicalQubit::transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         
         // Get all occupied sites
@@ -334,6 +351,9 @@ namespace TISCC
                 time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
             }
 
+            else if (op == "hadamard") {
+                time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+            }
         }
 
         // Sort master list of hardware instructions according to overloaded operator<

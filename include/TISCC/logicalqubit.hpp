@@ -44,6 +44,9 @@ public:
     // Helper function to return the data qubits from this patch that are NOT occupied by two others
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
 
+    // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
+    void xz_swap();
+
 private:
     // Code distances
     unsigned int dx_;
@@ -70,9 +73,6 @@ private:
 
     // Set up the circuits that we intend to use
     void init_circuits();
-
-    // Check to see if a given instruction is valid on a given plaquette 
-    bool is_instr_valid(const Instruction& instr, const Plaquette& p);
 
     // Apply a given instruction to all plaquettes in a given vector
     double apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step,
