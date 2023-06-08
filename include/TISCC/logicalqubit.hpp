@@ -8,7 +8,8 @@
 
 #include <vector>
 #include <set>
-#include <unordered_map>
+#include <map>
+#include <optional>
 
 namespace TISCC {
 
@@ -33,7 +34,7 @@ public:
 
     // Print functions
     void print_stabilizers();
-    void parity_check_matrix(const GridManager& grid);
+    void print_parity_check_matrix(const GridManager& grid);
 
     // Function to output all qsites occupied by the surface code
     std::set<unsigned int> occupied_sites();
@@ -62,6 +63,12 @@ private:
     std::vector<Instruction> Z_Circuit_Z_Type;
     std::vector<Instruction> X_Circuit_N_Type;
 
+    // Boolean matrix to store parity check matrix
+    std::optional<std::vector<std::vector<bool>>> parity_check_matrix;
+
+    // Map from qsite to column index in parity check matrix
+    std::optional<std::map<unsigned int, unsigned int>> qsite_to_index;
+
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;
 
@@ -73,6 +80,9 @@ private:
 
     // Set up the circuits that we intend to use
     void init_circuits();
+
+    // Construct parity check matrix from stabilizers
+    void construct_parity_check_matrix(const GridManager& grid);
 
     // Apply a given instruction to all plaquettes in a given vector
     double apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step,
