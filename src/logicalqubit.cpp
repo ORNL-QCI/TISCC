@@ -69,6 +69,26 @@ namespace TISCC
         X_Circuit_N_Type.push_back(Instruction("CNOT", 'm', 'd'));
         X_Circuit_N_Type.push_back(Instruction("Hadamard", 'm', ' '));   
         X_Circuit_N_Type.push_back(Instruction("Measure_Z", 'm', ' '));
+
+        // Add instructions to the Z plaquette measurement circuit
+        Z_Circuit_N_Type.push_back(Instruction("Prepare_Z", 'm', ' ')); 
+        Z_Circuit_N_Type.push_back(Instruction("Idle", ' ', ' '));   
+        Z_Circuit_N_Type.push_back(Instruction("CNOT", 'a', 'm'));
+        Z_Circuit_N_Type.push_back(Instruction("CNOT", 'c', 'm'));
+        Z_Circuit_N_Type.push_back(Instruction("CNOT", 'b', 'm'));
+        Z_Circuit_N_Type.push_back(Instruction("CNOT", 'd', 'm'));
+        Z_Circuit_N_Type.push_back(Instruction("Idle", ' ', ' ')); 
+        Z_Circuit_N_Type.push_back(Instruction("Measure_Z", 'm', ' '));
+
+        // Add instructions to the X plaquette measurement circuit
+        X_Circuit_Z_Type.push_back(Instruction("Prepare_Z", 'm', ' '));  
+        X_Circuit_Z_Type.push_back(Instruction("Hadamard", 'm', ' '));   
+        X_Circuit_Z_Type.push_back(Instruction("CNOT", 'm', 'a'));
+        X_Circuit_Z_Type.push_back(Instruction("CNOT", 'm', 'b'));
+        X_Circuit_Z_Type.push_back(Instruction("CNOT", 'm', 'c'));
+        X_Circuit_Z_Type.push_back(Instruction("CNOT", 'm', 'd'));
+        X_Circuit_Z_Type.push_back(Instruction("Hadamard", 'm', ' '));   
+        X_Circuit_Z_Type.push_back(Instruction("Measure_Z", 'm', ' '));
     }
 
     void LogicalQubit::print_stabilizers() {

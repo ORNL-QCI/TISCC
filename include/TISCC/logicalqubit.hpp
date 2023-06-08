@@ -62,6 +62,8 @@ private:
     // Vectors of instructions to hold syndrome measurement circuits
     std::vector<Instruction> Z_Circuit_Z_Type;
     std::vector<Instruction> X_Circuit_N_Type;
+    std::vector<Instruction> Z_Circuit_N_Type;
+    std::vector<Instruction> X_Circuit_Z_Type;
 
     // Boolean matrix to store parity check matrix
     std::optional<std::vector<std::vector<bool>>> parity_check_matrix;
