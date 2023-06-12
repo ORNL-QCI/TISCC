@@ -106,7 +106,10 @@ namespace TISCC
         }
     }
 
-    // Construct parity check matrix. Rows are plaquettes and columns refer to qsites (repeated twice)
+    /* Construct parity check matrix:
+        - Rows refer to stabilizers and columns refer to qsites (repeated twice)
+        - The final two rows are the logical operators (Z and X, respectively)
+    */
     void LogicalQubit::construct_parity_check_matrix(const GridManager& grid) {
 
         // Construct qsites to indices map
@@ -156,14 +159,59 @@ namespace TISCC
         parity_check_matrix = std::move(parity_check_);
     }
 
-    // Construct and print parity check matrix. rows are plaquettes and columns refer to qsites (repeated twice)
+    // Check validity of parity check matrix 
+    bool LogicalQubit::validity_parity_check_matrix() {
+
+        // Make sure that a parity check matrix has been constructed
+        if (!parity_check_matrix) {
+            return false;
+        }
+
+        /* 
+            - To check validity, we calculate the upper triangle of a mtx where entry (i, j) is the binary symplectic product between row i and row j of the parity check mtx.
+            - This product being zero or one indicates an even or odd number of anti-commuting pairs of single-qubit Paulis in the rows' corresponding Pauli strings.
+            - Every entry of the resulting matrix should be zero
+            - We also check validity for the logical operators, which are appended to the parity check matrix, and should anticommute with one another but commute with everything else
+        */
+        bool bin_sym_prod;
+        std::vector<bool> tmp_row;
+        tmp_row.reserve(2*qsite_to_index->size());
+        for (unsigned int i=0; i<parity_check_matrix->size(); i++) {
+            for (unsigned int j=i+1; j<parity_check_matrix->size(); j++) {
+                bin_sym_prod = 0;
+                for (unsigned int k=0; k<qsite_to_index->size(); k++) {
+                    tmp_row[k] = parity_check_matrix.value()[j][k+qsite_to_index->size()];
+                    tmp_row[k+qsite_to_index->size()] = parity_check_matrix.value()[j][k];
+                }
+                for (unsigned int k = 0; k < parity_check_matrix.value()[i].size(); k++) {
+                    bin_sym_prod ^= (parity_check_matrix.value()[i][k] && tmp_row[k]);
+                }
+
+                // The product between the last two rows should be 1 since the Z and X logical operators should anticommute
+                if ((i == parity_check_matrix->size() - 2) && (j == parity_check_matrix->size() - 1)) {
+                    if (!bin_sym_prod) return bin_sym_prod;
+                }
+
+                // Every other pair of rows should have a product of 0
+                else {
+                    if (bin_sym_prod) return !bin_sym_prod;
+                }
+            }
+        }
+
+        return bin_sym_prod;
+    }
+
+
+    // Print parity check matrix and logical operators
     void LogicalQubit::print_parity_check_matrix(const GridManager& grid) {
 
+        // If the matrix hasn't been constructed yet, construct it
         if (!parity_check_matrix) {
             construct_parity_check_matrix(grid);
         }
 
-        // Print map
+        // Print map from column indices to qsites
         std::cout << "Map from column indices to qsites:" << std::endl;
         for (std::pair<unsigned int, unsigned int> pair : qsite_to_index.value()) {
             std::cout << pair.second << " " << pair.first << std::endl;
@@ -172,7 +220,7 @@ namespace TISCC
             std::cout << qsite_to_index->size() + pair.second << " " << pair.first << std::endl;
         }
 
-        // Print matrix
+        // Print parity check matrix (and logical operators)
         std::cout << std::endl;
         std::cout << "Parity check matrix (rows in same order as given by print_stabilizers function):" << std::endl;
         for (unsigned int i = 0; i<parity_check_matrix->size(); i++) {
@@ -181,6 +229,10 @@ namespace TISCC
             }
             std::cout << std::endl;
         }
+
+        // Check validity of parity check matrix
+        bool validity = validity_parity_check_matrix();
+        std::cout << "Parity check matrix is valid: " << validity << std::endl;
     }
 
     // Test stabilizers (not fully implemented)

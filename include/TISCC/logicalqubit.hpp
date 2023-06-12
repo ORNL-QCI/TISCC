@@ -20,10 +20,10 @@ public:
     explicit LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid);
 
     // Accessors
-    unsigned int get_dx() {return dx_;}
-    unsigned int get_dz() {return dz_;}
-    unsigned int get_row() {return row_;}
-    unsigned int get_col() {return col_;}
+    unsigned int get_dx() const {return dx_;}
+    unsigned int get_dz() const {return dz_;}
+    unsigned int get_row() const {return row_;}
+    unsigned int get_col() const {return col_;}
 
     // Operations
     double idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
@@ -85,6 +85,9 @@ private:
 
     // Construct parity check matrix from stabilizers
     void construct_parity_check_matrix(const GridManager& grid);
+
+    // Check validity of parity check matrix
+    bool validity_parity_check_matrix();
 
     // Apply a given instruction to all plaquettes in a given vector
     double apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step,
