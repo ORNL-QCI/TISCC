@@ -4,6 +4,8 @@
 #include <cassert>
 #include <algorithm>
 #include <limits>
+#include <iterator>
+#include <utility>
 
 namespace TISCC 
 {
@@ -47,6 +49,19 @@ namespace TISCC
         }
     }
 
+    // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
+    std::vector<std::pair<unsigned int, char>> LogicalQubit::binary_operator_to_qsites(const std::vector<bool>& binary_rep) {
+        std::vector<std::pair<unsigned int, char>> qsite_rep;
+        for (unsigned int k = 0; k < 2*qsite_to_index->size(); k++) {
+            if (binary_rep[k] && (k < qsite_to_index->size())) {
+                qsite_rep.emplace_back(index_to_qsite.value()[k], 'Z');
+            }
+            else if (binary_rep[k]) {
+                qsite_rep.emplace_back(index_to_qsite.value()[k], 'X');
+            }
+        }
+        return qsite_rep;
+    }
 
     // Add new stabilizer plaquette (to be used in corner movement)
     void LogicalQubit::add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid) {
@@ -91,16 +106,15 @@ namespace TISCC
             new_row_transformed[k+qsite_to_index->size()] = new_row[k];
         }
 
-
         // Print row and transformed row (for debugging purposes)
-        for (const auto elem : new_row) {
-            std::cout << elem;
-        }
+        std::cout << std::endl << "Stabilizer being added: ";
+        std::copy(new_row.begin(), new_row.end(), std::ostream_iterator<bool>(std::cout));
         std::cout << std::endl;
-        for (unsigned int i=0; i<new_row_transformed.size(); i++) {
-            std::cout << new_row_transformed[i];
-        }
+        grid.visualize_operator(binary_operator_to_qsites(new_row));
+        std::cout << std::endl << "Stabilizer being added after swapping roles of X and Z: ";
+        std::copy(new_row_transformed.begin(), new_row_transformed.end(), std::ostream_iterator<bool>(std::cout));
         std::cout << std::endl;
+        grid.visualize_operator(binary_operator_to_qsites(new_row_transformed));
 
         // Then, calculate the binary symplectic product with every row of the parity_check_matrix and track row indices for which it is 1
         std::vector<unsigned int> anticommuting_stabilizers;
@@ -133,19 +147,25 @@ namespace TISCC
                     }
 
                     anticommuting_stabilizers.push_back(i);
+
+                    // Print (for debugging purposes)
+                    std::cout << std::endl << "Anti-commuting stabilizer: ";
+                    std::copy(parity_check_matrix.value()[i].begin(), parity_check_matrix.value()[i].end(), std::ostream_iterator<bool>(std::cout));
+                    std::cout << std::endl;
+                    grid.visualize_operator(binary_operator_to_qsites(parity_check_matrix.value()[i]));
                 }
 
                 // If this row of parity_check_matrix corresponds with a logical operator
                 else {
                     anticommuting_logical_ops.push_back(i);
+
+                    // Print (for debugging purposes)
+                    std::cout << std::endl << "Anti-commuting logical operator: ";
+                    std::copy(parity_check_matrix.value()[i].begin(), parity_check_matrix.value()[i].end(), std::ostream_iterator<bool>(std::cout));
+                    std::cout << std::endl;
+                    grid.visualize_operator(binary_operator_to_qsites(parity_check_matrix.value()[i]));
                 }
 
-                // Print (for debugging purposes)
-                for (unsigned int k = 0; k < parity_check_matrix.value()[i].size(); k++) {
-                    std::cout << parity_check_matrix.value()[i][k];
-                }
-                std::cout << ", " << i;
-                std::cout << std::endl;
             }
         }
 
@@ -177,7 +197,7 @@ namespace TISCC
         }
 
         else if ((anticommuting_stabilizers.size() == 2) && (anticommuting_logical_ops.size() == 1)) {
-            std::cerr << "LogicalQubit::add_stabilizer: Case with two anti-commuting stabilizers and one anti-commuting logical operator not implemented." << std::endl;
+            std::cerr << "LogicalQubit::add_stabilizer: Strange situation encountered; two anti-commuting stabilizers and one anti-commuting logical operator." << std::endl;
             abort();            
         }
 
@@ -203,27 +223,25 @@ namespace TISCC
             }
             alternative_logical_operator = std::move(tmp_logical_operator);
             
-            // Print (for debugging purposes)
-            for (unsigned int k = 0; k < alternative_logical_operator->size(); k++) {
-                std::cout << alternative_logical_operator.value()[k];
-            }
+            // Visualize operator on grid (for debugging purposes)
+            std::cout << std::endl << "Anti-commuting logical operator (topol. equiv. to the one stored): ";
+            std::copy(alternative_logical_operator.value().begin(), alternative_logical_operator.value().end(), std::ostream_iterator<bool>(std::cout));
             std::cout << std::endl;
-            for (unsigned int k = 0; k < alternative_logical_operator->size(); k++) {
-                if (alternative_logical_operator.value()[k]) {
-                    std::cout << index_to_qsite.value()[k] << " "; 
-                }
-            }
-            std::cout << std::endl;
+            grid.visualize_operator(binary_operator_to_qsites(alternative_logical_operator.value()));
         }
 
-        // We may be constructing a new logical operator using products with the anti-commuting stabilizers if the logical operator needs to be replaced
+        // In case an anti-commuting logical operator needs to be replaced using products with the anti-commuting stabilizers
         std::optional<std::vector<bool>> new_logical_operator;
+
+        // In some cases, a qubit will need to be removed in order to maintain a single logical qubit and retain code distance
+        std::optional<unsigned int> overlapping_index;
 
         // If there is one anti-commuting stabilizer, 
         if (anticommuting_stabilizers.size() == 1) {
 
-            // If the added stabilizer hadn't anti-commuted with one of the logical operators, an optional logical operator should have been constructed
-            if (alternative_logical_operator.has_value()) {
+            // If the added stabilizer hadn't anti-commuted with one of the logical operators, an alternative logical operator should have been constructed
+            if (anticommuting_logical_ops.size() == 0) {
+                assert(alternative_logical_operator.has_value());
 
                 // Check if the newly constructed logical operator anti-commutes with the added stabilizer
                 bin_sym_prod = 0;
@@ -232,7 +250,7 @@ namespace TISCC
                 }
 
                 if (!bin_sym_prod) {
-                    std::cerr << "LogicalQubit::add_stabilizer: strange situation encountered; one anti-commuting stabilizer and zero logical operators." << std::endl;
+                    std::cerr << "LogicalQubit::add_stabilizer: Strange situation encountered; one anti-commuting stabilizer and zero anti-commuting logical operators." << std::endl;
                     abort();
                 }
 
@@ -242,8 +260,7 @@ namespace TISCC
 
             // If there is an anti-commuting logical operator, take its product with the single anti-commuting stabilizer
             else {
-                std::vector<bool> tmp_logical_operator;
-                tmp_logical_operator.reserve(2*qsite_to_index->size());
+                std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
                 for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
                     tmp_logical_operator[k] = parity_check_matrix.value()[anticommuting_stabilizers[0]][k] ^ parity_check_matrix.value()[anticommuting_logical_ops[0]][k];
                 }
@@ -251,18 +268,16 @@ namespace TISCC
             }
         }
 
-        // If there are two, 
+        // If there are two anti-commuting stabilizers, 
         else if (anticommuting_stabilizers.size() == 2) {
 
             // Take their product
-            std::vector<bool> tmp_logical_operator;
-            tmp_logical_operator.reserve(2*qsite_to_index->size());
+            std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
             for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
                 tmp_logical_operator[i] = parity_check_matrix.value()[anticommuting_stabilizers[0]][i] ^ parity_check_matrix.value()[anticommuting_stabilizers[1]][i];
             }
 
             // Find out whether there is an overlapping qubit between this operator and the stored logical operator
-            std::optional<unsigned int> overlapping_index;
             for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
                 if (tmp_logical_operator[i] == parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')][i]) {
                     if (!overlapping_index) 
@@ -302,6 +317,21 @@ namespace TISCC
                 abort();
             }
 
+        }
+
+        // Visualize new logical operator on grid (for debugging purposes)
+        if (new_logical_operator.has_value()) {
+            std::cout << std::endl << "Logical operator replaced with: ";
+            std::copy(new_logical_operator.value().begin(), new_logical_operator.value().end(), std::ostream_iterator<bool>(std::cout));
+            std::cout << std::endl;
+            grid.visualize_operator(binary_operator_to_qsites(new_logical_operator.value()));
+        }
+
+        // Visualize qubit to remove (for debugging purposes)
+        if (overlapping_index.has_value()) {
+            std::cout << std::endl << "Qubit flagged for removal at qsite: " << overlapping_index.value() << std::endl;
+            std::pair<unsigned int, char> single_qubit = std::make_pair(overlapping_index.value(), type);
+            grid.visualize_operator({single_qubit});
         }
 
         // Add the new stabilizer
@@ -423,6 +453,7 @@ namespace TISCC
         for (unsigned int site: data) {
             qsite_to_index_[site] = counter;
             index_to_qsite_[counter] = site;
+            index_to_qsite_[counter + data.size()] = site;
             counter++;
         }
         qsite_to_index = std::move(qsite_to_index_);

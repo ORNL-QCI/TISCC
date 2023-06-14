@@ -145,6 +145,7 @@ namespace TISCC
             else if (s == "grid") {
                 GridManager grid(nrows, ncols);
                 grid.print_grid();
+                grid.visualize_grid();
             }
 
             else if (s == "parity") {
@@ -152,7 +153,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
                 lq.print_stabilizers();
-                lq.add_stabilizer(3, 2, 's', 'X', grid);
+                lq.add_stabilizer(1, 1, 'n', 'Z', grid);
                 // lq.print_parity_check_matrix(grid);
                 // lq.print_stabilizers();
             }

@@ -77,6 +77,9 @@ private:
     // Inverse map to above
     std::optional<std::vector<unsigned int>> index_to_qsite;
 
+    // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
+    std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);
+
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;
 

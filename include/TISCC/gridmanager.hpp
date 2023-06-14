@@ -23,7 +23,7 @@ public:
         QSite_Memory = 'M',
         QSite_Memory_and_Ops = 'O',
         Junction = 'J',
-        Nothing = 'X'
+        Nothing = ' '
     };
 
     // Constructor for GridManager
@@ -78,6 +78,8 @@ public:
     // Methods for printing
     void print_grid() const;
     void print_occ_sites() const;
+    void visualize_grid() const;
+    void visualize_operator(const std::vector<std::pair<unsigned int,char>>& qsites) const;
 
 private:
     SiteType* grid_;

@@ -458,4 +458,103 @@ namespace TISCC
             std::cout << i << std::endl;
         }
     }
+
+    // Visualize the grid using hard-coded repeating unit
+    void GridManager::visualize_grid() const {
+        std::vector<std::string> repeating_unit = {
+            "J M O M ",
+            "M       ",
+            "O       ",
+            "M       "
+        };
+
+        std::cout << std::endl << "  ";
+        for (unsigned int j = 0; j < ncols_; j++) {
+            std::cout << j << "       ";
+        }
+        std::cout << std::endl;
+
+        for (unsigned int i=0; i<nrows_; i++) {
+            for (unsigned int k=0; k<repeating_unit.size(); k++) {
+                if (k==0) std::cout << i << " ";
+                else std::cout << "  ";
+                for (unsigned int j=0; j<ncols_; j++) {
+                    std::cout << repeating_unit[k];
+                }
+                std::cout << std::endl;
+            }
+        }
+    }
+
+    // Visualize an operator on the grid
+    void GridManager::visualize_operator(const std::vector<std::pair<unsigned int,char>>& qsites) const {
+        std::vector<std::string> repeating_unit = {
+            "J M O M ",
+            "M       ",
+            "O       ",
+            "M       "
+        };
+
+        std::vector<std::set<unsigned int>> repeating_unit_idxs = {
+            {3, 4, 5, 6},
+            {2},
+            {1},
+            {0}
+        };
+
+        // Make sure qsites is sorted
+        std::vector<std::pair<unsigned int,char>> sorted_qsites = qsites;
+        std::sort(sorted_qsites.begin(), sorted_qsites.end());
+
+        // Collect row, col, and index for each qsite in the operator
+        std::vector<unsigned int> rows(sorted_qsites.size());
+        std::vector<unsigned int> cols(sorted_qsites.size());
+        std::vector<unsigned int> indices(sorted_qsites.size());
+        for (unsigned int i=0; i<sorted_qsites.size(); i++) {
+            rows[i] = get_row(sorted_qsites[i].first);
+            cols[i] = get_col(sorted_qsites[i].first);
+            indices[i] = get_idx(sorted_qsites[i].first);
+        }
+
+        /* sorted_qsites will be hit in order when looping sequentially over rows and cols in the grid */
+
+        // Loop over rows, cols, rows of repeating unit
+        std::cout << std::endl << "  ";
+        for (unsigned int j = 0; j < ncols_; j++) {
+            std::cout << j << "       ";
+        }
+        std::cout << std::endl;
+        unsigned int qsite_tracker = 0;
+        for (unsigned int i = 0; i < nrows_; i++) {
+            for (unsigned int k = 0; k < repeating_unit.size(); k++) {
+                if (k==0) std::cout << i << " ";
+                else std::cout << "  ";
+                for (unsigned int j = 0; j < ncols_; j++) {
+
+                    // Check if we have hit the next qsite in the list
+                    if (qsite_tracker < sorted_qsites.size()) {
+                        if ((i == rows[qsite_tracker]) && (j == cols[qsite_tracker]) && (repeating_unit_idxs[k].count(indices[qsite_tracker]) == 1)) {
+                            if (grid_[sorted_qsites[qsite_tracker].first] == SiteType::QSite_Memory_and_Ops) {
+                                std::cout << repeating_unit[k].replace(repeating_unit[k].find(grid_[sorted_qsites[qsite_tracker].first]), 1, 1, sorted_qsites[qsite_tracker].second);
+                                repeating_unit[k].replace(repeating_unit[k].find(sorted_qsites[qsite_tracker].second), 1, 1, grid_[sorted_qsites[qsite_tracker].first]);
+                                qsite_tracker++;
+                            }
+                            else {
+                                std::cerr << "GridManager::visualize_operator: Only SiteType::QSite_Memory_and_Ops are currently used as home bases for qubits in our hardware model." << std::endl;
+                                abort();
+                            }
+                        }
+                        else {
+                            std::cout << repeating_unit[k];
+                        }
+                    }
+                    else {
+                        std::cout << repeating_unit[k];
+                    }
+                }
+
+                std::cout << std::endl;
+            }
+        }
+    }
 }
