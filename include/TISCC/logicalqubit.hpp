@@ -48,6 +48,9 @@ public:
     // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
     void xz_swap();
 
+    // Add new stabilizer plaquette (used in corner movement)
+    void add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid);
+
 private:
     // Code distances
     unsigned int dx_;
@@ -71,6 +74,9 @@ private:
     // Map from qsite to column index in parity check matrix
     std::optional<std::map<unsigned int, unsigned int>> qsite_to_index;
 
+    // Inverse map to above
+    std::optional<std::vector<unsigned int>> index_to_qsite;
+
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;
 
@@ -78,7 +84,7 @@ private:
     void init_stabilizers(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid); 
 
     // Test stabilizers (not fully implemented)
-    void test_stabilizers(unsigned int dx, unsigned int dz);
+    void test_stabilizers();
 
     // Set up the circuits that we intend to use
     void init_circuits();

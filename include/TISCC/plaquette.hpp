@@ -19,7 +19,7 @@ class Plaquette {
 public:
     // Constructor
     explicit Plaquette(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int m, unsigned int row,
-        unsigned int col, char shape, char type, GridManager& grid) :
+        unsigned int col, char shape, char type, GridManager* grid) :
         a_(a), b_(b), c_(c), d_(d), m_(m), row_(row), col_(col), shape_(shape), type_(type), grid_(grid) {}
 
     // Accessor functions
@@ -38,7 +38,7 @@ public:
     bool is_instr_valid(const Instruction& instr) const;
 
     // Provide const access to the GridManager object for the grid that this plaquette lives on
-    const GridManager& grid() const {return grid_;} 
+    GridManager* grid() const {return grid_;} 
 
 private:
     unsigned int a_;
@@ -50,7 +50,7 @@ private:
     unsigned int col_;
     char shape_; 
     char type_;
-    GridManager& grid_;
+    GridManager* grid_;
 
     // Private member function that returns an lvalue allowing you to modify the qsite of a qubit
     unsigned int& mod_qsite(char qubit);

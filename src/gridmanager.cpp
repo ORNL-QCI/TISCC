@@ -233,35 +233,35 @@ namespace TISCC
             unsigned int d = index_from_coords(row+1, col, 5);
             std::set<unsigned int> sites{a, b, c, d, m};
             occupied_sites.insert(sites.begin(), sites.end());
-            return Plaquette(a,b,c,d,m,row,col,shape,type,*this);
+            return Plaquette(a,b,c,d,m,row,col,shape,type,this);
         }
         else if (shape== 'n') {
             unsigned int c = index_from_coords(row+1, col-1, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
             std::set<unsigned int> sites{c, d, m};
             occupied_sites.insert(sites.begin(), sites.end());
-            return Plaquette(uint_max,uint_max,c,d,m,row,col,shape,type,*this);
+            return Plaquette(uint_max,uint_max,c,d,m,row,col,shape,type,this);
         }
         else if (shape== 's') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int b = index_from_coords(row, col, 5);
             std::set<unsigned int> sites{a, b, m};
             occupied_sites.insert(sites.begin(), sites.end());
-            return Plaquette(a,b,uint_max,uint_max,m,row,col,shape,type,*this);
+            return Plaquette(a,b,uint_max,uint_max,m,row,col,shape,type,this);
         }
         else if (shape== 'e') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int c = index_from_coords(row+1, col-1, 5);
             std::set<unsigned int> sites{a, c, m};
             occupied_sites.insert(sites.begin(), sites.end());
-            return Plaquette(a,uint_max,c,uint_max,m,row,col,shape,type,*this);
+            return Plaquette(a,uint_max,c,uint_max,m,row,col,shape,type,this);
         }
         else if (shape== 'w') {
             unsigned int b = index_from_coords(row, col, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
             std::set<unsigned int> sites{b, d, m};
             occupied_sites.insert(sites.begin(), sites.end());
-            return Plaquette(uint_max,b,uint_max,d,m,row,col,shape,type,*this);
+            return Plaquette(uint_max,b,uint_max,d,m,row,col,shape,type,this);
         }
         else {std::cerr << "GridManager::get_plaquette: Invalid input given." << std::endl; abort();}
     }

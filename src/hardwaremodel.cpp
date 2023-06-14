@@ -38,7 +38,7 @@ namespace TISCC
     double HardwareModel::add_init(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
-        if (p.grid()[p.get_qsite(qubit)] != 'O') {
+        if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_init: Can only Prepare Z at 'O' QSites." << std::endl;
             abort();
         }
@@ -74,7 +74,7 @@ namespace TISCC
     double HardwareModel::add_H(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
-        if (p.grid()[p.get_qsite(qubit)] != 'O') {
+        if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_H: Can only apply Hadamard gates at 'O' QSites." << std::endl;
             abort();
         }
@@ -112,7 +112,7 @@ namespace TISCC
     double HardwareModel::add_meas(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
-        if (p.grid()[p.get_qsite(qubit)] != 'O') {
+        if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_meas: Can only apply Measure Z at 'O' QSites." << std::endl;
             abort();
         }
@@ -145,7 +145,7 @@ namespace TISCC
     double HardwareModel::add_test(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
         // Perform validity check
-        if (p.grid()[p.get_qsite(qubit)] != 'O') {
+        if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_test: Can only apply these gates at 'O' QSites." << std::endl;
             abort();
         }

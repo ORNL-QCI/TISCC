@@ -14,11 +14,11 @@ namespace TISCC
 
     // Move qubit to a specified site after checking validity and recording change on grid
     void Plaquette::move_to_site(char q, unsigned int site) {
-        
+
         // Update the site of the qubit and update the set of occupied sites in the grid
-        grid_.move_qubit(get_qsite(q), site);
+        grid_->move_qubit(get_qsite(q), site);
         mod_qsite(q) = site;
-        
+
     }
 
     // Private member function that returns an lvalue allowing one to modify the qsite of a qubit
@@ -34,19 +34,19 @@ namespace TISCC
     // Check whether a qubit is currently at its home location on the grid
     bool Plaquette::is_home(char qubit) const {
         if (qubit == 'm') {
-            return m_ == grid_.index_from_coords(row_, col_, 1);
+            return m_ == grid_->index_from_coords(row_, col_, 1);
         }
         else if (qubit == 'a') {
-            return a_ == grid_.index_from_coords(row_, col_-1, 5);
+            return a_ == grid_->index_from_coords(row_, col_-1, 5);
         }
         else if (qubit == 'b') {
-            return b_ == grid_.index_from_coords(row_, col_, 5);
+            return b_ == grid_->index_from_coords(row_, col_, 5);
         }
         else if (qubit == 'c') {
-            return c_ == grid_.index_from_coords(row_+1, col_-1, 5);
+            return c_ == grid_->index_from_coords(row_+1, col_-1, 5);
         }
         else if (qubit == 'd') {
-            return d_ == grid_.index_from_coords(row_+1, col_, 5);
+            return d_ == grid_->index_from_coords(row_+1, col_, 5);
         }
         else {
             std::cerr << "Plaquette::is_home: Invalid qubit character given." << std::endl;

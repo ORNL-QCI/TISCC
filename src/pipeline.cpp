@@ -151,6 +151,10 @@ namespace TISCC
                 GridManager grid(nrows, ncols);
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
+                lq.print_stabilizers();
+                lq.add_stabilizer(3, 2, 's', 'X', grid);
+                // lq.print_parity_check_matrix(grid);
+                // lq.print_stabilizers();
             }
 
             else {
