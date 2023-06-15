@@ -110,6 +110,12 @@ namespace TISCC
             return 0;
         }
 
+        // If debugging output is requested, create a bool to pass into functions below
+        bool debug = false;
+        if (parser.exists("d")) {
+            debug = true;
+        }
+
         // Extracting required arguments from command line input
         unsigned int dx = parser.get<unsigned int>("x");
         unsigned int dz = parser.get<unsigned int>("z");
@@ -158,8 +164,8 @@ namespace TISCC
                 GridManager grid(nrows, ncols);
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
-                lq.print_stabilizers();
-                lq.add_stabilizer(0, 1, 'n', 'X', grid);
+                // lq.print_stabilizers();
+                lq.add_stabilizer(0, 1, 'n', 'X', grid, debug);
                 // lq.print_parity_check_matrix(grid);
                 // lq.print_stabilizers();
             }
@@ -169,12 +175,6 @@ namespace TISCC
             }
             
             return 0;
-        }
-
-        // If debugging output is requested, create a bool to pass into functions below
-        bool debug = false;
-        if (parser.exists("d")) {
-            debug = true;
         }
 
         // Operation-dependent logic
