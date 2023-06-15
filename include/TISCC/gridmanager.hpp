@@ -69,6 +69,9 @@ public:
     // Provide a plaquette object ``pinned" at a particular grid point 
     Plaquette get_plaquette(unsigned int row, unsigned int col, char shape, char type);
 
+    // Provide a function that de-occupies a qsite on the grid
+    void deoccupy_site(unsigned int site) {occupied_sites.erase(site);}
+
     // Routine that enforces the validity of hardware instructions
     void enforce_hw_master_validity(std::vector<HW_Instruction>& hw_master);
 

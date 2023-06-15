@@ -35,6 +35,10 @@ public:
     // Check whether a qubit is currently at its home location on the grid
     bool is_home(char qubit) const;
 
+    // Ask whether the plaquette has support on the site in question and remove if so
+    bool remove_supported_qsite(unsigned int site);
+
+   // Check to see if a given instruction is valid on this plaquette 
     bool is_instr_valid(const Instruction& instr) const;
 
     // Provide const access to the GridManager object for the grid that this plaquette lives on

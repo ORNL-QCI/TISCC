@@ -165,7 +165,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
                 // lq.print_stabilizers();
-                lq.add_stabilizer(0, 1, 'n', 'X', grid, debug);
+                lq.add_stabilizer(2, 6, 'e', 'Z', grid, debug);
                 // lq.print_parity_check_matrix(grid);
                 // lq.print_stabilizers();
             }

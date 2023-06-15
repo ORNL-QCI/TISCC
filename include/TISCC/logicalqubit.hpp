@@ -86,7 +86,7 @@ private:
     // Construct stabilizers and update set of occupied sites in grid
     void init_stabilizers(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid); 
 
-    // Test stabilizers (not fully implemented)
+    // Test stabilizers
     void test_stabilizers();
 
     // Set up the circuits that we intend to use

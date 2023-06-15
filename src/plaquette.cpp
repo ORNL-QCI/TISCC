@@ -12,6 +12,18 @@ namespace TISCC
         else {std::cerr << "Plaquette::get_qsite: Invalid character given." << qubit << std::endl; abort();}
     }
 
+    // Ask whether the plaquette has support on the site in question and remove if so
+    bool Plaquette::remove_supported_qsite(unsigned int site) {
+        if ((a_ == site) || (b_ == site) || (c_ == site) || (d_ == site)) {
+            return true;
+        }
+        else if (m_ == site) {
+            std::cerr << "Plaquette::remove_supported_qsite: Cannot remove measure qubit of active plaquette." << std::endl;
+            abort();
+        }
+        else {return false;}
+    }
+
     // Move qubit to a specified site after checking validity and recording change on grid
     void Plaquette::move_to_site(char q, unsigned int site) {
 
