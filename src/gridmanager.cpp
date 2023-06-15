@@ -424,7 +424,7 @@ namespace TISCC
     }
 
     // Print out grid
-    void GridManager::print_grid() const {
+    void GridManager::print_qsite_mapping() const {
 
         // I/O settings
         int W = 5;
@@ -454,40 +454,14 @@ namespace TISCC
 
     // Print out occupied sites
     void GridManager::print_occ_sites() const {
+        std::cout << occupied_sites.size() << std::endl;
         for (unsigned int i : occupied_sites) {
             std::cout << i << std::endl;
         }
     }
 
     // Visualize the grid using hard-coded repeating unit
-    void GridManager::visualize_grid() const {
-        std::vector<std::string> repeating_unit = {
-            "J M O M ",
-            "M       ",
-            "O       ",
-            "M       "
-        };
-
-        std::cout << std::endl << "  ";
-        for (unsigned int j = 0; j < ncols_; j++) {
-            std::cout << j << "       ";
-        }
-        std::cout << std::endl;
-
-        for (unsigned int i=0; i<nrows_; i++) {
-            for (unsigned int k=0; k<repeating_unit.size(); k++) {
-                if (k==0) std::cout << i << " ";
-                else std::cout << "  ";
-                for (unsigned int j=0; j<ncols_; j++) {
-                    std::cout << repeating_unit[k];
-                }
-                std::cout << std::endl;
-            }
-        }
-    }
-
-    // Visualize an operator on the grid
-    void GridManager::visualize_operator(const std::vector<std::pair<unsigned int,char>>& qsites) const {
+    std::vector<std::string> GridManager::ascii_grid(bool occ_mode) const {
         std::vector<std::string> repeating_unit = {
             "J M O M ",
             "M       ",
@@ -501,6 +475,76 @@ namespace TISCC
             {1},
             {0}
         };
+
+        std::vector<std::string> grid_output; 
+        
+        grid_output.push_back("  ");
+        for (unsigned int j = 0; j < ncols_; j++) {
+            grid_output[0] += std::to_string(j) + "       ";
+        }
+
+        for (unsigned int i=0; i<nrows_; i++) {
+            for (unsigned int k=0; k<repeating_unit.size(); k++) {
+                std::string row_output;
+                if (k==0) {
+                    row_output += std::to_string(i) + " ";
+                }
+                else {
+                    row_output += "  ";
+                } 
+                for (unsigned int j=0; j<ncols_; j++) {
+                    std::string new_unit = repeating_unit[k];
+                    if (occ_mode) {
+                        for (unsigned int idx : repeating_unit_idxs[k]) {
+                            if (!occupied_sites.count(index_from_coords(i, j, idx))) {
+                                // Note assumptions: 
+                                //  (1) elements of repeating_unit[k] corresp. to the same SiteType are encountered in the same order as in repeating_unit_idxs
+                                //  (2) first element of repeating_unit is a horizontal line and subsequent elements are vertical lines
+                                if (k==0) {
+                                    new_unit.replace(new_unit.find(grid_[index_from_coords(i,j,idx)]), 1, 1, '-');
+                                }
+                                else {
+                                    new_unit.replace(new_unit.find(grid_[index_from_coords(i,j,idx)]), 1, 1, '|');
+                                }
+                            }
+                        }
+                    }
+                    row_output += new_unit;
+                }
+                grid_output.push_back(row_output);
+            }
+        }
+
+        return grid_output;
+    }
+
+    // Visualize an operator on the grid
+    std::vector<std::string> GridManager::ascii_grid_with_operator(const std::vector<std::pair<unsigned int,char>>& qsites, bool occ_mode) const {
+        std::vector<std::string> repeating_unit = {
+                "J M O M ",
+                "M       ",
+                "O       ",
+                "M       "
+        };
+
+        std::vector<std::set<unsigned int>> repeating_unit_idxs = {
+            {3, 4, 5, 6},
+            {2},
+            {1},
+            {0}
+        };
+
+        // Make sure operator is valid
+        for (const auto& element : qsites) {
+            if (grid_[element.first] != SiteType::QSite_Memory_and_Ops) {
+                std::cerr << "GridManager::ascii_grid_with_operator: Valid operators can only have support on 'O' SiteTypes." << std::endl;
+                abort();
+            }
+            if (!occupied_sites.count(element.first)) {
+                std::cerr << "GridManager::ascii_grid_with_operator: Valid operators can only have support on occupied qsites." << std::endl;
+                abort();
+            }
+        }
 
         // Make sure qsites is sorted
         std::vector<std::pair<unsigned int,char>> sorted_qsites = qsites;
@@ -516,45 +560,64 @@ namespace TISCC
             indices[i] = get_idx(sorted_qsites[i].first);
         }
 
+        // Set up the output grid
+        std::vector<std::string> grid_output; 
+        grid_output.push_back("  ");
+        for (unsigned int j = 0; j < ncols_; j++) {
+            grid_output[0] += std::to_string(j) + "       ";
+        }
+
         /* sorted_qsites will be hit in order when looping sequentially over rows and cols in the grid */
 
-        // Loop over rows, cols, rows of repeating unit
-        std::cout << std::endl << "  ";
-        for (unsigned int j = 0; j < ncols_; j++) {
-            std::cout << j << "       ";
-        }
-        std::cout << std::endl;
         unsigned int qsite_tracker = 0;
         for (unsigned int i = 0; i < nrows_; i++) {
             for (unsigned int k = 0; k < repeating_unit.size(); k++) {
-                if (k==0) std::cout << i << " ";
-                else std::cout << "  ";
+                std::string row_output;
+                if (k==0) {
+                    row_output += std::to_string(i) + " ";
+                }
+                else {
+                    row_output += "  ";
+                }
                 for (unsigned int j = 0; j < ncols_; j++) {
+                    std::string new_unit = repeating_unit[k];
 
-                    // Check if we have hit the next qsite in the list
+                    // Check if we have hit the next qsite in the list; if so, replace the appropriate character in new_unit
                     if (qsite_tracker < sorted_qsites.size()) {
                         if ((i == rows[qsite_tracker]) && (j == cols[qsite_tracker]) && (repeating_unit_idxs[k].count(indices[qsite_tracker]) == 1)) {
-                            if (grid_[sorted_qsites[qsite_tracker].first] == SiteType::QSite_Memory_and_Ops) {
-                                std::cout << repeating_unit[k].replace(repeating_unit[k].find(grid_[sorted_qsites[qsite_tracker].first]), 1, 1, sorted_qsites[qsite_tracker].second);
-                                repeating_unit[k].replace(repeating_unit[k].find(sorted_qsites[qsite_tracker].second), 1, 1, grid_[sorted_qsites[qsite_tracker].first]);
-                                qsite_tracker++;
-                            }
-                            else {
-                                std::cerr << "GridManager::visualize_operator: Only SiteType::QSite_Memory_and_Ops are currently used as home bases for qubits in our hardware model." << std::endl;
-                                abort();
-                            }
-                        }
-                        else {
-                            std::cout << repeating_unit[k];
+                            new_unit = new_unit.replace(new_unit.find(grid_[sorted_qsites[qsite_tracker].first]), 1, 1, sorted_qsites[qsite_tracker].second);
+                            qsite_tracker++;
                         }
                     }
-                    else {
-                        std::cout << repeating_unit[k];
-                    }
-                }
 
-                std::cout << std::endl;
+                    // If occ_mode, replace all non-occupied sites with lines
+                    if (occ_mode) {
+                        for (unsigned int idx : repeating_unit_idxs[k]) {
+                            if (!occupied_sites.count(index_from_coords(i, j, idx))) {
+                                // Note assumptions: 
+                                //  (1) elements of repeating_unit[k] corresp. to the same SiteType are encountered in the same order as in repeating_unit_idxs
+                                //  (2) first element of repeating_unit is a horizontal line and subsequent elements are vertical lines
+                                if (k==0) {
+                                    new_unit.replace(new_unit.find(grid_[index_from_coords(i,j,idx)]), 1, 1, '-');
+                                }
+                                else {
+                                    new_unit.replace(new_unit.find(grid_[index_from_coords(i,j,idx)]), 1, 1, '|');
+                                }
+                            }
+                        }
+                    }
+                    row_output += new_unit;
+                }
+                grid_output.push_back(row_output);
             }
+        }
+        return grid_output;
+    }
+
+    // Print grid using the output of the above functions
+    void GridManager::print_grid(std::vector<std::string>& ascii_grid) const {
+        for (const std::string& row : ascii_grid) {
+            std::cout << row << std::endl;
         }
     }
 }

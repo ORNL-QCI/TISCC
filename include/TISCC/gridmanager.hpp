@@ -76,10 +76,11 @@ public:
     void resource_counter(const std::vector<HW_Instruction>& hw_master) const;
 
     // Methods for printing
-    void print_grid() const;
+    void print_qsite_mapping() const;
     void print_occ_sites() const;
-    void visualize_grid() const;
-    void visualize_operator(const std::vector<std::pair<unsigned int,char>>& qsites) const;
+    std::vector<std::string> ascii_grid(bool occ_mode) const;
+    std::vector<std::string> ascii_grid_with_operator(const std::vector<std::pair<unsigned int,char>>& qsites, bool occ_mode) const;
+    void print_grid(std::vector<std::string>& ascii_grid) const;
 
 private:
     SiteType* grid_;

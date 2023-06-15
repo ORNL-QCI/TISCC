@@ -144,8 +144,14 @@ namespace TISCC
           
             else if (s == "grid") {
                 GridManager grid(nrows, ncols);
-                grid.print_grid();
-                grid.visualize_grid();
+                grid.print_qsite_mapping();
+                std::cout << std::endl;
+                std::vector<std::string> ascii_grid = grid.ascii_grid(false);
+                grid.print_grid(ascii_grid);
+                std::cout << std::endl;
+                LogicalQubit lq(dx, dz, 0, 0, grid);
+                ascii_grid = grid.ascii_grid(true);
+                grid.print_grid(ascii_grid);
             }
 
             else if (s == "parity") {
@@ -153,7 +159,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
                 lq.print_stabilizers();
-                lq.add_stabilizer(1, 1, 'n', 'Z', grid);
+                lq.add_stabilizer(0, 1, 'n', 'X', grid);
                 // lq.print_parity_check_matrix(grid);
                 // lq.print_stabilizers();
             }
