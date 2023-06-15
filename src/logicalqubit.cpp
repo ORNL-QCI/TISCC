@@ -699,13 +699,14 @@ namespace TISCC
 
     // Test stabilizers
     void LogicalQubit::test_stabilizers() {
-        unsigned int num_data_qubits = dx_*dz_;
-        unsigned int num_measure_qubits = num_data_qubits-1;
+        
+        // Get number of data qubits and number of stabilizers
+        unsigned int num_data_qubits = data_qsites().size();
+        unsigned int num_stabilizers = z_plaquettes.size() + x_plaquettes.size();
 
-        // Check that number of stabilizers is equal to the number expected
-        unsigned int num_plaquettes = z_plaquettes.size() + x_plaquettes.size();
-        if (num_plaquettes != num_measure_qubits) {
-            std::cerr << "Incorrect number of plaquettes: " << num_plaquettes << " " << num_measure_qubits << std::endl; 
+        if (num_data_qubits - num_stabilizers != 1) {
+            std::cerr << "LogicalQubit::test_stabilizers: To encode one logical qubit, there should be one fewer stabilizer than data qubit. Currently there are :" << std::endl;
+            std::cerr << num_data_qubits << " data qubits and " << num_stabilizers << " stabilizers." << std::endl;
             abort();
         }
 
@@ -713,18 +714,41 @@ namespace TISCC
         std::vector<unsigned int> measure_qubits;
         for (Plaquette p : z_plaquettes) {
             for (unsigned int q : measure_qubits) {
-                if (p.get_qsite('m') == q) {std::cerr << "Found duplicate measure qubit among plaquettes."; abort();}
+                if (p.get_qsite('m') == q) {std::cerr << "LogicalQubit::test_stabilizers: Found duplicate measure qubit among Z plaquettes."; abort();}
             }
             measure_qubits.push_back(p.get_qsite('m'));
         }
         for (Plaquette p : x_plaquettes) {
             for (unsigned int q : measure_qubits) {
-                if (p.get_qsite('m') == q) {std::cerr << "Found duplicate measure qubit among plaquettes."; abort();}
+                if (p.get_qsite('m') == q) {std::cerr << "LogicalQubit::test_stabilizers: Found duplicate measure qubit among X plaquettes."; abort();}
             }
             measure_qubits.push_back(p.get_qsite('m'));
         }
 
-        // TODO: Create a way to find all plaquettes containing a particular qubit
+        // Ensure consistency with rows of parity check mtx
+        if (parity_check_matrix.has_value()) {
+            for (unsigned int i=0; i<parity_check_matrix->size() - 2; i++) {
+                bool consistent = 1;
+                if (i < z_plaquettes.size()) {
+                    for (char qubit : {'a', 'b', 'c', 'd'}) {
+                        if (z_plaquettes[i].get_qsite(qubit) != std::numeric_limits<unsigned int>::max())
+                            consistent = consistent && parity_check_matrix.value()[i][qsite_to_index.value()[z_plaquettes[i].get_qsite(qubit)]];
+                    }
+                }
+                else {
+                    for (char qubit : {'a', 'b', 'c', 'd'}) {
+                        if (x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit) != std::numeric_limits<unsigned int>::max())
+                            consistent = consistent && parity_check_matrix.value()[i][qsite_to_index.value()[x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit)] + qsite_to_index->size()];
+                    }   
+                }
+
+                if (!consistent) {
+                    std::cerr << "LogicalQubit::test_stabilizers: stabilizer row " << i << " out of " << parity_check_matrix->size() - 2 << " in parity check matrix inconsistent with corresponding stabilizer." << std::endl;
+                    std::cerr << "There are " << z_plaquettes.size() << " z plaquettes." << std::endl;
+                    abort();
+                }
+            }
+        }
     }
 
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : 

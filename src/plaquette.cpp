@@ -1,5 +1,7 @@
 #include <TISCC/plaquette.hpp>
 
+#include <limits>
+
 namespace TISCC 
 {
     // Access qsite occupied by a named qubit
@@ -14,9 +16,10 @@ namespace TISCC
 
     // Ask whether the plaquette has support on the site in question and remove if so
     bool Plaquette::remove_supported_qsite(unsigned int site) {
-        if ((a_ == site) || (b_ == site) || (c_ == site) || (d_ == site)) {
-            return true;
-        }
+        if (a_ == site) {a_ = std::numeric_limits<unsigned int>::max(); return true;}
+        else if (b_ == site) {b_ = std::numeric_limits<unsigned int>::max(); return true;}
+        else if (c_ == site) {c_ = std::numeric_limits<unsigned int>::max(); return true;}
+        else if (d_ == site) {d_ = std::numeric_limits<unsigned int>::max(); return true;}
         else if (m_ == site) {
             std::cerr << "Plaquette::remove_supported_qsite: Cannot remove measure qubit of active plaquette." << std::endl;
             abort();
