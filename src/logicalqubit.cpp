@@ -487,8 +487,6 @@ namespace TISCC
         // Next we need to test
 
         /* We need to make the following updates: 
-            - Make sure that we still have the same number of encoded qubits i.e. that the number of stabilizers still equals the number of qubits minus 1
-            - Ensure that the correspondence in ordering of the parity check matrix rows vs. plaquette vector indices is preserved
             - A function that notes any decrease in code distance would be very useful
             - Check that three-qubit stabilizers still work 
         */
