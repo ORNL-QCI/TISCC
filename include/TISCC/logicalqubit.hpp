@@ -49,7 +49,7 @@ public:
     void xz_swap();
 
     // Add new stabilizer plaquette (used in corner movement)
-    void add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, bool debug);
+    double add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 
 private:
     // Code distances

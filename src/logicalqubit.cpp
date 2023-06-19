@@ -63,435 +63,6 @@ namespace TISCC
         return qsite_rep;
     }
 
-    // Add new stabilizer plaquette (to be used in corner movement)
-    void LogicalQubit::add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, bool debug) {
-
-        // We require newly measured stabilizers to be along the boundaries and of the appropriate shape, since the purpose of this function is to be used in corner movement
-        if (!(((col == col_) && (row > row_) && (row < row_ + dz_) && (shape == 'w')) ||  // Left edge
-            ((col == col_ + dx_) && (row > row_) && (row < row_ + dz_) && (shape == 'e')) || // Right edge
-            ((row == row_) && (col > col_) && (col < col_ + dx_) && (shape == 'n')) ||  // Top edge
-            ((row == row_ + dz_) && (col > col_) && (col < col_ + dx_) && (shape == 's')))) { // Bottom edge
-            std::cout << "LogicalQubit::add_stabilizer: Newly added plaquettes must lie along boundaries and be of the appropriate shape, as this function is only meant to be used in corner movement." << std::endl;
-            abort();
-        }
-
-        // Construct parity check matrix if haven't already
-        if (!parity_check_matrix) {
-            construct_parity_check_matrix(grid);
-        }
-
-        // Construct new Plaquette from the grid without explicitly adding it yet
-        // (note that more validity checks take place within this function)
-        // ** The set of occupied_sites on grid is updated to include the new measure qubit
-        Plaquette new_stabilizer(grid.get_plaquette(row, col, shape, type)); 
-
-        // Construct a new vector in binary symplectic format corresponding to this stabilizer
-        std::vector<bool> new_row(2*qsite_to_index->size(), 0);
-        for (char qubit : {'a', 'b', 'c', 'd'}) {
-            if (qsite_to_index->count(new_stabilizer.get_qsite(qubit))) {
-                if (type == 'Z') {
-                    new_row[qsite_to_index.value()[new_stabilizer.get_qsite(qubit)]] = 1;
-                }
-                else if (type == 'X') {
-                    new_row[qsite_to_index->size() + qsite_to_index.value()[new_stabilizer.get_qsite(qubit)]] = 1;
-                }
-            }
-        }
-
-        /* Check commutation of new stabilizer with every row of parity_check_matrix (with appended logical operators) */
-
-        // First, transform the new row s.t. the roles of X and Z have been swapped
-        std::vector<bool> new_row_transformed(2*qsite_to_index->size());
-        for (unsigned int k=0; k<qsite_to_index->size(); k++) {
-            new_row_transformed[k] = new_row[k+qsite_to_index->size()];
-            new_row_transformed[k+qsite_to_index->size()] = new_row[k];
-        }
-
-        // Then, calculate the binary symplectic product with every row of the parity_check_matrix and track row indices for which it is 1
-        std::vector<unsigned int> anticommuting_stabilizers;
-        std::vector<unsigned int> anticommuting_logical_ops;
-        bool bin_sym_prod;
-        for (unsigned int i=0; i<parity_check_matrix->size(); i++) {
-
-            // Calculate binary symplectic product
-            bin_sym_prod = 0;
-            for (unsigned int k = 0; k < new_row_transformed.size(); k++) {
-                bin_sym_prod ^= (parity_check_matrix.value()[i][k] && new_row_transformed[k]);
-            }
-
-            // If the product = 1, then the two operators anti-commute
-            if (bin_sym_prod) {
-
-                // If this row of parity_check_matrix corresponds with a stabilizer plaquette,
-                if (i < parity_check_matrix->size() - 2) {
-
-                    // We don't allow the new stabilizer to anti-commute with any 'f' plaquettes
-                    if (i < z_plaquettes.size()) {
-                        if (z_plaquettes[i].get_shape() == 'f') {
-                            std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
-                            abort();
-                        }
-                    }
-                    else if (x_plaquettes[i - z_plaquettes.size()].get_shape() == 'f') {
-                        std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
-                        abort();  
-                    }
-
-                    anticommuting_stabilizers.push_back(i);
-                }
-
-                // If this row of parity_check_matrix corresponds with a logical operator
-                else {
-                    anticommuting_logical_ops.push_back(i);
-                }
-            }
-        }
-
-        // We remove the measure qubits corresponding with the anti-commuting stabilizers from the grid's occupied_sites set
-        for (unsigned int index: anticommuting_stabilizers) {
-            // Remove the stabilizers that anticommute with the new one
-            if (index < z_plaquettes.size()) {
-                grid.deoccupy_site(z_plaquettes[index].get_qsite('m'));        
-            }
-            else {
-                grid.deoccupy_site(x_plaquettes[index - z_plaquettes.size()].get_qsite('m'));
-            }
-        }
-
-        // Print stabilizers to be added and removed and logical ops to be updated
-        if (debug) {
-            std::cout << std::endl << "Stabilizer being added: ";
-            std::copy(new_row.begin(), new_row.end(), std::ostream_iterator<bool>(std::cout));
-            std::cout << std::endl;
-            std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(new_row), true);
-            grid.print_grid(ascii_grid);
-
-            for (unsigned int index: anticommuting_stabilizers) {
-                std::cout << std::endl << "Stabilizer being removed: ";
-                std::copy(parity_check_matrix.value()[index].begin(), parity_check_matrix.value()[index].end(), std::ostream_iterator<bool>(std::cout));
-                std::cout << std::endl;
-                ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[index]), true);
-                grid.print_grid(ascii_grid);
-            }
-
-            for (unsigned int index: anticommuting_logical_ops) {
-                std::cout << std::endl << "Anti-commuting logical operator to be updated: ";
-                std::copy(parity_check_matrix.value()[index].begin(), parity_check_matrix.value()[index].end(), std::ostream_iterator<bool>(std::cout));
-                std::cout << std::endl;
-                ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[index]), true);
-                grid.print_grid(ascii_grid);
-            }
-        }
-
-        // Before modifying the stabilizer vectors, ensure they pass appropriate checks
-        test_stabilizers(); 
-
-        // Create an optional alternative logical operator, to be used in cases where neither stored logical operator anti-commuted with the added stabilizer
-        std::optional<std::vector<bool>> logical_operator_opposite_edge;
-
-        // Checks on results
-        if (anticommuting_stabilizers.size() > 2) {
-            std::cerr << "LogicalQubit::add_stabilizer: At most two stabilizers should anti-commute with a measured boundary stabilizer." << std::endl;
-            abort();
-        }
-
-        else if (anticommuting_logical_ops.size() > 1) {
-            std::cerr << "LogicalQubit::add_stabilizer: At most one stored (X or Z) logical operator should anti-commute with a measured boundary stabilizer." << std::endl;
-            abort();
-        }
-
-        else if ((anticommuting_stabilizers.size() == 0) && (anticommuting_logical_ops.size() == 1)) {
-            std::cerr << "LogicalQubit::add_stabilizer: Added stabilizer anti-commutes with a logical operator but with no stabilizers." << std::endl;
-            abort();
-        }
-
-        else if ((anticommuting_stabilizers.size() == 0) && (anticommuting_logical_ops.size() == 0)) {
-            std::cerr << "LogicalQubit::add_stabilizer: Added stabilizer already exists." << std::endl;
-            abort();
-        }
-
-        else if ((anticommuting_stabilizers.size() == 2) && (anticommuting_logical_ops.size() == 1)) {
-            std::cerr << "LogicalQubit::add_stabilizer: Strange situation encountered; two anti-commuting stabilizers and one anti-commuting logical operator." << std::endl;
-            abort();            
-        }
-
-        // If neither of the stored logical operators anti-commute with the added stabilizer,
-        // (depending on the case) we construct an equivalent operator along the opposite edge of the logical qubit.
-        else if (anticommuting_logical_ops.size() == 0) {
-            std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
-            if (type == 'X') {
-                tmp_logical_operator = parity_check_matrix.value()[parity_check_matrix->size()-2];
-                for (unsigned int i=0; i<z_plaquettes.size(); i++) {
-                    for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
-                        tmp_logical_operator[k] = tmp_logical_operator[k] ^ parity_check_matrix.value()[i][k];
-                    }
-                }
-            }
-            else if (type == 'Z') {
-                tmp_logical_operator = parity_check_matrix.value()[parity_check_matrix->size()-1];
-                for (unsigned int i=0; i<x_plaquettes.size(); i++) {
-                    for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
-                        tmp_logical_operator[k] = tmp_logical_operator[k] ^ parity_check_matrix.value()[i + z_plaquettes.size()][k];
-                    }
-                }
-            }
-            logical_operator_opposite_edge = std::move(tmp_logical_operator);
-
-            // // Visualize first the relevant logical operator on default edge
-            // if (debug) {
-            //     std::cout << std::endl << "Logical operator (default edge): ";
-            //     std::copy(parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')].begin(), parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')].end(), std::ostream_iterator<bool>(std::cout));
-            //     std::cout << std::endl;
-            //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')]), true);
-            //     grid.print_grid(ascii_grid);
-            // }
-            
-            // // Visualize same (topol. equiv.) logical operator on the opposite edge
-            // if (debug) {
-            //     std::cout << std::endl << "Logical operator (topol. equiv. on opposite edge): ";
-            //     std::copy(logical_operator_opposite_edge.value().begin(), logical_operator_opposite_edge.value().end(), std::ostream_iterator<bool>(std::cout));
-            //     std::cout << std::endl;
-            //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(logical_operator_opposite_edge.value()), true);
-            //     grid.print_grid(ascii_grid);
-            // }
-        }
-
-        // In case an anti-commuting logical operator needs to be replaced using products with the anti-commuting stabilizers
-        std::optional<std::vector<bool>> new_logical_operator_default_edge;
-        std::optional<std::vector<bool>> new_logical_operator_opposite_edge;
-
-        // In some cases, a qubit will need to be removed in order to maintain a single logical qubit and retain code distance
-        std::optional<unsigned int> overlapping_index;
-
-        // If there is one anti-commuting stabilizer, 
-        if (anticommuting_stabilizers.size() == 1) {
-
-            // If the added stabilizer hadn't anti-commuted with one of the logical operators, an alternative logical operator should have been constructed
-            if (anticommuting_logical_ops.size() == 0) {
-                assert(logical_operator_opposite_edge.has_value());
-
-                // Check if the newly constructed logical operator anti-commutes with the added stabilizer
-                bin_sym_prod = 0;
-                for (unsigned int k=0; k<logical_operator_opposite_edge.value().size(); k++) {
-                    bin_sym_prod ^= (logical_operator_opposite_edge.value()[k] && new_row_transformed[k]);
-                }
-
-                if (!bin_sym_prod) {
-                    std::cerr << "LogicalQubit::add_stabilizer: Strange situation encountered; one anti-commuting stabilizer and zero anti-commuting logical operators." << std::endl;
-                    abort();
-                }
-
-                // If the check passes, there is nothing to do in updating the logical operator
-
-            }
-
-            // If there is an anti-commuting logical operator along the default edge, take its product with the single anti-commuting stabilizer
-            else {
-                std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
-                for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
-                    tmp_logical_operator[k] = parity_check_matrix.value()[anticommuting_stabilizers[0]][k] ^ parity_check_matrix.value()[anticommuting_logical_ops[0]][k];
-                }
-                new_logical_operator_default_edge = std::move(tmp_logical_operator);
-            }
-        }
-
-        // If there are two anti-commuting stabilizers, 
-        else if (anticommuting_stabilizers.size() == 2) {
-
-            // Take their product
-            std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
-            for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
-                tmp_logical_operator[i] = parity_check_matrix.value()[anticommuting_stabilizers[0]][i] ^ parity_check_matrix.value()[anticommuting_stabilizers[1]][i];
-            }
-
-            // if (debug) {
-            //     std::cout << std::endl << "New logical operator comprised of two anti-commuting stabilizers: ";
-            //     std::copy(tmp_logical_operator.begin(), tmp_logical_operator.end(), std::ostream_iterator<bool>(std::cout));
-            //     std::cout << std::endl;
-            //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(tmp_logical_operator), true);
-            //     grid.print_grid(ascii_grid);
-            // }
-
-            // Find out whether there is an overlapping qubit between this operator and the stored logical operator
-            for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
-                if (tmp_logical_operator[i] && (parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')][i])) {
-                    if (!overlapping_index) 
-                        overlapping_index = std::make_optional(index_to_qsite.value()[i]);
-                    else {
-                        std::cerr << "LogicalQubit::add_stabilizer: Multiple overlapping qsites found (path 1)." << std::endl;
-                        abort();
-                    }
-                }
-            }
-
-            // Update the tmp_logical_operator if overlap was found
-            if (overlapping_index.has_value()) {
-                for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
-                    tmp_logical_operator[i] = tmp_logical_operator[i] ^ parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')][i];
-                }
-                new_logical_operator_default_edge = std::move(tmp_logical_operator);
-
-                // Visualize new logical operator on grid (for debugging purposes)
-                if (debug) {
-                    std::cout << std::endl << "Default edge logical operator replaced with: ";
-                    std::copy(new_logical_operator_default_edge.value().begin(), new_logical_operator_default_edge.value().end(), std::ostream_iterator<bool>(std::cout));
-                    std::cout << std::endl;
-                    std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(new_logical_operator_default_edge.value()), true);
-                    grid.print_grid(ascii_grid);
-                }
-            } 
-
-            // If none was found, try the opposite edge logical operator
-            else {
-                for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
-                    if (tmp_logical_operator[i] && (logical_operator_opposite_edge.value()[i])) {
-                        if (!overlapping_index) 
-                            overlapping_index = std::make_optional(index_to_qsite.value()[i]);
-                        else {
-                            std::cerr << "LogicalQubit::add_stabilizer: Multiple overlapping qsites found (path 2)." << std::endl;
-                            abort();
-                        }
-                    }
-                }
-
-                // Update the tmp_logical_operator if overlap was found
-                if (overlapping_index.has_value()) {
-                    for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
-                        tmp_logical_operator[i] = tmp_logical_operator[i] ^ logical_operator_opposite_edge.value()[i];
-                    }
-                    new_logical_operator_opposite_edge = std::move(tmp_logical_operator);
-
-                    // Visualize new logical operator on grid (for debugging purposes)
-                    if (debug) {
-                        std::cout << std::endl << "Opposite edge logical operator replaced with: ";
-                        std::copy(new_logical_operator_opposite_edge.value().begin(), new_logical_operator_opposite_edge.value().end(), std::ostream_iterator<bool>(std::cout));
-                        std::cout << std::endl;
-                        std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(new_logical_operator_opposite_edge.value()), true);
-                        grid.print_grid(ascii_grid);
-                    }
-                } 
-            }
-
-            // Now, if there is still no overlapping qubit, then this is an invalid path
-            if (!overlapping_index) {
-                std::cerr << "LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement." << std::endl;
-                abort();
-            }
-
-        }
-
-        // If the default-edge logical operator of the same type as the added stabilizer has overlap with it, it should be replaced
-        std::optional<std::vector<bool>> new_same_type_logical_operator;
-        std::vector<bool> tmp_row(2*qsite_to_index->size());
-        unsigned int weight_current = 0;
-        unsigned int weight_new = 0;
-        for (unsigned int i=0; i<2*qsite_to_index->size(); i++) {
-            tmp_row[i] = parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][i] ^ new_row[i];
-            weight_current += parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][i];
-            weight_new += tmp_row[i];
-        }
-        if (weight_new < weight_current) {
-            new_same_type_logical_operator = std::move(tmp_row);
-        }
-
-        // Replace the old logical operators with new ones if necessary
-        if (new_logical_operator_default_edge.has_value()) {
-            parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')] = new_logical_operator_default_edge.value();
-        }
-        if (new_same_type_logical_operator.has_value()) {
-            parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')] = new_same_type_logical_operator.value();
-        }
-
-        // Visualize qubit to remove (for debugging purposes)
-        if (overlapping_index.has_value()) {
-            if (debug) {
-                std::cout << std::endl << "Qubit flagged for removal at qsite: " << overlapping_index.value() << std::endl;
-                std::pair<unsigned int, char> single_qubit = std::make_pair(overlapping_index.value(), type);
-                std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator({single_qubit}, true);
-                grid.print_grid(ascii_grid);
-            }
-        }
-
-        // Remove the overlapping qubit if necessary
-        if (overlapping_index.has_value()) {
-            if (type=='X') {
-                for (unsigned int i=0; i<x_plaquettes.size(); i++) {
-                    if (x_plaquettes[i].remove_supported_qsite(overlapping_index.value())) {
-                        parity_check_matrix.value()[i + z_plaquettes.size()][qsite_to_index.value()[overlapping_index.value()] + qsite_to_index->size()] = 0;
-                    }
-                }
-            }
-            else {
-                for (unsigned int i=0; i<z_plaquettes.size(); i++) {
-                    if (z_plaquettes[i].remove_supported_qsite(overlapping_index.value())) {
-                        parity_check_matrix.value()[i][qsite_to_index.value()[overlapping_index.value()]] = 0;
-                    }
-                }
-            }
-            parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][qsite_to_index.value()[overlapping_index.value()] + (type=='X')*qsite_to_index->size()] = 0;
-            grid.deoccupy_site(overlapping_index.value());
-        }
-
-        // Print final grid and final default-edge logical operators
-        if (debug) {
-            std::cout << std::endl << "Final grid: " << std::endl;
-            std::vector<std::string> ascii_grid = grid.ascii_grid(true);
-            grid.print_grid(ascii_grid);
-
-            std::cout << std::endl << "Final default-edge logical Z operator: ";
-            std::copy(parity_check_matrix.value()[parity_check_matrix->size()-2].begin(), parity_check_matrix.value()[parity_check_matrix->size()-2].end(), std::ostream_iterator<bool>(std::cout));
-            std::cout << std::endl;
-            ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[parity_check_matrix->size()-2]), true);
-            grid.print_grid(ascii_grid);
-
-            std::cout << std::endl << "Final default-edge logical X operator: ";
-            std::copy(parity_check_matrix.value()[parity_check_matrix->size()-1].begin(), parity_check_matrix.value()[parity_check_matrix->size()-1].end(), std::ostream_iterator<bool>(std::cout));
-            std::cout << std::endl;
-            ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[parity_check_matrix->size()-1]), true);
-            grid.print_grid(ascii_grid);
-        }
-
-        // Loop over anti-commuting operators and remove them
-        for (unsigned int i=0; i<anticommuting_stabilizers.size(); i++) {
-            if (anticommuting_stabilizers[i] < z_plaquettes.size()) {
-                z_plaquettes.erase(z_plaquettes.begin() + anticommuting_stabilizers[i]);   
-            }
-            else {
-                x_plaquettes.erase(x_plaquettes.begin() + anticommuting_stabilizers[i] - z_plaquettes.size());
-            }
-            parity_check_matrix->erase(parity_check_matrix->begin() + anticommuting_stabilizers[i]);
-
-            for (unsigned int j=i+1; j<anticommuting_stabilizers.size(); j++) {
-                if (anticommuting_stabilizers[j] > anticommuting_stabilizers[i]) 
-                    anticommuting_stabilizers[j]--;
-            }
-        }
-
-        // Add the new stabilizer
-        if (type == 'Z') {
-            z_plaquettes.push_back(std::move(new_stabilizer));
-            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() - 1, std::move(new_row));
-        }
-        else {
-            x_plaquettes.push_back(std::move(new_stabilizer));
-            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() + x_plaquettes.size() - 1, std::move(new_row));
-        }
-
-        /* Things to note: 
-            - There is now an empty column where the removed qubit was. We keep it there since it might return on the addition of a later stabilizer.
-            - That case (where a qubit needs to return) is not currently handled
-        */
-
-        test_stabilizers(); 
-
-        // Next we need to test
-
-        /* We need to make the following updates: 
-            - A function that notes any decrease in code distance would be very useful
-            - Check that three-qubit stabilizers still work 
-        */
-    }
-
     // Set up the circuits that we intend to use
     void LogicalQubit::init_circuits() {
 
@@ -972,45 +543,482 @@ namespace TISCC
         return time;
     }
 
-// Construct and return a logical qubit that represents the merged product of two input logical qubits
-LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
+   // Add new stabilizer plaquette (to be used in corner movement)
+    double LogicalQubit::add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
-    // Determine whether to merge horizontally or vertically and set parameters
+        // We require newly measured stabilizers to be along the boundaries and of the appropriate shape, since the purpose of this function is to be used in corner movement
+        if (!(((col == col_) && (row > row_) && (row < row_ + dz_) && (shape == 'w')) ||  // Left edge
+            ((col == col_ + dx_) && (row > row_) && (row < row_ + dz_) && (shape == 'e')) || // Right edge
+            ((row == row_) && (col > col_) && (col < col_ + dx_) && (shape == 'n')) ||  // Top edge
+            ((row == row_ + dz_) && (col > col_) && (col < col_ + dx_) && (shape == 's')))) { // Bottom edge
+            std::cout << "LogicalQubit::add_stabilizer: Newly added plaquettes must lie along boundaries and be of the appropriate shape, as this function is only meant to be used in corner movement." << std::endl;
+            abort();
+        }
 
-    // If they are horizontally displaced,
-    if (lq1.get_row() == lq2.get_row()) {
+        // In some cases, a hardware instruction is added and time needs to be incremented
+        double time_tmp = time;
 
-        // We require them to have the same code distance
-        assert(lq1.get_dz() == lq2.get_dz());
+        // Construct parity check matrix if haven't already
+        if (!parity_check_matrix) {
+            construct_parity_check_matrix(grid);
+        }
 
-        // Merge horizontally
-        unsigned int extra_strip = 0;
-        if (lq1.get_dx()%2 == 0) {extra_strip = 1;}
-        assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1 + extra_strip);
-        return LogicalQubit(lq1.get_dx() + lq2.get_dx() + 1 + extra_strip, lq1.get_dz(), lq1.get_row(), lq1.get_col(), grid);
+        // Construct new Plaquette from the grid without explicitly adding it yet
+        // (note that more validity checks take place within this function)
+        // ** The set of occupied_sites on grid is updated to include the new measure qubit
+        Plaquette new_stabilizer(grid.get_plaquette(row, col, shape, type)); 
 
+        // Construct a new vector in binary symplectic format corresponding to this stabilizer
+        std::vector<bool> new_row(2*qsite_to_index->size(), 0);
+        for (char qubit : {'a', 'b', 'c', 'd'}) {
+            if (qsite_to_index->count(new_stabilizer.get_qsite(qubit))) {
+                if (type == 'Z') {
+                    new_row[qsite_to_index.value()[new_stabilizer.get_qsite(qubit)]] = 1;
+                }
+                else if (type == 'X') {
+                    new_row[qsite_to_index->size() + qsite_to_index.value()[new_stabilizer.get_qsite(qubit)]] = 1;
+                }
+            }
+        }
+
+        /* Check commutation of new stabilizer with every row of parity_check_matrix (with appended logical operators) */
+
+        // First, transform the new row s.t. the roles of X and Z have been swapped
+        std::vector<bool> new_row_transformed(2*qsite_to_index->size());
+        for (unsigned int k=0; k<qsite_to_index->size(); k++) {
+            new_row_transformed[k] = new_row[k+qsite_to_index->size()];
+            new_row_transformed[k+qsite_to_index->size()] = new_row[k];
+        }
+
+        // Then, calculate the binary symplectic product with every row of the parity_check_matrix and track row indices for which it is 1
+        std::vector<unsigned int> anticommuting_stabilizers;
+        std::vector<unsigned int> anticommuting_logical_ops;
+        bool bin_sym_prod;
+        for (unsigned int i=0; i<parity_check_matrix->size(); i++) {
+
+            // Calculate binary symplectic product
+            bin_sym_prod = 0;
+            for (unsigned int k = 0; k < new_row_transformed.size(); k++) {
+                bin_sym_prod ^= (parity_check_matrix.value()[i][k] && new_row_transformed[k]);
+            }
+
+            // If the product = 1, then the two operators anti-commute
+            if (bin_sym_prod) {
+
+                // If this row of parity_check_matrix corresponds with a stabilizer plaquette,
+                if (i < parity_check_matrix->size() - 2) {
+
+                    // We don't allow the new stabilizer to anti-commute with any 'f' plaquettes
+                    if (i < z_plaquettes.size()) {
+                        if (z_plaquettes[i].get_shape() == 'f') {
+                            std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
+                            abort();
+                        }
+                    }
+                    else if (x_plaquettes[i - z_plaquettes.size()].get_shape() == 'f') {
+                        std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
+                        abort();  
+                    }
+
+                    anticommuting_stabilizers.push_back(i);
+                }
+
+                // If this row of parity_check_matrix corresponds with a logical operator
+                else {
+                    anticommuting_logical_ops.push_back(i);
+                }
+            }
+        }
+
+        // We remove the measure qubits corresponding with the anti-commuting stabilizers from the grid's occupied_sites set
+        for (unsigned int index: anticommuting_stabilizers) {
+            // Remove the stabilizers that anticommute with the new one
+            if (index < z_plaquettes.size()) {
+                grid.deoccupy_site(z_plaquettes[index].get_qsite('m'));        
+            }
+            else {
+                grid.deoccupy_site(x_plaquettes[index - z_plaquettes.size()].get_qsite('m'));
+            }
+        }
+
+        // Print stabilizers to be added and removed and logical ops to be updated
+        if (debug) {
+            std::cout << std::endl << "Stabilizer being added: ";
+            std::copy(new_row.begin(), new_row.end(), std::ostream_iterator<bool>(std::cout));
+            std::cout << std::endl;
+            std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(new_row), true);
+            grid.print_grid(ascii_grid);
+
+            for (unsigned int index: anticommuting_stabilizers) {
+                std::cout << std::endl << "Stabilizer being removed: ";
+                std::copy(parity_check_matrix.value()[index].begin(), parity_check_matrix.value()[index].end(), std::ostream_iterator<bool>(std::cout));
+                std::cout << std::endl;
+                ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[index]), true);
+                grid.print_grid(ascii_grid);
+            }
+
+            for (unsigned int index: anticommuting_logical_ops) {
+                std::cout << std::endl << "Anti-commuting logical operator to be updated: ";
+                std::copy(parity_check_matrix.value()[index].begin(), parity_check_matrix.value()[index].end(), std::ostream_iterator<bool>(std::cout));
+                std::cout << std::endl;
+                ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[index]), true);
+                grid.print_grid(ascii_grid);
+            }
+        }
+
+        // Before modifying the stabilizer vectors, ensure they pass appropriate checks
+        test_stabilizers(); 
+
+        // Create an optional alternative logical operator, to be used in cases where neither stored logical operator anti-commuted with the added stabilizer
+        std::optional<std::vector<bool>> logical_operator_opposite_edge;
+
+        // Checks on results
+        if (anticommuting_stabilizers.size() > 2) {
+            std::cerr << "LogicalQubit::add_stabilizer: At most two stabilizers should anti-commute with a measured boundary stabilizer." << std::endl;
+            abort();
+        }
+
+        else if (anticommuting_logical_ops.size() > 1) {
+            std::cerr << "LogicalQubit::add_stabilizer: At most one stored (X or Z) logical operator should anti-commute with a measured boundary stabilizer." << std::endl;
+            abort();
+        }
+
+        else if ((anticommuting_stabilizers.size() == 0) && (anticommuting_logical_ops.size() == 1)) {
+            std::cerr << "LogicalQubit::add_stabilizer: Added stabilizer anti-commutes with a logical operator but with no stabilizers." << std::endl;
+            abort();
+        }
+
+        else if ((anticommuting_stabilizers.size() == 0) && (anticommuting_logical_ops.size() == 0)) {
+            std::cerr << "LogicalQubit::add_stabilizer: Added stabilizer already exists." << std::endl;
+            abort();
+        }
+
+        else if ((anticommuting_stabilizers.size() == 2) && (anticommuting_logical_ops.size() == 1)) {
+            std::cerr << "LogicalQubit::add_stabilizer: Strange situation encountered; two anti-commuting stabilizers and one anti-commuting logical operator." << std::endl;
+            abort();            
+        }
+
+        // If neither of the stored logical operators anti-commute with the added stabilizer,
+        // (depending on the case) we construct an equivalent operator along the opposite edge of the logical qubit.
+        else if (anticommuting_logical_ops.size() == 0) {
+            std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
+            if (type == 'X') {
+                tmp_logical_operator = parity_check_matrix.value()[parity_check_matrix->size()-2];
+                for (unsigned int i=0; i<z_plaquettes.size(); i++) {
+                    for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
+                        tmp_logical_operator[k] = tmp_logical_operator[k] ^ parity_check_matrix.value()[i][k];
+                    }
+                }
+            }
+            else if (type == 'Z') {
+                tmp_logical_operator = parity_check_matrix.value()[parity_check_matrix->size()-1];
+                for (unsigned int i=0; i<x_plaquettes.size(); i++) {
+                    for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
+                        tmp_logical_operator[k] = tmp_logical_operator[k] ^ parity_check_matrix.value()[i + z_plaquettes.size()][k];
+                    }
+                }
+            }
+            logical_operator_opposite_edge = std::move(tmp_logical_operator);
+
+            // // Visualize first the relevant logical operator on default edge
+            // if (debug) {
+            //     std::cout << std::endl << "Logical operator (default edge): ";
+            //     std::copy(parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')].begin(), parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')].end(), std::ostream_iterator<bool>(std::cout));
+            //     std::cout << std::endl;
+            //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')]), true);
+            //     grid.print_grid(ascii_grid);
+            // }
+            
+            // // Visualize same (topol. equiv.) logical operator on the opposite edge
+            // if (debug) {
+            //     std::cout << std::endl << "Logical operator (topol. equiv. on opposite edge): ";
+            //     std::copy(logical_operator_opposite_edge.value().begin(), logical_operator_opposite_edge.value().end(), std::ostream_iterator<bool>(std::cout));
+            //     std::cout << std::endl;
+            //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(logical_operator_opposite_edge.value()), true);
+            //     grid.print_grid(ascii_grid);
+            // }
+        }
+
+        // In case an anti-commuting logical operator needs to be replaced using products with the anti-commuting stabilizers
+        std::optional<std::vector<bool>> new_logical_operator_default_edge;
+        std::optional<std::vector<bool>> new_logical_operator_opposite_edge;
+
+        // In some cases, a qubit will need to be removed in order to maintain a single logical qubit and retain code distance
+        std::optional<unsigned int> overlapping_index;
+
+        // If there is one anti-commuting stabilizer, 
+        if (anticommuting_stabilizers.size() == 1) {
+
+            // If the added stabilizer hadn't anti-commuted with one of the logical operators, an alternative logical operator should have been constructed
+            if (anticommuting_logical_ops.size() == 0) {
+                assert(logical_operator_opposite_edge.has_value());
+
+                // Check if the newly constructed logical operator anti-commutes with the added stabilizer
+                bin_sym_prod = 0;
+                for (unsigned int k=0; k<logical_operator_opposite_edge.value().size(); k++) {
+                    bin_sym_prod ^= (logical_operator_opposite_edge.value()[k] && new_row_transformed[k]);
+                }
+
+                if (!bin_sym_prod) {
+                    std::cerr << "LogicalQubit::add_stabilizer: Strange situation encountered; one anti-commuting stabilizer and zero anti-commuting logical operators." << std::endl;
+                    abort();
+                }
+
+                // If the check passes, there is nothing to do in updating the logical operator
+
+            }
+
+            // If there is an anti-commuting logical operator along the default edge, take its product with the single anti-commuting stabilizer
+            else {
+                std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
+                for (unsigned int k=0; k<tmp_logical_operator.size(); k++) {
+                    tmp_logical_operator[k] = parity_check_matrix.value()[anticommuting_stabilizers[0]][k] ^ parity_check_matrix.value()[anticommuting_logical_ops[0]][k];
+                }
+                new_logical_operator_default_edge = std::move(tmp_logical_operator);
+            }
+        }
+
+        // If there are two anti-commuting stabilizers, 
+        else if (anticommuting_stabilizers.size() == 2) {
+
+            // Take their product
+            std::vector<bool> tmp_logical_operator(2*qsite_to_index->size());
+            for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
+                tmp_logical_operator[i] = parity_check_matrix.value()[anticommuting_stabilizers[0]][i] ^ parity_check_matrix.value()[anticommuting_stabilizers[1]][i];
+            }
+
+            // if (debug) {
+            //     std::cout << std::endl << "New logical operator comprised of two anti-commuting stabilizers: ";
+            //     std::copy(tmp_logical_operator.begin(), tmp_logical_operator.end(), std::ostream_iterator<bool>(std::cout));
+            //     std::cout << std::endl;
+            //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(tmp_logical_operator), true);
+            //     grid.print_grid(ascii_grid);
+            // }
+
+            // Find out whether there is an overlapping qubit between this operator and the stored logical operator
+            for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
+                if (tmp_logical_operator[i] && (parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')][i])) {
+                    if (!overlapping_index) 
+                        overlapping_index = std::make_optional(index_to_qsite.value()[i]);
+                    else {
+                        std::cerr << "LogicalQubit::add_stabilizer: Multiple overlapping qsites found (path 1)." << std::endl;
+                        abort();
+                    }
+                }
+            }
+
+            // Update the tmp_logical_operator if overlap was found
+            if (overlapping_index.has_value()) {
+                for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
+                    tmp_logical_operator[i] = tmp_logical_operator[i] ^ parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')][i];
+                }
+                new_logical_operator_default_edge = std::move(tmp_logical_operator);
+
+                // Visualize new logical operator on grid (for debugging purposes)
+                if (debug) {
+                    std::cout << std::endl << "Default edge logical operator replaced with: ";
+                    std::copy(new_logical_operator_default_edge.value().begin(), new_logical_operator_default_edge.value().end(), std::ostream_iterator<bool>(std::cout));
+                    std::cout << std::endl;
+                    std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(new_logical_operator_default_edge.value()), true);
+                    grid.print_grid(ascii_grid);
+                }
+            } 
+
+            // If none was found, try the opposite edge logical operator
+            else {
+                for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
+                    if (tmp_logical_operator[i] && (logical_operator_opposite_edge.value()[i])) {
+                        if (!overlapping_index) 
+                            overlapping_index = std::make_optional(index_to_qsite.value()[i]);
+                        else {
+                            std::cerr << "LogicalQubit::add_stabilizer: Multiple overlapping qsites found (path 2)." << std::endl;
+                            abort();
+                        }
+                    }
+                }
+
+                // Update the tmp_logical_operator if overlap was found
+                if (overlapping_index.has_value()) {
+                    for (unsigned int i = 0; i<2*qsite_to_index->size(); i++) {
+                        tmp_logical_operator[i] = tmp_logical_operator[i] ^ logical_operator_opposite_edge.value()[i];
+                    }
+                    new_logical_operator_opposite_edge = std::move(tmp_logical_operator);
+
+                    // Visualize new logical operator on grid (for debugging purposes)
+                    if (debug) {
+                        std::cout << std::endl << "Opposite edge logical operator replaced with: ";
+                        std::copy(new_logical_operator_opposite_edge.value().begin(), new_logical_operator_opposite_edge.value().end(), std::ostream_iterator<bool>(std::cout));
+                        std::cout << std::endl;
+                        std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(new_logical_operator_opposite_edge.value()), true);
+                        grid.print_grid(ascii_grid);
+                    }
+                } 
+            }
+
+            // Now, if there is still no overlapping qubit, then this is an invalid path
+            if (!overlapping_index) {
+                std::cerr << "LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement." << std::endl;
+                abort();
+            }
+
+        }
+
+        // If the default-edge logical operator of the same type as the added stabilizer has overlap with it, it should be replaced
+        std::optional<std::vector<bool>> new_same_type_logical_operator;
+        std::vector<bool> tmp_row(2*qsite_to_index->size());
+        unsigned int weight_current = 0;
+        unsigned int weight_new = 0;
+        for (unsigned int i=0; i<2*qsite_to_index->size(); i++) {
+            tmp_row[i] = parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][i] ^ new_row[i];
+            weight_current += parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][i];
+            weight_new += tmp_row[i];
+        }
+        if (weight_new < weight_current) {
+            new_same_type_logical_operator = std::move(tmp_row);
+        }
+
+        // Replace the old logical operators with new ones if necessary
+        if (new_logical_operator_default_edge.has_value()) {
+            parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')] = new_logical_operator_default_edge.value();
+        }
+        if (new_same_type_logical_operator.has_value()) {
+            parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')] = new_same_type_logical_operator.value();
+        }
+
+        // Visualize qubit to remove (for debugging purposes)
+        if (overlapping_index.has_value()) {
+            if (debug) {
+                std::cout << std::endl << "Qubit flagged for removal at qsite: " << overlapping_index.value() << std::endl;
+                std::pair<unsigned int, char> single_qubit = std::make_pair(overlapping_index.value(), type);
+                std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator({single_qubit}, true);
+                grid.print_grid(ascii_grid);
+            }
+        }
+
+        // Remove the overlapping qubit if necessary
+        if (overlapping_index.has_value()) {
+            if (type=='X') {
+                for (unsigned int i=0; i<x_plaquettes.size(); i++) {
+                    if (x_plaquettes[i].remove_supported_qsite(overlapping_index.value())) {
+                        parity_check_matrix.value()[i + z_plaquettes.size()][qsite_to_index.value()[overlapping_index.value()] + qsite_to_index->size()] = 0;
+                    }
+                }
+                time_tmp = TI_model.add_H(overlapping_index.value(), time, 0, grid, hw_master);
+                time_tmp = TI_model.add_meas(overlapping_index.value(), time_tmp, 1, grid, hw_master);
+            }
+            else {
+                for (unsigned int i=0; i<z_plaquettes.size(); i++) {
+                    if (z_plaquettes[i].remove_supported_qsite(overlapping_index.value())) {
+                        parity_check_matrix.value()[i][qsite_to_index.value()[overlapping_index.value()]] = 0;
+                    }
+                }
+                time_tmp = TI_model.add_meas(overlapping_index.value(), time, 0, grid, hw_master);
+            }
+            parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][qsite_to_index.value()[overlapping_index.value()] + (type=='X')*qsite_to_index->size()] = 0;
+            grid.deoccupy_site(overlapping_index.value());
+        }
+
+        // Print final grid and final default-edge logical operators
+        if (debug) {
+            std::cout << std::endl << "Final grid: " << std::endl;
+            std::vector<std::string> ascii_grid = grid.ascii_grid(true);
+            grid.print_grid(ascii_grid);
+
+            std::cout << std::endl << "Final default-edge logical Z operator: ";
+            std::copy(parity_check_matrix.value()[parity_check_matrix->size()-2].begin(), parity_check_matrix.value()[parity_check_matrix->size()-2].end(), std::ostream_iterator<bool>(std::cout));
+            std::cout << std::endl;
+            ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[parity_check_matrix->size()-2]), true);
+            grid.print_grid(ascii_grid);
+
+            std::cout << std::endl << "Final default-edge logical X operator: ";
+            std::copy(parity_check_matrix.value()[parity_check_matrix->size()-1].begin(), parity_check_matrix.value()[parity_check_matrix->size()-1].end(), std::ostream_iterator<bool>(std::cout));
+            std::cout << std::endl;
+            ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(parity_check_matrix.value()[parity_check_matrix->size()-1]), true);
+            grid.print_grid(ascii_grid);
+        }
+
+        // Loop over anti-commuting operators and remove them
+        for (unsigned int i=0; i<anticommuting_stabilizers.size(); i++) {
+            if (anticommuting_stabilizers[i] < z_plaquettes.size()) {
+                z_plaquettes.erase(z_plaquettes.begin() + anticommuting_stabilizers[i]);   
+            }
+            else {
+                x_plaquettes.erase(x_plaquettes.begin() + anticommuting_stabilizers[i] - z_plaquettes.size());
+            }
+            parity_check_matrix->erase(parity_check_matrix->begin() + anticommuting_stabilizers[i]);
+
+            for (unsigned int j=i+1; j<anticommuting_stabilizers.size(); j++) {
+                if (anticommuting_stabilizers[j] > anticommuting_stabilizers[i]) 
+                    anticommuting_stabilizers[j]--;
+            }
+        }
+
+        // Add the new stabilizer
+        if (type == 'Z') {
+            z_plaquettes.push_back(std::move(new_stabilizer));
+            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() - 1, std::move(new_row));
+        }
+        else {
+            x_plaquettes.push_back(std::move(new_stabilizer));
+            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() + x_plaquettes.size() - 1, std::move(new_row));
+        }
+
+        /* Things to note: 
+            - There is now an empty column where the removed qubit was. We keep it there since it might return on the addition of a later stabilizer.
+            - That case (where a qubit needs to return) is not currently handled
+        */
+
+        test_stabilizers(); 
+
+        return time_tmp;
+
+        // Next we need to test
+
+        /* We need to make the following updates: 
+            - A function that notes any decrease in code distance would be very useful
+            - Check that three-qubit stabilizers still work 
+        */
     }
 
-    // Otherwise, if they are vertically displaced,
-    else if (lq1.get_col() == lq2.get_col()) {
+    // Construct and return a logical qubit that represents the merged product of two input logical qubits
+    LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 
-        // We require them to have the same x code distance
-        assert(lq1.get_dx() == lq2.get_dx());
+        // Determine whether to merge horizontally or vertically and set parameters
 
-        // Merge vertically
-        unsigned int extra_strip = 0;
-        if (lq1.get_dz()%2 == 0) {extra_strip = 1;} 
-        assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1 + extra_strip);
-        return LogicalQubit(lq1.get_dx(), lq1.get_dz() + lq2.get_dz() + 1 + extra_strip, lq1.get_row(), lq1.get_col(), grid); 
+        // If they are horizontally displaced,
+        if (lq1.get_row() == lq2.get_row()) {
+
+            // We require them to have the same code distance
+            assert(lq1.get_dz() == lq2.get_dz());
+
+            // Merge horizontally
+            unsigned int extra_strip = 0;
+            if (lq1.get_dx()%2 == 0) {extra_strip = 1;}
+            assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1 + extra_strip);
+            return LogicalQubit(lq1.get_dx() + lq2.get_dx() + 1 + extra_strip, lq1.get_dz(), lq1.get_row(), lq1.get_col(), grid);
+
+        }
+
+        // Otherwise, if they are vertically displaced,
+        else if (lq1.get_col() == lq2.get_col()) {
+
+            // We require them to have the same x code distance
+            assert(lq1.get_dx() == lq2.get_dx());
+
+            // Merge vertically
+            unsigned int extra_strip = 0;
+            if (lq1.get_dz()%2 == 0) {extra_strip = 1;} 
+            assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1 + extra_strip);
+            return LogicalQubit(lq1.get_dx(), lq1.get_dz() + lq2.get_dz() + 1 + extra_strip, lq1.get_row(), lq1.get_col(), grid); 
+
+        }
+
+        else {
+            std::cerr << "merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+            abort();
+        }
+
+
 
     }
-
-    else {
-        std::cerr << "merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
-        abort();
-    }
-
-
-
-}
 }

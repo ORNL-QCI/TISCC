@@ -165,7 +165,9 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
                 lq.print_stabilizers();
-                lq.add_stabilizer(2, 6, 'e', 'Z', grid, debug);
+                double time = 0;
+                std::vector<HW_Instruction> hw_master;
+                time = lq.add_stabilizer(2, 6, 'e', 'Z', grid, hw_master, time, debug);
                 lq.print_parity_check_matrix(grid);
                 lq.print_stabilizers();
             }
