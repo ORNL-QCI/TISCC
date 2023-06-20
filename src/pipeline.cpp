@@ -141,7 +141,6 @@ namespace TISCC
                 TI_model.print_TI_ops();
             }
 
-            /* TODO: It would probably make more sense to print the measure qsite rather than the junction. */
             else if (s == "plaquettes") {
                 GridManager grid(nrows, ncols);
                 LogicalQubit lq(dx, dz, 0, 0, grid);
@@ -164,14 +163,6 @@ namespace TISCC
                 GridManager grid(nrows, ncols);
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix(grid);
-                // lq.print_stabilizers();
-                // double time = 0;
-                // std::vector<HW_Instruction> hw_master;
-                // time = lq.add_stabilizer(5, 2, 's', 'X', grid, hw_master, time, debug);
-                // time = lq.add_stabilizer(5, 3, 's', 'Z', grid, hw_master, time, debug);
-                // time = lq.add_stabilizer(5, 1, 's', 'Z', grid, hw_master, time, debug);
-                // lq.print_parity_check_matrix(grid);
-                // lq.print_stabilizers();
             }
 
             else {
@@ -214,9 +205,6 @@ namespace TISCC
 
                 // Append an idle operation if applicable 
                 if ((s == "idle") || (s == "prepz") || (s == "prepx")) {
-                    // time = lq.add_stabilizer(5, 2, 's', 'X', grid, hw_master, time, debug);
-                    // time = lq.add_stabilizer(5, 3, 's', 'Z', grid, hw_master, time, debug);
-                    // time = lq.add_stabilizer(5, 1, 's', 'Z', grid, hw_master, time, debug);
                     time = lq.idle(cycles, grid, hw_master, time);
                 }
 

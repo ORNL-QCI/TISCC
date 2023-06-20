@@ -519,20 +519,6 @@ namespace TISCC
 
     }
 
-    // Helper function to return the data qubits from this patch that are NOT occupied by two others
-    std::set<unsigned int> LogicalQubit::get_strip(LogicalQubit& lq1, LogicalQubit& lq2) {
-        std::set<unsigned int> data = data_qsites();
-        std::set<unsigned int> lq1_data = lq1.data_qsites();
-        std::set<unsigned int> lq2_data = lq2.data_qsites();
-        std::set<unsigned int> strip;
-        for (unsigned int lq_site : data) {
-            if ((lq1_data.find(lq_site) == lq1_data.end()) && (lq2_data.find(lq_site) == lq2_data.end())) {
-                strip.insert(lq_site);
-            }
-        }
-        return strip;
-    }
-
     // Placeholder function to help implement little test circuits
     double LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         // Bell state preparation
@@ -648,7 +634,7 @@ namespace TISCC
             }
         }
 
-        /* Check commutation of new stabilizer with every row of parity_check_matrix (with appended logical operators) */
+        /* Check commutation of new stabilizer with every row of parity_check_matrix (and appended logical operators) */
 
         // First, transform the new row s.t. the roles of X and Z have been swapped
         std::vector<bool> new_row_transformed(2*qsite_to_index->size());
@@ -962,7 +948,7 @@ namespace TISCC
             new_same_type_logical_operator = std::move(tmp_row);
         }
 
-        // Replace the old logical operators with new ones if necessary
+        // Replace the old logical operators with new ones in the parity check mtx
         if (new_logical_operator_default_edge.has_value()) {
             parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='X')] = new_logical_operator_default_edge.value();
         }
@@ -988,8 +974,8 @@ namespace TISCC
                         parity_check_matrix.value()[i + z_plaquettes.size()][qsite_to_index.value()[overlapping_index.value()] + qsite_to_index->size()] = 0;
                     }
                 }
-                // time_tmp = TI_model.add_H(overlapping_index.value(), time, 0, grid, hw_master);
-                // time_tmp = TI_model.add_meas(overlapping_index.value(), time_tmp, 1, grid, hw_master);
+                time_tmp = TI_model.add_H(overlapping_index.value(), time, 0, grid, hw_master);
+                time_tmp = TI_model.add_meas(overlapping_index.value(), time_tmp, 1, grid, hw_master);
             }
             else {
                 for (unsigned int i=0; i<z_plaquettes.size(); i++) {
@@ -997,19 +983,52 @@ namespace TISCC
                         parity_check_matrix.value()[i][qsite_to_index.value()[overlapping_index.value()]] = 0;
                     }
                 }
-                // time_tmp = TI_model.add_meas(overlapping_index.value(), time, 0, grid, hw_master);
+                time_tmp = TI_model.add_meas(overlapping_index.value(), time, 0, grid, hw_master);
             }
             parity_check_matrix.value()[parity_check_matrix->size() - 1 - (type=='Z')][qsite_to_index.value()[overlapping_index.value()] + (type=='X')*qsite_to_index->size()] = 0;
             grid.deoccupy_site(overlapping_index.value());
         }
 
         // If we had to add a qubit, add appropriate hardware instructions to initialize it
-        // if (added_qubit.has_value()) {
-        //     time_tmp = TI_model.add_init(added_qubit.value(), time, 0, grid, hw_master);
-        //     if (type=='Z') {
-        //         time_tmp = TI_model.add_H(added_qubit.value(), time, 1, grid, hw_master);
-        //     }
-        // }
+        if (added_qubit.has_value()) {
+            time_tmp = TI_model.add_init(added_qubit.value(), time, 0, grid, hw_master);
+            if (type=='Z') {
+                time_tmp = TI_model.add_H(added_qubit.value(), time, 1, grid, hw_master);
+            }
+        }
+
+        // Remove anti-commuting stabilizers from plaquette vectors
+        for (unsigned int i=0; i<anticommuting_stabilizers.size(); i++) {
+            if (anticommuting_stabilizers[i] < z_plaquettes.size()) {
+                z_plaquettes.erase(z_plaquettes.begin() + anticommuting_stabilizers[i]);   
+            }
+            else {
+                x_plaquettes.erase(x_plaquettes.begin() + anticommuting_stabilizers[i] - z_plaquettes.size());
+            }
+            parity_check_matrix->erase(parity_check_matrix->begin() + anticommuting_stabilizers[i]);
+
+            for (unsigned int j=i+1; j<anticommuting_stabilizers.size(); j++) {
+                if (anticommuting_stabilizers[j] > anticommuting_stabilizers[i]) 
+                    anticommuting_stabilizers[j]--;
+            }
+        }
+
+        // Finally, add the new stabilizer
+        if (type == 'Z') {
+            z_plaquettes.push_back(std::move(new_stabilizer));
+            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() - 1, std::move(new_row));
+        }
+        else {
+            x_plaquettes.push_back(std::move(new_stabilizer));
+            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() + x_plaquettes.size() - 1, std::move(new_row));
+        }
+
+        // Test validity of stabilizers and parity check mtx
+        test_stabilizers(); 
+        if (!validity_parity_check_matrix()) {
+            std::cerr << "LogicalQubit::add_stabilizer: Final parity check matrix invalid." << std::endl;
+            abort();
+        }
 
         // Print final grid and final default-edge logical operators
         if (debug) {
@@ -1030,47 +1049,21 @@ namespace TISCC
             grid.print_grid(ascii_grid);
         }
 
-        // Loop over anti-commuting operators and remove them
-        for (unsigned int i=0; i<anticommuting_stabilizers.size(); i++) {
-            if (anticommuting_stabilizers[i] < z_plaquettes.size()) {
-                z_plaquettes.erase(z_plaquettes.begin() + anticommuting_stabilizers[i]);   
-            }
-            else {
-                x_plaquettes.erase(x_plaquettes.begin() + anticommuting_stabilizers[i] - z_plaquettes.size());
-            }
-            parity_check_matrix->erase(parity_check_matrix->begin() + anticommuting_stabilizers[i]);
-
-            for (unsigned int j=i+1; j<anticommuting_stabilizers.size(); j++) {
-                if (anticommuting_stabilizers[j] > anticommuting_stabilizers[i]) 
-                    anticommuting_stabilizers[j]--;
-            }
-        }
-
-        // Add the new stabilizer
-        if (type == 'Z') {
-            z_plaquettes.push_back(std::move(new_stabilizer));
-            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() - 1, std::move(new_row));
-        }
-        else {
-            x_plaquettes.push_back(std::move(new_stabilizer));
-            parity_check_matrix->insert(parity_check_matrix->begin() + z_plaquettes.size() + x_plaquettes.size() - 1, std::move(new_row));
-        }
-
-        /* Things to note: 
-            - There is now an empty column where the removed qubit was. We keep it there since it might return on the addition of a later stabilizer.
-            - That case (where a qubit needs to return) is not currently handled
-        */
-
-        test_stabilizers(); 
-
         return time_tmp;
+    }
 
-        // Next we need to test
-
-        /* We need to make the following updates: 
-            - A function that notes any decrease in code distance would be very useful
-            - Check that three-qubit stabilizers still work 
-        */
+    // Helper function to return the data qubits from this patch that are NOT occupied by two others
+    std::set<unsigned int> LogicalQubit::get_strip(LogicalQubit& lq1, LogicalQubit& lq2) {
+        std::set<unsigned int> data = data_qsites();
+        std::set<unsigned int> lq1_data = lq1.data_qsites();
+        std::set<unsigned int> lq2_data = lq2.data_qsites();
+        std::set<unsigned int> strip;
+        for (unsigned int lq_site : data) {
+            if ((lq1_data.find(lq_site) == lq1_data.end()) && (lq2_data.find(lq_site) == lq2_data.end())) {
+                strip.insert(lq_site);
+            }
+        }
+        return strip;
     }
 
     // Construct and return a logical qubit that represents the merged product of two input logical qubits
