@@ -268,7 +268,8 @@ namespace TISCC
 
     // Test stabilizers
     void LogicalQubit::test_stabilizers() {
-        
+        double uint_max = std::numeric_limits<unsigned int>::max();
+
         // Get number of data qubits and number of stabilizers
         unsigned int num_data_qubits = data_qsites().size();
         unsigned int num_stabilizers = z_plaquettes.size() + x_plaquettes.size();
@@ -279,19 +280,30 @@ namespace TISCC
             abort();
         }
 
+        // Create vector of all plaquettes
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
         // Check that measure qubits are all unique
         std::vector<unsigned int> measure_qubits;
-        for (Plaquette p : z_plaquettes) {
+        for (Plaquette p : all_plaquettes) {
             for (unsigned int q : measure_qubits) {
-                if (p.get_qsite('m') == q) {std::cerr << "LogicalQubit::test_stabilizers: Found duplicate measure qubit among Z plaquettes."; abort();}
+                if (p.get_qsite('m') == q) {std::cerr << "LogicalQubit::test_stabilizers: Found duplicate measure qubit among plaquettes."; abort();}
             }
             measure_qubits.push_back(p.get_qsite('m'));
         }
-        for (Plaquette p : x_plaquettes) {
-            for (unsigned int q : measure_qubits) {
-                if (p.get_qsite('m') == q) {std::cerr << "LogicalQubit::test_stabilizers: Found duplicate measure qubit among X plaquettes."; abort();}
+
+        // Check consistency of stabilizer type with its qsites
+        for (Plaquette p: all_plaquettes) { 
+            bool n_invalid = (p.get_shape() == 'n' && ((p.get_qsite('a') != uint_max) || (p.get_qsite('b') != uint_max)));
+            bool s_invalid = (p.get_shape() == 's' && ((p.get_qsite('c') != uint_max) || (p.get_qsite('d') != uint_max)));
+            bool e_invalid = (p.get_shape() == 'e' && ((p.get_qsite('b') != uint_max) || (p.get_qsite('d') != uint_max)));
+            bool w_invalid = (p.get_shape() == 'w' && ((p.get_qsite('a') != uint_max) || (p.get_qsite('c') != uint_max)));
+
+            if (n_invalid || s_invalid || e_invalid || w_invalid) {
+                std::cerr << "LogicalQubit::test_stabilizers: Inconsistent stabilizer found." << std::endl; abort();
             }
-            measure_qubits.push_back(p.get_qsite('m'));
         }
 
         // Ensure consistency with rows of parity check mtx
@@ -300,13 +312,13 @@ namespace TISCC
                 bool consistent = 1;
                 if (i < z_plaquettes.size()) {
                     for (char qubit : {'a', 'b', 'c', 'd'}) {
-                        if (z_plaquettes[i].get_qsite(qubit) != std::numeric_limits<unsigned int>::max())
+                        if (z_plaquettes[i].get_qsite(qubit) != uint_max)
                             consistent = consistent && parity_check_matrix.value()[i][qsite_to_index.value()[z_plaquettes[i].get_qsite(qubit)]];
                     }
                 }
                 else {
                     for (char qubit : {'a', 'b', 'c', 'd'}) {
-                        if (x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit) != std::numeric_limits<unsigned int>::max())
+                        if (x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit) != uint_max)
                             consistent = consistent && parity_check_matrix.value()[i][qsite_to_index.value()[x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit)] + qsite_to_index->size()];
                     }   
                 }
@@ -364,8 +376,10 @@ namespace TISCC
     double LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step, 
         const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
 
-        // Create tmp variable for time
-        double time_tmp = 0;
+        // Create tmp variables for time
+        // ** Initialization to zero causes apply_instruction to return 0 if an Idle was given and an updated time in any other case
+        double time_tmp;
+        double time_to_return = 0;
 
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {
@@ -373,39 +387,36 @@ namespace TISCC
             // Loop over plaquettes
             for (Plaquette& p : plaquettes) {
 
-                // Certain stabilizer shapes do not accomodate certain qubit labels
-                if (p.is_instr_valid(instr)) 
-                {
-                    
-                    // Add single-qubit instructions
-                    if ((instr.get_name() == "Prepare_Z") && (instr.get_q2() == ' ')) {
-                        time_tmp = TI_model.add_init(p, instr.get_q1(), time, step, hw_master);
-                    }
-
-                    else if ((instr.get_name() == "Hadamard") && (instr.get_q2() == ' ')) {
-                        time_tmp = TI_model.add_H(p, instr.get_q1(), time, step, hw_master);
-                    }
-
-                    else if ((instr.get_name() == "Measure_Z") && (instr.get_q2() == ' ')) {
-                        time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
-                    }
-
-                    else if ((instr.get_name() == "Test_Gate") && (instr.get_q2() == ' ')) {
-                        time_tmp = TI_model.add_test(p, instr.get_q1(), time, step, hw_master);
-                    }
-
-                    // Add CNOT gate
-                    else if (instr.get_name() == "CNOT") {
-                        time_tmp = TI_model.add_CNOT(p, instr.get_q1(), instr.get_q2(), time, step, grid, hw_master);
-                    }
-
-                    else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
-                    
+                // Add single-qubit instructions and track updated time
+                if ((instr.get_name() == "Prepare_Z") && (instr.get_q2() == ' ')) {
+                    time_tmp = TI_model.add_init(p, instr.get_q1(), time, step, hw_master);
                 }
+
+                else if ((instr.get_name() == "Hadamard") && (instr.get_q2() == ' ')) {
+                    time_tmp = TI_model.add_H(p, instr.get_q1(), time, step, hw_master);
+                }
+
+                else if ((instr.get_name() == "Measure_Z") && (instr.get_q2() == ' ')) {
+                    time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
+                }
+
+                else if ((instr.get_name() == "Test_Gate") && (instr.get_q2() == ' ')) {
+                    time_tmp = TI_model.add_test(p, instr.get_q1(), time, step, hw_master);
+                }
+
+                // Add CNOT gate
+                else if (instr.get_name() == "CNOT") {
+                    time_tmp = TI_model.add_CNOT(p, instr.get_q1(), instr.get_q2(), time, step, grid, hw_master);
+                }
+
+                else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
+
+                // Track the time update corresp. to the plaquette for which the instruction took the longest
+                if (time_tmp > time_to_return) time_to_return = time_tmp;
             }
         }
 
-        return time_tmp;
+        return time_to_return;
     }
 
     double LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {

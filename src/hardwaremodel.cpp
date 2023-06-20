@@ -37,6 +37,12 @@ namespace TISCC
     // Helper function to add the Prepare_Z HW_Instruction to a circuit given a plaquette and a qubit label
     double HardwareModel::add_init(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
+        // If the plaquette in question does not have the present qubit label, do nothing
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        if (p.get_qsite(qubit) == uint_max) {
+            return time;
+        }
+
         // Perform validity check
         if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_init: Can only Prepare Z at 'O' QSites." << std::endl;
@@ -44,7 +50,6 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instruction onto the circuit
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
         circuit.push_back(HW_Instruction("Prepare_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
 
         // Return updated time
@@ -73,6 +78,12 @@ namespace TISCC
     // Helper function to add H gate in terms of native TI gates to a circuit given a plaquette and a qubit label
     double HardwareModel::add_H(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
+        // If the plaquette in question does not have the present qubit label, do nothing
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        if (p.get_qsite(qubit) == uint_max) {
+            return time;
+        }
+
         // Perform validity check
         if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_H: Can only apply Hadamard gates at 'O' QSites." << std::endl;
@@ -80,7 +91,6 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instructions onto the circuit
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
         circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
         circuit.push_back(HW_Instruction("Z_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_-pi/4"), step, qubit, ' ', p.get_shape(), p.get_type()));
 
@@ -111,6 +121,12 @@ namespace TISCC
     // Helper function to add the Measure_Z HW_Instruction to a circuit given a plaquette and a qubit label
     double HardwareModel::add_meas(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
 
+        // If the plaquette in question does not have the present qubit label, do nothing
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        if (p.get_qsite(qubit) == uint_max) {
+            return time;
+        }
+
         // Perform validity check
         if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_meas: Can only apply Measure Z at 'O' QSites." << std::endl;
@@ -118,7 +134,6 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instructions onto the circuit
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
         circuit.push_back(HW_Instruction("Measure_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
 
         // Return updated time
@@ -144,6 +159,12 @@ namespace TISCC
     // This is just a placeholder to apply a test gate with
     double HardwareModel::add_test(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         
+        // If the plaquette in question does not have the present qubit label, do nothing
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        if (p.get_qsite(qubit) == uint_max) {
+            return time;
+        }
+
         // Perform validity check
         if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
             std::cerr << "HardwareModel::add_test: Can only apply these gates at 'O' QSites." << std::endl;
@@ -151,7 +172,6 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instructions onto the circuit
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
         circuit.push_back(HW_Instruction("Y_pi/2", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
         circuit.push_back(HW_Instruction("X_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_pi/2"), step, qubit, ' ', p.get_shape(), p.get_type()));
 
@@ -189,6 +209,12 @@ namespace TISCC
     // Helper function to add CNOT gate in terms of native TI gates to a circuit given a plaquette and qubit labels
     double HardwareModel::add_CNOT(Plaquette& p, char control, char target, double time, unsigned int step, const GridManager& grid, 
         std::vector<HW_Instruction>& circuit) const {
+
+        // If the plaquette in question does not have the present qubit labels, do nothing
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        if ((p.get_qsite(control) == uint_max) || (p.get_qsite(target) == uint_max)) {
+            return time;
+        }
         
         // This function currently requires one of the qubits to be 'm'
         if (control != 'm' && target != 'm') {
@@ -215,7 +241,6 @@ namespace TISCC
         }
 
         // Perform initial rotation
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
         circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
         time += TI_ops.at("Y_-pi/4");
 
