@@ -448,70 +448,98 @@ namespace TISCC
     }
 
     // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
-    double LogicalQubit::apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step, 
+    double LogicalQubit::apply_instruction(const Instruction& instr, Plaquette& p, double time, unsigned int step, 
         const GridManager& grid, std::vector<HW_Instruction>& hw_master) {
 
         // Create tmp variables for time
         // ** Initialization to zero causes apply_instruction to return 0 if an Idle was given and an updated time in any other case
         double time_tmp;
-        double time_to_return = 0;
+        double time_to_return = time;
 
         // Don't explicitly apply an "Idle" operation
         if (instr.get_name() != "Idle") {
 
-            // Loop over plaquettes
-            for (Plaquette& p : plaquettes) {
-
-                // Add single-qubit instructions and track updated time
-                if ((instr.get_name() == "Prepare_Z") && (instr.get_q2() == ' ')) {
-                    time_tmp = TI_model.add_init(p, instr.get_q1(), time, step, hw_master);
-                }
-
-                else if ((instr.get_name() == "Hadamard") && (instr.get_q2() == ' ')) {
-                    time_tmp = TI_model.add_H(p, instr.get_q1(), time, step, hw_master);
-                }
-
-                else if ((instr.get_name() == "Measure_Z") && (instr.get_q2() == ' ')) {
-                    time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
-                }
-
-                else if ((instr.get_name() == "Test_Gate") && (instr.get_q2() == ' ')) {
-                    time_tmp = TI_model.add_test(p, instr.get_q1(), time, step, hw_master);
-                }
-
-                // Add CNOT gate
-                else if (instr.get_name() == "CNOT") {
-                    time_tmp = TI_model.add_CNOT(p, instr.get_q1(), instr.get_q2(), time, step, grid, hw_master);
-                }
-
-                else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
-
-                // Track the time update corresp. to the plaquette for which the instruction took the longest
-                if (time_tmp > time_to_return) time_to_return = time_tmp;
+            // Add single-qubit instructions and track updated time
+            if ((instr.get_name() == "Prepare_Z") && (instr.get_q2() == ' ')) {
+                time_tmp = TI_model.add_init(p, instr.get_q1(), time, step, hw_master);
             }
+
+            else if ((instr.get_name() == "Hadamard") && (instr.get_q2() == ' ')) {
+                time_tmp = TI_model.add_H(p, instr.get_q1(), time, step, hw_master);
+            }
+
+            else if ((instr.get_name() == "Measure_Z") && (instr.get_q2() == ' ')) {
+                time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
+            }
+
+            else if ((instr.get_name() == "Test_Gate") && (instr.get_q2() == ' ')) {
+                time_tmp = TI_model.add_test(p, instr.get_q1(), time, step, hw_master);
+            }
+
+            // Add CNOT gate
+            else if (instr.get_name() == "CNOT") {
+                time_tmp = TI_model.add_CNOT(p, instr.get_q1(), instr.get_q2(), time, step, grid, hw_master);
+            }
+
+            else {std::cerr << "LogicalQubit::apply_instruction: Invalid instruction given." << std::endl; abort();}
+
+            // Track the time update corresp. to the plaquette for which the instruction took the longest
+            if (time_tmp > time_to_return) time_to_return = time_tmp;
+
         }
 
         return time_to_return;
     }
 
     double LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
-        
+
+        // The four circuit types should have the same number of instructions and can be run in parallel on the applicable stabilizers
+        assert((Z_Circuit_Z_Type.size() == X_Circuit_N_Type.size()) && (Z_Circuit_Z_Type.size() == Z_Circuit_N_Type.size())
+            && (Z_Circuit_Z_Type.size() == X_Circuit_Z_Type.size()));
+        unsigned int num_instructions = Z_Circuit_Z_Type.size();
+
+        // Create a vector of all plaquettes for convenience
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
         // Loop over surface code cycles
         for (unsigned int cycle=0; cycle < cycles; cycle++) {
 
-            // Enforce that the two circuits contain the same number of instructions
-            assert(Z_Circuit_Z_Type.size() == X_Circuit_N_Type.size());
-            unsigned int num_instructions = Z_Circuit_Z_Type.size();
-
-            // Loop over ``qubit-level'' instructions and apply them to plaquettes while adding HW_Instructions to hw_master
+            // Loop over Instructions 
             for (unsigned int i=0; i<num_instructions; i++) {
-                double t1 = apply_instruction(Z_Circuit_Z_Type[i], z_plaquettes, time, i, grid, hw_master);
-                double t2 = apply_instruction(X_Circuit_N_Type[i], x_plaquettes, time, i, grid, hw_master);
 
-                // Increment time counter
-                if (t1 == 0) {time = t2;}
-                else if (t2 == 0) {time = t1;}
-                else {assert(t1==t2); time = t1;}  
+                // Loop over all plaquettes and apply instruction
+                double latest_time_returned = time;
+                double time_tmp;
+                for (Plaquette& p : all_plaquettes) {
+
+                    if (p.get_operator_type() == 'Z' && p.get_circuit_pattern() == 'Z') {
+                        time_tmp = apply_instruction(Z_Circuit_Z_Type[i], p, time, i, grid, hw_master);
+                    }
+
+                    else if (p.get_operator_type() == 'Z' && p.get_circuit_pattern() == 'N') {
+                        time_tmp = apply_instruction(Z_Circuit_N_Type[i], p, time, i, grid, hw_master);
+                    }
+
+                    else if (p.get_operator_type() == 'X' && p.get_circuit_pattern() == 'Z') {
+                        time_tmp = apply_instruction(X_Circuit_Z_Type[i], p, time, i, grid, hw_master);
+                    }
+
+                    else if (p.get_operator_type() == 'X' && p.get_circuit_pattern() == 'N') {
+                        time_tmp = apply_instruction(X_Circuit_N_Type[i], p, time, i, grid, hw_master);
+                    }
+
+                    else {
+                        std::cerr << "LogicalQubit::idle: Unrecognized operator type and/or circuit pattern." << std::endl;
+                        abort();
+                    }
+
+                    if (time_tmp > latest_time_returned) {latest_time_returned = time_tmp;}
+
+                }
+
+                time = latest_time_returned;
 
             }
             
@@ -571,12 +599,12 @@ namespace TISCC
     // Placeholder function to help implement little test circuits
     double LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         // Bell state preparation
-        apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
-        time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
-        time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
-        time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
-        apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
-        time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 3, grid, hw_master);
+        // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
+        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
+        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
+        // apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
+        // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 3, grid, hw_master);
 
         // SWAP gate
         // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);

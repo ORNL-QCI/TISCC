@@ -108,8 +108,8 @@ private:
     void recalculate_code_distance(); 
 
     // Apply a given instruction to all plaquettes in a given vector
-    double apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step,
-        const GridManager& grid, std::vector<HW_Instruction>& idle_operation);
+    double apply_instruction(const Instruction& instr, Plaquette& p, double time, unsigned int step,
+        const GridManager& grid, std::vector<HW_Instruction>& hw_master);
 
 };
 
