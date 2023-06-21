@@ -32,7 +32,7 @@ public:
     std::set<unsigned int> occupied_sites(bool just_data_qubits) const;
     const std::vector<bool>& get_logical_operator_default_edge(char type) const;
     std::vector<bool> get_logical_operator_opposite_edge(char type) const;
-    bool default_pattern() const {return default_pattern_;}
+    bool default_arrangement() const {return default_arrangement_;}
 
     // Print functions
     void print_stabilizers() const;
@@ -64,7 +64,7 @@ private:
     unsigned int col_;
 
     // Track whether deformations have taken place
-    bool default_pattern_;
+    bool default_arrangement_;
 
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;

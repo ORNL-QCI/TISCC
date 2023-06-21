@@ -399,38 +399,38 @@ namespace TISCC
                     // Swap roles of X and Z for merged patch
                     lq.xz_swap(grid);
 
-                    // Next extend patch rightward by running 'idle' on the merged patch
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    // // Next extend patch rightward by running 'idle' on the merged patch
+                    // time = lq.idle(cycles, grid, hw_master, time);
 
-                    // Corner movements: all measurements commute so I think they can be done at once
-                    // This should probably be done as a sequence of measurements rather than anything explicit in the LogicalQubit object
+                    // // Corner movements: all measurements commute so I think they can be done at once
+                    // // This should probably be done as a sequence of measurements rather than anything explicit in the LogicalQubit object
 
-                    /* Contraction */
-                    // Perform measure x on the half to be cropped
-                    lq1.transversal_op("measx", grid, hw_master, time);
+                    // /* Contraction */
+                    // // Perform measure x on the half to be cropped
+                    // lq1.transversal_op("measx", grid, hw_master, time);
 
-                    // Perform measure x on the strip
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
+                    // // Perform measure x on the strip
+                    // double time_tmp = 0;
+                    // for (unsigned int site : strip) {
+                    //     time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                    //     time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+                    // }
 
-                    /* Extension */
-                    // Prepare the physical qubits on lq2 in the X basis
-                    lq1.transversal_op("prepx", grid, hw_master, time);
+                    // /* Extension */
+                    // // Prepare the physical qubits on lq2 in the X basis
+                    // lq1.transversal_op("prepx", grid, hw_master, time);
 
-                    // Prepare qsites on the strip in the X basis
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-                    }
+                    // // Prepare qsites on the strip in the X basis
+                    // for (unsigned int site : strip) {
+                    //     time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                    //     time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                    // }
 
-                    // Swap roles of X and Z for merged patch
-                    lq.xz_swap(grid);
+                    // // Swap roles of X and Z for merged patch
+                    // lq.xz_swap(grid);
 
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    // // Perform 'idle' operation on the merged qubit
+                    // time = lq.idle(cycles, grid, hw_master, time);
 
                 }
 

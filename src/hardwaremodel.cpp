@@ -50,7 +50,7 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instruction onto the circuit
-        circuit.push_back(HW_Instruction("Prepare_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Prepare_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_operator_type()));
 
         // Return updated time
         return time + TI_ops.at("Prepare_Z");
@@ -91,8 +91,8 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instructions onto the circuit
-        circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
-        circuit.push_back(HW_Instruction("Z_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_-pi/4"), step, qubit, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_operator_type()));
+        circuit.push_back(HW_Instruction("Z_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_-pi/4"), step, qubit, ' ', p.get_shape(), p.get_operator_type()));
 
         // Return updated time
         return time + TI_ops.at("Y_-pi/4") + TI_ops.at("Z_pi/2");
@@ -134,7 +134,7 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instructions onto the circuit
-        circuit.push_back(HW_Instruction("Measure_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Measure_Z", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_operator_type()));
 
         // Return updated time
         return time + TI_ops.at("Measure_Z");
@@ -172,8 +172,8 @@ namespace TISCC
         }
 
         // Push corresponding HW_Instructions onto the circuit
-        circuit.push_back(HW_Instruction("Y_pi/2", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_type()));
-        circuit.push_back(HW_Instruction("X_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_pi/2"), step, qubit, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Y_pi/2", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_operator_type()));
+        circuit.push_back(HW_Instruction("X_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_pi/2"), step, qubit, ' ', p.get_shape(), p.get_operator_type()));
 
         // Return updated time
         return time + TI_ops.at("Y_pi/2") + TI_ops.at("X_pi/2");
@@ -198,7 +198,7 @@ namespace TISCC
                 through_J = 1;
                 continue;
             }
-            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_type()));
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_operator_type()));
             time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
             if (through_J == 1) {through_J = 0;}
             p.move_to_site('m', path[i]);
@@ -241,7 +241,7 @@ namespace TISCC
         }
 
         // Perform initial rotation
-        circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Y_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_operator_type()));
         time += TI_ops.at("Y_-pi/4");
 
         // Retrieve path to data qubit and apply move_along_path
@@ -249,7 +249,7 @@ namespace TISCC
         move_along_path(p, step, circuit, time, path, grid);
 
         // Apply ZZ operation
-        circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, data_qubit, 'm', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, data_qubit, 'm', p.get_shape(), p.get_operator_type()));
         time += TI_ops.at("ZZ");
 
         // Move the measure qubit back to its home base for further operations
@@ -260,10 +260,10 @@ namespace TISCC
         assert(p.is_home(control) && p.is_home(target)); 
 
         // Perform final rotations
-        circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(control), uint_max, time, step, control, ' ', p.get_shape(), p.get_type()));
-        circuit.push_back(HW_Instruction("X_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(control), uint_max, time, step, control, ' ', p.get_shape(), p.get_operator_type()));
+        circuit.push_back(HW_Instruction("X_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_operator_type()));
         time += TI_ops.at("X_-pi/4");
-        circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_type()));
+        circuit.push_back(HW_Instruction("Z_-pi/4", p.get_qsite(target), uint_max, time, step, target, ' ', p.get_shape(), p.get_operator_type()));
 
         // Return updated time
         return time + TI_ops.at("Z_-pi/4");

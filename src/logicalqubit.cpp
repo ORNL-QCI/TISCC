@@ -98,6 +98,14 @@ namespace TISCC
         for (unsigned int i=row+1+gap; i<row+dz; i+=2) {
             x_plaquettes.push_back(grid.get_plaquette(i, col+dx, 'e', 'X'));
         }
+
+        // Set default circuit patterns
+        for (Plaquette& p : z_plaquettes) {
+            p.set_circuit_pattern('Z');
+        }
+        for (Plaquette& p : x_plaquettes) {
+            p.set_circuit_pattern('N');
+        }
     }
 
     // Test stabilizers
@@ -112,6 +120,20 @@ namespace TISCC
             std::cerr << "LogicalQubit::test_stabilizers: To encode one logical qubit, there should be one fewer stabilizer than data qubit. Currently there are :" << std::endl;
             std::cerr << num_data_qubits << " data qubits and " << num_stabilizers << " stabilizers." << std::endl;
             abort();
+        }
+
+        // Check that all plaquette types are correct
+        for (const Plaquette& p : z_plaquettes) {
+            if (p.get_operator_type() != 'Z') {
+                std::cerr << "LogicalQubit::test_stabilizers: Wrong plaquette type in z_plaquettes." << std::endl;
+                abort();
+            }
+        }
+        for (const Plaquette& p : x_plaquettes) {
+            if (p.get_operator_type() != 'X') {
+                std::cerr << "LogicalQubit::test_stabilizers: Wrong plaquette type in x_plaquettes." << std::endl;
+                abort();
+            }
         }
 
         // Create vector of all plaquettes
@@ -130,10 +152,10 @@ namespace TISCC
 
         // Check consistency of stabilizer type with its qsites
         for (Plaquette p: all_plaquettes) { 
-            bool n_invalid = (p.get_shape() == 'n' && ((p.get_qsite('a') != uint_max) || (p.get_qsite('b') != uint_max)));
-            bool s_invalid = (p.get_shape() == 's' && ((p.get_qsite('c') != uint_max) || (p.get_qsite('d') != uint_max)));
-            bool e_invalid = (p.get_shape() == 'e' && ((p.get_qsite('b') != uint_max) || (p.get_qsite('d') != uint_max)));
-            bool w_invalid = (p.get_shape() == 'w' && ((p.get_qsite('a') != uint_max) || (p.get_qsite('c') != uint_max)));
+            bool n_invalid = (p.get_shape() == 'n' && ((p.get_qsite('a') != uint_max) || (p.get_qsite('b') != uint_max) || (p.get_qsite('c') == uint_max) || (p.get_qsite('d') == uint_max)));
+            bool s_invalid = (p.get_shape() == 's' && ((p.get_qsite('c') != uint_max) || (p.get_qsite('d') != uint_max) || (p.get_qsite('a') == uint_max) || (p.get_qsite('b') == uint_max)));
+            bool e_invalid = (p.get_shape() == 'e' && ((p.get_qsite('b') != uint_max) || (p.get_qsite('d') != uint_max) || (p.get_qsite('a') == uint_max) || (p.get_qsite('c') == uint_max)));
+            bool w_invalid = (p.get_shape() == 'w' && ((p.get_qsite('a') != uint_max) || (p.get_qsite('c') != uint_max) || (p.get_qsite('b') == uint_max) || (p.get_qsite('d') == uint_max)));
 
             if (n_invalid || s_invalid || e_invalid || w_invalid) {
                 std::cerr << "LogicalQubit::test_stabilizers: Inconsistent stabilizer found." << std::endl; abort();
@@ -143,19 +165,24 @@ namespace TISCC
         // Ensure consistency with rows of parity check mtx
         for (unsigned int i=0; i<parity_check_matrix.size() - 2; i++) {
             bool consistent = 1;
+            unsigned int weight = 0;
             if (i < z_plaquettes.size()) {
                 for (char qubit : {'a', 'b', 'c', 'd'}) {
-                    if (z_plaquettes[i].get_qsite(qubit) != uint_max)
+                    if (z_plaquettes[i].get_qsite(qubit) != uint_max) {
+                        weight++;
                         consistent = consistent && parity_check_matrix[i][qsite_to_index[z_plaquettes[i].get_qsite(qubit)]];
+                    }
                 }
             }
             else {
                 for (char qubit : {'a', 'b', 'c', 'd'}) {
-                    if (x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit) != uint_max)
+                    if (x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit) != uint_max) {
+                        weight++;
                         consistent = consistent && parity_check_matrix[i][qsite_to_index[x_plaquettes[i - z_plaquettes.size()].get_qsite(qubit)] + qsite_to_index.size()];
-                }   
+                    }
+                } 
             }
-
+            if (weight != pauli_weight(parity_check_matrix[i])) {consistent = 0;}
             if (!consistent) {
                 std::cerr << "LogicalQubit::test_stabilizers: stabilizer row " << i << " out of " << parity_check_matrix.size() - 2 << " in parity check matrix inconsistent with corresponding stabilizer." << std::endl;
                 abort();
@@ -167,13 +194,13 @@ namespace TISCC
 
         // Print all z stabilizers
         for (const Plaquette& p : z_plaquettes) {
-            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
+            std::cout << p.get_operator_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
                  << " " << p.grid()->index_from_coords(p.get_row(), p.get_col(), 1) << std::endl;
         }
 
         // Print all x stabilizers
         for (const Plaquette& p : x_plaquettes) {
-            std::cout << p.get_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
+            std::cout << p.get_operator_type() << " " << p.get_row() << " " << p.get_col() << " " << p.get_shape()
                  << " " << p.grid()->index_from_coords(p.get_row(), p.get_col(), 1) << std::endl;
         }
     }
@@ -367,7 +394,7 @@ namespace TISCC
     }
 
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : 
-        dx_(dx), dx_init_(dx), dz_(dz), dz_init_(dz), row_(row), col_(col), default_pattern_(true), TI_model() { 
+        dx_(dx), dx_init_(dx), dz_(dz), dz_init_(dz), row_(row), col_(col), default_arrangement_(true), TI_model() { 
         init_stabilizers(dx, dz, row, col, grid);
         construct_parity_check_matrix(grid);
         init_circuits();
@@ -588,34 +615,39 @@ namespace TISCC
     // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
     void LogicalQubit::xz_swap(const GridManager& grid) {
 
-        // This will only work properly if the stabilizers and logical operators are the default ones
+        // Construct new parity check matrix
+        std::vector<std::vector<bool>> new_parity_check_matrix;
+        std::vector<bool> tmp_row;
+        for (unsigned int i = 0; i<x_plaquettes.size(); i++) {
+            tmp_row = symplectic_transform(parity_check_matrix[i + z_plaquettes.size()]);
+            new_parity_check_matrix.push_back(tmp_row);
+        }
+        for (unsigned int i=0; i<z_plaquettes.size(); i++) {
+            tmp_row = symplectic_transform(parity_check_matrix[i]);
+            new_parity_check_matrix.push_back(tmp_row);
+        }
+        new_parity_check_matrix.push_back(symplectic_transform(parity_check_matrix[parity_check_matrix.size() - 1]));
+        new_parity_check_matrix.push_back(symplectic_transform(parity_check_matrix[parity_check_matrix.size() - 2]));   
+        parity_check_matrix = std::move(new_parity_check_matrix);
+        assert(validity_parity_check_matrix()==1);
 
-        // Every X operator becomes a Z operator and vice versa
-        std::vector<Plaquette> tmp_x_plaquettes(x_plaquettes);
-        std::vector<Plaquette> tmp_z_plaquettes(z_plaquettes);
-        x_plaquettes = std::move(tmp_z_plaquettes);
-        z_plaquettes = std::move(tmp_x_plaquettes);
+        // Transform stabilizers while keeping circuit patterns the same
+        std::vector<Plaquette> new_z_plaquettes;
+        std::vector<Plaquette> new_x_plaquettes;
+        for (Plaquette& p : z_plaquettes) {
+            p.change_operator_type('X');
+            new_x_plaquettes.push_back(p);
+        }
+        for (Plaquette& p : x_plaquettes) {
+            p.change_operator_type('Z');
+            new_z_plaquettes.push_back(p);
+        }
+        z_plaquettes = std::move(new_z_plaquettes);
+        x_plaquettes = std::move(new_x_plaquettes);
+        test_stabilizers();
 
-        // Still need to modify the identity of the stabilizers
-
-        // Parity check matrix should be re-constructed and logical x/z should be swapped
-        std::vector<bool> tmp_x_operator = symplectic_transform(parity_check_matrix[parity_check_matrix.size() - 2]);
-        std::vector<bool> tmp_z_operator = symplectic_transform(parity_check_matrix[parity_check_matrix.size() - 1]);
-        construct_parity_check_matrix(grid);
-        parity_check_matrix[parity_check_matrix.size() - 2] = std::move(tmp_z_operator);
-        parity_check_matrix[parity_check_matrix.size() - 1] = std::move(tmp_x_operator);
-        
-
-
-        // Thus, Z are horizontal and X are vertical
-
-        // Thus, Z stabilizer circuits need to be N type and X stabilizer circuits need to be Z type
-
-        // x_plaquettes and z_plaquettes vectors should be swapped and dx and dz should be swapped
-
-        // Z_Circuit_N_Type and X_Circuit_Z_Type should be created and used for any subsequent operation
-
-        // A patch rotation needs to be required after this, because other operations (such as merge) will no longer be compatible with this patch
+        // Update code distances
+        recalculate_code_distance();
 
     }
 
@@ -1090,8 +1122,8 @@ namespace TISCC
             grid.print_grid(ascii_grid);
         }
 
-        // Set this variable to indicate that the stabilizer pattern has been altered
-        default_pattern_ = false;
+        // Set this variable to indicate that the stabilizer arrangement has been altered
+        default_arrangement_ = false;
 
         // Recalculate code distance
         recalculate_code_distance();
@@ -1106,7 +1138,7 @@ namespace TISCC
     LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 
         // If the stabilizers have been altered at all, don't allow merge
-        if ((!lq1.default_pattern()) || (!lq2.default_pattern())) {
+        if ((!lq1.default_arrangement()) || (!lq2.default_arrangement())) {
             std::cerr << "merge: Merge not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
             abort();
         }
