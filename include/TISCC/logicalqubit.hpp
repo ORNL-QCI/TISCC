@@ -24,6 +24,19 @@ public:
     unsigned int get_dz() const {return dz_;}
     unsigned int get_row() const {return row_;}
     unsigned int get_col() const {return col_;}
+    const std::vector<std::vector<bool>>& get_parity_check_matrix() const {return parity_check_matrix;}
+    const std::map<unsigned int, unsigned int>& get_qsite_to_index() const {return qsite_to_index;}
+    const std::vector<unsigned int>& get_index_to_qsite() const {return index_to_qsite;}
+
+    // Derived quantities and other accessors
+    std::set<unsigned int> occupied_sites(bool just_data_qubits) const;
+    const std::vector<bool>& get_logical_operator_default_edge(char type) const;
+    std::vector<bool> get_logical_operator_opposite_edge(char type) const;
+    bool default_pattern() const {return default_pattern_;}
+
+    // Print functions
+    void print_stabilizers() const;
+    void print_parity_check_matrix() const;
 
     // Operations
     double idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
@@ -32,56 +45,46 @@ public:
     // Placeholder function to help implement little test circuits
     double test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
-    // Print functions
-    void print_stabilizers();
-    void print_parity_check_matrix(const GridManager& grid);
-
-    // Function to output all qsites occupied by the surface code
-    std::set<unsigned int> occupied_sites();
-
-    // Function to output all qsites occupied by data qubits on the surface code
-    std::set<unsigned int> data_qsites();
-
-    // Helper function to return the data qubits from this patch that are NOT occupied by two others
+    // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
 
-    // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
-    void xz_swap();
+    // Swap roles of x and z for this patch (typically used during Hadamard and patch rotation)
+    void xz_swap(const GridManager& grid);
 
-    // Add new stabilizer plaquette (used in corner movement)
+    // Add new stabilizer plaquette (typically used in corner movement)
     double add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 
 private:
-    // Code distances
+    // Code distances and location on grid
     unsigned int dx_;
+    unsigned int dx_init_;
     unsigned int dz_;
+    unsigned int dz_init_;
     unsigned int row_;
     unsigned int col_;
+
+    // Track whether deformations have taken place
+    bool default_pattern_;
+
+    // Contains details of hardware native gates and stabilizer circuits
+    HardwareModel TI_model;
 
     // Vectors of X or Z plaquettes 
     std::vector<Plaquette> x_plaquettes;
     std::vector<Plaquette> z_plaquettes;
+
+    // Boolean matrix to store parity check matrix
+    std::vector<std::vector<bool>> parity_check_matrix;
+
+    // Map from qsite to column index in parity check matrix
+    std::map<unsigned int, unsigned int> qsite_to_index;
+    std::vector<unsigned int> index_to_qsite;
 
     // Vectors of instructions to hold syndrome measurement circuits
     std::vector<Instruction> Z_Circuit_Z_Type;
     std::vector<Instruction> X_Circuit_N_Type;
     std::vector<Instruction> Z_Circuit_N_Type;
     std::vector<Instruction> X_Circuit_Z_Type;
-
-    // Boolean matrix to store parity check matrix
-    std::optional<std::vector<std::vector<bool>>> parity_check_matrix;
-
-    // Map from qsite to column index in parity check matrix
-    std::optional<std::map<unsigned int, unsigned int>> qsite_to_index;
-
-    // Inverse map to above
-    std::optional<std::vector<unsigned int>> index_to_qsite;
-
-    // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
-    std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);
-
-    // Contains details of hardware native gates and stabilizer circuits
-    HardwareModel TI_model;
 
     // Construct stabilizers and update set of occupied sites in grid
     void init_stabilizers(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid); 
@@ -92,11 +95,17 @@ private:
     // Set up the circuits that we intend to use
     void init_circuits();
 
+    // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
+    std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);
+
     // Construct parity check matrix from stabilizers
     void construct_parity_check_matrix(const GridManager& grid);
 
     // Check validity of parity check matrix
-    bool validity_parity_check_matrix();
+    bool validity_parity_check_matrix() const;
+
+    // Recalculate code distance using logical operators
+    void recalculate_code_distance(); 
 
     // Apply a given instruction to all plaquettes in a given vector
     double apply_instruction(const Instruction& instr, std::vector<Plaquette>& plaquettes, double time, unsigned int step,

@@ -162,7 +162,12 @@ namespace TISCC
             else if (s == "parity") {
                 GridManager grid(nrows, ncols);
                 LogicalQubit lq(dx, dz, 0, 0, grid);
-                lq.print_parity_check_matrix(grid);
+                lq.print_parity_check_matrix();
+                std::vector<HW_Instruction> hw_master;
+                double time = 0;
+                lq.add_stabilizer(5, 2, 's', 'X', grid, hw_master, time, debug);
+                lq.add_stabilizer(5, 3, 's', 'Z', grid, hw_master, time, debug);
+                lq.add_stabilizer(5, 1, 's', 'Z', grid, hw_master, time, debug);
             }
 
             else {
@@ -196,7 +201,7 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Grab all of the occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites();
+                std::set<unsigned int> occupied_sites = lq.occupied_sites(false);
 
                 // Perform associated transversal operation
                 if (s != "idle") {
@@ -250,7 +255,7 @@ namespace TISCC
                 LogicalQubit lq = merge(lq1, lq2, grid);   
 
                 // Grab all of the merged patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites();
+                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);        
@@ -392,7 +397,7 @@ namespace TISCC
                     }
 
                     // Swap roles of X and Z for merged patch
-                    lq.xz_swap();
+                    lq.xz_swap(grid);
 
                     // Next extend patch rightward by running 'idle' on the merged patch
                     time = lq.idle(cycles, grid, hw_master, time);
@@ -422,7 +427,7 @@ namespace TISCC
                     }
 
                     // Swap roles of X and Z for merged patch
-                    lq.xz_swap();
+                    lq.xz_swap(grid);
 
                     // Perform 'idle' operation on the merged qubit
                     time = lq.idle(cycles, grid, hw_master, time);
@@ -461,7 +466,7 @@ namespace TISCC
                 LogicalQubit lq = merge(lq1, lq2, grid);
 
                 // Grab all of the larger patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites();
+                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
