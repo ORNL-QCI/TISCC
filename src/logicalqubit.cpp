@@ -640,8 +640,24 @@ namespace TISCC
         return strip;
     }
 
+    // Obtain pair<qsite unsigned int, Pauli char> for each stabilizer measure qubit for the purpose of labeling on the grid
+    std::vector<std::pair<unsigned int, char>> LogicalQubit::syndrome_measurement_qsites() {
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
+        std::vector<std::pair<unsigned int, char>> syndrome_measurement_qsites;
+        for (const Plaquette& p : all_plaquettes) {
+            syndrome_measurement_qsites.emplace_back(p.get_qsite('m'), p.get_operator_type());
+        }
+        return syndrome_measurement_qsites;
+    }
+
     // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
     void LogicalQubit::xz_swap(const GridManager& grid) {
+
+        std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
+        grid.print_grid(ascii_grid);
 
         // Construct new parity check matrix
         std::vector<std::vector<bool>> new_parity_check_matrix;
@@ -676,6 +692,9 @@ namespace TISCC
 
         // Update code distances
         recalculate_code_distance();
+
+        ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
+        grid.print_grid(ascii_grid);
 
     }
 
