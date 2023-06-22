@@ -404,7 +404,7 @@ namespace TISCC
 
                     // Corner movements: all measurements commute so I think they can be done at once
                     // This should probably be done as a sequence of measurements rather than anything explicit in the LogicalQubit object
-                    lq.extend_logical_operator_default_edge_clockwise('X', 15, grid, hw_master, time, debug); 
+                    lq.extend_logical_operator_default_edge_clockwise('X', 1, grid, hw_master, time, debug); 
 
                     // /* Contraction */
                     // // Perform measure x on the half to be cropped

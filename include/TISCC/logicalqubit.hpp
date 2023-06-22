@@ -55,7 +55,7 @@ public:
     double add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 
     // Corner movement 
-    double extend_logical_operator_default_edge_clockwise(char type, unsigned int weight_to_add, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
+    double extend_logical_operator_default_edge_clockwise(char type, unsigned int weight_to_add, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 
 private:
     // Code distances and location on grid
@@ -121,6 +121,12 @@ private:
 
 // Construct and return a logical qubit that represents the merged product of two input logical qubits
 LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid);
+
+// Helper functions related to binary vector math
+bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2);
+std::vector<bool> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2);
+std::vector<bool> symplectic_transform(const std::vector<bool>& v);
+unsigned int pauli_weight(const std::vector<bool>& v);
 
 }
 

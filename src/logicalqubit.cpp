@@ -807,8 +807,9 @@ namespace TISCC
                             std::vector<bool> plaquette_with_added_qubit = parity_check_matrix[i];
                             plaquette_with_added_qubit[qsite_to_index[added_qubit.value()] + (type == 'Z')*qsite_to_index.size()] = 1;
                             if (bin_dot_prod_mod_2(plaquette_with_added_qubit, new_row_transformed)) {
-                                std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
-                                abort();   
+                                // std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
+                                throw std::runtime_error("LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added.");
+                                // abort();   
                             }
                             else {
 
@@ -824,8 +825,9 @@ namespace TISCC
                         }
 
                         else {
-                            std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
-                            abort();  
+                            // std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
+                            // abort(); 
+                            throw std::runtime_error("LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added."); 
                         }
   
                     }
@@ -1044,8 +1046,9 @@ namespace TISCC
 
             // Now, if there is still no overlapping qubit, then this is an invalid path
             if (!overlapping_index) {
-                std::cerr << "LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement." << std::endl;
-                abort();
+                throw std::runtime_error("LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement.");
+                // std::cerr << "LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement." << std::endl;
+                // abort();
             }
 
         }
@@ -1184,10 +1187,30 @@ namespace TISCC
         return time_tmp;
     }
 
-    double LogicalQubit::extend_logical_operator_default_edge_clockwise(char type, unsigned int weight_to_add, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
+    double LogicalQubit::extend_logical_operator_default_edge_clockwise(char type, unsigned int weight_to_add, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
+        // We require stabilizers of a known type (X or Z)
+        char opp_type;
+        if (type == 'Z') {
+            opp_type = 'X';
+        }
+        else if (type == 'X') {
+            opp_type = 'Z';
+        }
+        else {
+            std::cerr << "LogicalQubit::add_stabilizer: Invalid stabilizer type (X or Z) given." << std::endl;
+            abort(); 
+        }
+
+        //
         double time_tmp = time;
-        
+
+
+        // Create vector of all plaquettes for convenience
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
         // 
         std::vector<bool> logical_operator_default_edge = get_logical_operator_default_edge(type);
         std::vector<bool> logical_operator_opposite_edge = get_logical_operator_opposite_edge(type);
@@ -1278,7 +1301,8 @@ namespace TISCC
             // Find a stabilizer that has support on this qsite
             std::optional<unsigned int> supporting_stabilizer_index;
             for (unsigned int i=0; i<parity_check_matrix.size(); i++) {
-                if (parity_check_matrix[i][qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()]) {
+                if ((parity_check_matrix[i][qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()]) &&
+                    (all_plaquettes[i].get_shape() != 'f')) {
                     supporting_stabilizer_index = i;
                     break;
                 }
@@ -1289,21 +1313,47 @@ namespace TISCC
                 abort();              
             }
 
+            // std::cout << all_plaquettes[supporting_stabilizer_index.value()].get_row() << " " << all_plaquettes[supporting_stabilizer_index.value()].get_col() << 
+                // " " << all_plaquettes[supporting_stabilizer_index.value()].get_shape() << " " << all_plaquettes[supporting_stabilizer_index.value()].get_operator_type() << std::endl;
+
+            char new_stab_type = opp_type;
+            char new_stab_shape = all_plaquettes[supporting_stabilizer_index.value()].get_shape();
+            unsigned int new_stab_row = all_plaquettes[supporting_stabilizer_index.value()].get_row();
+            unsigned int new_stab_col = all_plaquettes[supporting_stabilizer_index.value()].get_col();
+
+            // std::cout << new_stab_row << " " << new_stab_col-- << " " << new_stab_shape << " " << new_stab_type << std::endl;
+
+            /* This is no good because the add_stabilizer function actually changes the grid. Leaving it for now. */
             // Add a corresponding stabilizer
-            time_tmp = add_stabilizer()
+            if ((new_stab_shape == 'n') || (new_stab_shape == 's')) {
+                try {
+                    time_tmp = add_stabilizer(new_stab_row, new_stab_col+1, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
+                } catch (const std::runtime_error& e1) {
+                    std::cerr << e1.what() << std::endl;
+                    try{
+                        time_tmp = add_stabilizer(new_stab_row, new_stab_col-1, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
+                    } catch (const std::runtime_error& e2) {
+                        std::cerr << e2.what() << std::endl;
+                        abort();
+                    }
 
-            for (const std::vector<bool>& row : parity_check_matrix) {
+                }
 
+                
+            }
+            else if ((new_stab_shape == 'e') || (new_stab_shape == 'w')) {
+                time_tmp = add_stabilizer(new_stab_row++, new_stab_col, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
+                time_tmp = add_stabilizer(new_stab_row--, new_stab_col, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
             }
 
             // Add this qsite to the logical
-            logical_operator_default_edge[qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()] = 1;
+            // logical_operator_default_edge[qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()] = 1;
 
             // Print for debugging purposes
-            std::cout << std::endl << "Updated logical operator: ";
-            std::cout << std::endl;
-            std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(logical_operator_default_edge), true);
-            grid.print_grid(ascii_grid);
+            // std::cout << std::endl << "Updated logical operator: ";
+            // std::cout << std::endl;
+            // std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(logical_operator_default_edge), true);
+            // grid.print_grid(ascii_grid);
 
         }
 
