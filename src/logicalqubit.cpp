@@ -656,8 +656,8 @@ namespace TISCC
     // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
     void LogicalQubit::xz_swap(const GridManager& grid) {
 
-        std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
-        grid.print_grid(ascii_grid);
+        // std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
+        // grid.print_grid(ascii_grid);
 
         // Construct new parity check matrix
         std::vector<std::vector<bool>> new_parity_check_matrix;
@@ -693,8 +693,11 @@ namespace TISCC
         // Update code distances
         recalculate_code_distance();
 
-        ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
-        grid.print_grid(ascii_grid);
+        // ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
+        // grid.print_grid(ascii_grid);
+
+        // We have changed the stabilizer arrangement
+        default_arrangement_ = false;
 
     }
 
