@@ -1184,6 +1184,135 @@ namespace TISCC
         return time_tmp;
     }
 
+    double LogicalQubit::extend_logical_operator_default_edge_clockwise(char type, unsigned int weight_to_add, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
+
+        double time_tmp = time;
+        
+        // 
+        std::vector<bool> logical_operator_default_edge = get_logical_operator_default_edge(type);
+        std::vector<bool> logical_operator_opposite_edge = get_logical_operator_opposite_edge(type);
+
+        // Which product of the current logical + current stabilizers would yield the desired logical?
+            // First find the qsite on the "far" edge of the current logical.
+            // Then find the next furthest qsite.
+                // Find a stabilizer that (a) has support on that qsite and (b) anti-commutes with one or more stabilizers
+            // Add the stabilizer that you found.
+            // Repeat until final condition satisfied.
+
+        // Find a qsite supported on the logical operator
+        std::optional<unsigned int> qsite;
+        for (unsigned int i=0; i<logical_operator_default_edge.size(); i++) {
+            if (logical_operator_default_edge[i]) {
+                if (grid.is_occupied(index_to_qsite[i])) { 
+                    qsite = index_to_qsite[i];
+                    break;
+                }
+                else {
+                    std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Logical operator supports qsite that isn't occupied on the grid." << std::endl;
+                    abort();
+                }
+
+            } 
+        }
+
+        if (!qsite.has_value()) {
+            std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Logical operator in question has no support on any qsites." << std::endl;
+            abort();
+        }
+
+        // Find the grid spec of this qsite
+        unsigned int row = grid.get_row(qsite.value());
+        unsigned int col = grid.get_col(qsite.value());
+        unsigned int index = grid.get_idx(qsite.value());
+
+        // Loop over weight to add to the logical
+        for (unsigned int i=0; i<weight_to_add; i++) {
+
+            // Make sure we aren't adding a qsite already supported on the logical, and employ a counter to stop after a cutoff number of tries
+            unsigned int counter = 0;
+            while ((logical_operator_default_edge[qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()]) &&
+                (counter < 2*dx_init_ + 2*dz_init_)) {
+
+                // Figure out which boundary the present qsite lies on. Assign corners assuming movement will be clockwise. Set coords to the next (occupied) clockwise boundary qsite.
+                if ((col == col_) && (row != row_ + 1)) {
+                    // left edge 
+                    row--;
+                    if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
+                        col++;
+                    }
+                }
+
+                else if ((row == row_ + 1) && (col != col_ + dx_init_ - 1)) {
+                    // top edge
+                    col++;
+                    if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
+                        row++;
+                    }
+                }
+
+                else if ((col == col_ + dx_init_ - 1) && (row != row_ + dz_init_)) {
+                    // right edge
+                    row++;
+                    if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
+                        col--;
+                    }
+                }
+
+                else if ((row == row_ + dz_init_) && (col != col_)) {
+                    // bottom edge
+                    col--;
+                    if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
+                        row--;
+                    }
+                }
+
+                else {
+                    std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Logical operator has support on non-boundary qubit." << std::endl;
+                    abort();
+                }
+
+                counter++;
+
+            }
+
+            // Find a stabilizer that has support on this qsite
+            std::optional<unsigned int> supporting_stabilizer_index;
+            for (unsigned int i=0; i<parity_check_matrix.size(); i++) {
+                if (parity_check_matrix[i][qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()]) {
+                    supporting_stabilizer_index = i;
+                    break;
+                }
+            }
+
+            if (!supporting_stabilizer_index.has_value()) {
+                std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: No supporting stabilizer found for qsite in question." << std::endl;
+                abort();              
+            }
+
+            // Add a corresponding stabilizer
+            time_tmp = add_stabilizer()
+
+            for (const std::vector<bool>& row : parity_check_matrix) {
+
+            }
+
+            // Add this qsite to the logical
+            logical_operator_default_edge[qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()] = 1;
+
+            // Print for debugging purposes
+            std::cout << std::endl << "Updated logical operator: ";
+            std::cout << std::endl;
+            std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(logical_operator_default_edge), true);
+            grid.print_grid(ascii_grid);
+
+        }
+
+        /* No (little) validity checking is currently implemented */
+
+        return time;
+
+    }
+
     // Construct and return a logical qubit that represents the merged product of two input logical qubits
     LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 

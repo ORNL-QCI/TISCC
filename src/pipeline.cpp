@@ -399,11 +399,12 @@ namespace TISCC
                     // Swap roles of X and Z for merged patch
                     lq.xz_swap(grid);
 
-                    // // Next extend patch rightward by running 'idle' on the merged patch
-                    // time = lq.idle(cycles, grid, hw_master, time);
+                    // Next extend patch rightward by running 'idle' on the merged patch
+                    time = lq.idle(cycles, grid, hw_master, time);
 
-                    // // Corner movements: all measurements commute so I think they can be done at once
-                    // // This should probably be done as a sequence of measurements rather than anything explicit in the LogicalQubit object
+                    // Corner movements: all measurements commute so I think they can be done at once
+                    // This should probably be done as a sequence of measurements rather than anything explicit in the LogicalQubit object
+                    lq.extend_logical_operator_default_edge_clockwise('X', 15, grid, hw_master, time, debug); 
 
                     // /* Contraction */
                     // // Perform measure x on the half to be cropped
