@@ -405,7 +405,7 @@ namespace TISCC
                     // Corner movements: all measurements commute so I think they can be done at once
                     // This should probably be done as a sequence of measurements rather than anything explicit in the LogicalQubit object
                     // lq.extend_logical_operator_default_edge_clockwise('X', lq.get_dz()-1, grid, hw_master, time, debug); 
-                    lq.extend_logical_operator_default_edge_clockwise('Z', lq.get_dx() - 2, grid, hw_master, time, debug); 
+                    lq.extend_logical_operator_clockwise('Z', "opposite", lq.get_dx() - 1, grid, hw_master, time, debug); 
 
                     std::cout << "Made it out." << std::endl;
 

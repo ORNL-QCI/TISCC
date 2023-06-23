@@ -1187,7 +1187,8 @@ namespace TISCC
         return time_tmp;
     }
 
-    double LogicalQubit::extend_logical_operator_default_edge_clockwise(char type, unsigned int weight_to_add, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
+    double LogicalQubit::extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, 
+        GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
         // We require stabilizers of a known type (X or Z)
         char opp_type;
@@ -1207,19 +1208,22 @@ namespace TISCC
         double time_to_return = time;
 
         // Grab logical operators of 'type' on default and opposite edge
-        std::vector<bool> logical_operator_default_edge = get_logical_operator_default_edge(type);
-        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - pauli_weight(logical_operator_default_edge);
+        std::vector<bool> logical_operator;
+        if (edge_type == "default") {logical_operator = get_logical_operator_default_edge(type);}
+        else if (edge_type == "opposite") {logical_operator = get_logical_operator_opposite_edge(type);}
+        else {std::cerr << "LogicalQubit::extend_logical_operator_clockwise: invalid input for edge_type." << std::endl; abort();}
+        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - pauli_weight(logical_operator);
 
         // Find any qsite supported on the logical operator
         std::optional<unsigned int> qsite;
-        for (unsigned int i=0; i<logical_operator_default_edge.size(); i++) {
-            if (logical_operator_default_edge[i]) {
+        for (unsigned int i=0; i<logical_operator.size(); i++) {
+            if (logical_operator[i]) {
                 if (grid.is_occupied(index_to_qsite[i])) { 
                     qsite = index_to_qsite[i];
                     break;
                 }
                 else {
-                    std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Logical operator supports qsite that isn't occupied on the grid." << std::endl;
+                    std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Logical operator supports qsite that isn't occupied on the grid." << std::endl;
                     abort();
                 }
 
@@ -1227,7 +1231,7 @@ namespace TISCC
         }
 
         if (!qsite.has_value()) {
-            std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Logical operator in question has no support on any qsites." << std::endl;
+            std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Logical operator in question has no support on any qsites." << std::endl;
             abort();
         }
 
@@ -1246,7 +1250,7 @@ namespace TISCC
 
             // We make sure we aren't adding a qsite already supported on the logical
             unsigned int pc_column_index = qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size();
-            while (logical_operator_default_edge[pc_column_index]) {
+            while (logical_operator[pc_column_index]) {
 
                 // Figure out which boundary the present qsite lies on. Assign corners assuming movement will be clockwise. Set coords to the next (occupied) clockwise boundary qsite.
                 if ((col == col_) && (row != row_ + 1)) {
@@ -1282,7 +1286,7 @@ namespace TISCC
                 }
 
                 else {
-                    std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Logical operator has support on non-boundary qubit." << std::endl;
+                    std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Logical operator has support on non-boundary qubit." << std::endl;
                     abort();
                 }
 
@@ -1307,7 +1311,7 @@ namespace TISCC
             }
 
             if (!supporting_stabilizer_index.has_value()) {
-                std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: No supporting stabilizer found for qsite in question." << std::endl;
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No supporting stabilizer found for qsite in question." << std::endl;
                 abort();              
             }
 
@@ -1322,7 +1326,7 @@ namespace TISCC
             else if (new_stab_shape == 'e') {shift_vertical = 1;}
             else if (new_stab_shape == 's') {shift_horizontal = -1;}
             else if (new_stab_shape == 'w') {shift_vertical = -1;}
-            else {std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: invalid stabilizer shape." << std::endl;}
+            else {std::cerr << "LogicalQubit::extend_logical_operator_clockwise: invalid stabilizer shape." << std::endl;}
 
             // We will handle two cases:
             //  (1) The found boundary stabilizer has no support on the current logical
@@ -1341,14 +1345,14 @@ namespace TISCC
                         for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
                             std::cout << qubit << " " << all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) << std::endl;
                         }
-                        std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Supporting stabilizer invalid (path 1)." << std::endl;
+                        std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 1)." << std::endl;
                         abort();
                     }
                 }
             }
             
             if (!other_qsite.has_value()) {
-                std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Supporting stabilizer invalid (path 2)." << std::endl;
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 2)." << std::endl;
             }
 
             else {
@@ -1356,7 +1360,7 @@ namespace TISCC
             }
 
             // Check whether logical operator has support here and add_stabilizer depending on the case
-            if (logical_operator_default_edge[pc_column_index_other]) {
+            if (logical_operator[pc_column_index_other]) {
                 time_tmp = add_stabilizer(new_stab_row+shift_vertical, new_stab_col+shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug);           
             }
             else {
@@ -1367,11 +1371,14 @@ namespace TISCC
             In that case, will have measure and init of the same qubit at the same time in the hardware circuit. */
 
             // Update logical operator
-            unsigned int weight_diff = pauli_weight(logical_operator_default_edge);
-            logical_operator_default_edge = get_logical_operator_default_edge(type);
-            weight_diff = pauli_weight(logical_operator_default_edge) - weight_diff;
+            unsigned int weight_diff = pauli_weight(logical_operator);
+            if (edge_type == "default") {logical_operator = get_logical_operator_default_edge(type);}
+            else if (edge_type == "opposite") {logical_operator = get_logical_operator_opposite_edge(type);}
+            weight_diff = pauli_weight(logical_operator) - weight_diff;
             i += weight_diff - 1;
-
+            if (weight_diff == 0) {
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: logical operator of desired edge type did not change weight. add_stabilizer may have chosen the default edge operator to modify." << std::endl;
+            }
 
             // Print for debugging purposes
             if (debug) {
