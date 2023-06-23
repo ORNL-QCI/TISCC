@@ -1394,6 +1394,17 @@ namespace TISCC
 
     }
 
+    // Reset stabilizer circuits to default values
+    void LogicalQubit::reset_stabilizer_circuit_patterns() {
+        // Set default circuit patterns
+        for (Plaquette& p : z_plaquettes) {
+            p.set_circuit_pattern('Z');
+        }
+        for (Plaquette& p : x_plaquettes) {
+            p.set_circuit_pattern('N');
+        }
+    }
+
     // Construct and return a logical qubit that represents the merged product of two input logical qubits
     LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 

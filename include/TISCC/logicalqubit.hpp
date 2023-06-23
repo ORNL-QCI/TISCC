@@ -22,6 +22,8 @@ public:
     // Accessors
     unsigned int get_dx() const {return dx_;}
     unsigned int get_dz() const {return dz_;}
+    unsigned int get_dx_init() const {return dx_init_;}
+    unsigned int get_dz_init() const {return dz_init_;}
     unsigned int get_row() const {return row_;}
     unsigned int get_col() const {return col_;}
     const std::vector<std::vector<bool>>& get_parity_check_matrix() const {return parity_check_matrix;}
@@ -56,6 +58,9 @@ public:
 
     // Corner movement 
     double extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
+
+    // Reset stabilizer circuits to default values
+    void reset_stabilizer_circuit_patterns();
 
 private:
     // Code distances and location on grid
