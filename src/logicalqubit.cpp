@@ -1202,27 +1202,15 @@ namespace TISCC
             abort(); 
         }
 
-        //
-        double time_tmp = time;
+        // Hardware instructions may be added in add_stabilizer, so we need to track time
+        double time_tmp;
+        double time_to_return = time;
 
-
-        // Create vector of all plaquettes for convenience
-        std::vector<Plaquette> all_plaquettes;
-        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
-        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
-
-        // 
+        // Grab logical operators of 'type' on default and opposite edge
         std::vector<bool> logical_operator_default_edge = get_logical_operator_default_edge(type);
-        std::vector<bool> logical_operator_opposite_edge = get_logical_operator_opposite_edge(type);
+        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - pauli_weight(logical_operator_default_edge);
 
-        // Which product of the current logical + current stabilizers would yield the desired logical?
-            // First find the qsite on the "far" edge of the current logical.
-            // Then find the next furthest qsite.
-                // Find a stabilizer that (a) has support on that qsite and (b) anti-commutes with one or more stabilizers
-            // Add the stabilizer that you found.
-            // Repeat until final condition satisfied.
-
-        // Find a qsite supported on the logical operator
+        // Find any qsite supported on the logical operator
         std::optional<unsigned int> qsite;
         for (unsigned int i=0; i<logical_operator_default_edge.size(); i++) {
             if (logical_operator_default_edge[i]) {
@@ -1248,13 +1236,17 @@ namespace TISCC
         unsigned int col = grid.get_col(qsite.value());
         unsigned int index = grid.get_idx(qsite.value());
 
-        // Loop over weight to add to the logical
+        // Loop over single-qubit operators to add in extending the logical operator
         for (unsigned int i=0; i<weight_to_add; i++) {
 
-            // Make sure we aren't adding a qsite already supported on the logical, and employ a counter to stop after a cutoff number of tries
-            unsigned int counter = 0;
-            while ((logical_operator_default_edge[qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()]) &&
-                (counter < 2*dx_init_ + 2*dz_init_)) {
+            // Don't let it try to add above the maximum Pauli weight before the operator eats its tail
+            if (i >= max_weight_to_add) {
+                break;
+            }
+
+            // We make sure we aren't adding a qsite already supported on the logical
+            unsigned int pc_column_index = qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size();
+            while (logical_operator_default_edge[pc_column_index]) {
 
                 // Figure out which boundary the present qsite lies on. Assign corners assuming movement will be clockwise. Set coords to the next (occupied) clockwise boundary qsite.
                 if ((col == col_) && (row != row_ + 1)) {
@@ -1294,14 +1286,20 @@ namespace TISCC
                     abort();
                 }
 
-                counter++;
+                qsite = grid.index_from_coords(row, col, index);
+                pc_column_index = qsite_to_index[qsite.value()] + (type == 'X')*qsite_to_index.size();
 
             }
 
-            // Find a stabilizer that has support on this qsite
+            // Create vector of all plaquettes for convenience
+            std::vector<Plaquette> all_plaquettes;
+            all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+            all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
+            // Find any boundary stabilizer that has on this qsite corresponding to 'type'
             std::optional<unsigned int> supporting_stabilizer_index;
-            for (unsigned int i=0; i<parity_check_matrix.size(); i++) {
-                if ((parity_check_matrix[i][qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()]) &&
+            for (unsigned int i=0; i<all_plaquettes.size(); i++) {
+                if ((parity_check_matrix[i][pc_column_index]) &&
                     (all_plaquettes[i].get_shape() != 'f')) {
                     supporting_stabilizer_index = i;
                     break;
@@ -1313,53 +1311,79 @@ namespace TISCC
                 abort();              
             }
 
-            // std::cout << all_plaquettes[supporting_stabilizer_index.value()].get_row() << " " << all_plaquettes[supporting_stabilizer_index.value()].get_col() << 
-                // " " << all_plaquettes[supporting_stabilizer_index.value()].get_shape() << " " << all_plaquettes[supporting_stabilizer_index.value()].get_operator_type() << std::endl;
-
+            // Set up basic parameters for input to add_stabilizer
             char new_stab_type = opp_type;
             char new_stab_shape = all_plaquettes[supporting_stabilizer_index.value()].get_shape();
             unsigned int new_stab_row = all_plaquettes[supporting_stabilizer_index.value()].get_row();
             unsigned int new_stab_col = all_plaquettes[supporting_stabilizer_index.value()].get_col();
+            int shift_horizontal = 0;
+            int shift_vertical = 0;
+            if (new_stab_shape == 'n') {shift_horizontal = 1;}
+            else if (new_stab_shape == 'e') {shift_vertical = 1;}
+            else if (new_stab_shape == 's') {shift_horizontal = -1;}
+            else if (new_stab_shape == 'w') {shift_vertical = -1;}
+            else {std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: invalid stabilizer shape." << std::endl;}
 
-            // std::cout << new_stab_row << " " << new_stab_col-- << " " << new_stab_shape << " " << new_stab_type << std::endl;
+            // We will handle two cases:
+            //  (1) The found boundary stabilizer has no support on the current logical
+            //  (2) The found boundary stabilizer has one qubit of support on the current logical
 
-            /* This is no good because the add_stabilizer function actually changes the grid. Leaving it for now. */
-            // Add a corresponding stabilizer
-            if ((new_stab_shape == 'n') || (new_stab_shape == 's')) {
-                try {
-                    time_tmp = add_stabilizer(new_stab_row, new_stab_col+1, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
-                } catch (const std::runtime_error& e1) {
-                    std::cerr << e1.what() << std::endl;
-                    try{
-                        time_tmp = add_stabilizer(new_stab_row, new_stab_col-1, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
-                    } catch (const std::runtime_error& e2) {
-                        std::cerr << e2.what() << std::endl;
+            // Grab the other qsite associated with this boundary stabilizer
+            std::optional<unsigned int> other_qsite;
+            unsigned int pc_column_index_other;
+            for (char qubit : {'a', 'b', 'c', 'd'}) {
+                if ((all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) != std::numeric_limits<unsigned int>::max()) &&
+                    all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) != qsite.value()) {
+                    if (!other_qsite.has_value()) {
+                        other_qsite = all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit);
+                    }
+                    else {
+                        for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
+                            std::cout << qubit << " " << all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) << std::endl;
+                        }
+                        std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Supporting stabilizer invalid (path 1)." << std::endl;
                         abort();
                     }
-
                 }
-
-                
             }
-            else if ((new_stab_shape == 'e') || (new_stab_shape == 'w')) {
-                time_tmp = add_stabilizer(new_stab_row++, new_stab_col, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
-                time_tmp = add_stabilizer(new_stab_row--, new_stab_col, new_stab_shape, new_stab_type, grid, hw_master, time, debug);
+            
+            if (!other_qsite.has_value()) {
+                std::cerr << "LogicalQubit::extend_logical_operator_default_edge_clockwise: Supporting stabilizer invalid (path 2)." << std::endl;
             }
 
-            // Add this qsite to the logical
-            // logical_operator_default_edge[qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size()] = 1;
+            else {
+                pc_column_index_other = qsite_to_index[other_qsite.value()] + (type=='X')*qsite_to_index.size();
+            }
+
+            // Check whether logical operator has support here and add_stabilizer depending on the case
+            if (logical_operator_default_edge[pc_column_index_other]) {
+                time_tmp = add_stabilizer(new_stab_row+shift_vertical, new_stab_col+shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug);           
+            }
+            else {
+                time_tmp = add_stabilizer(new_stab_row-shift_vertical, new_stab_col-shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug); 
+            }
+
+            /* Something to note; it is unclear whether there will be cases where qubits will need to be added and removed in the same corner movement. 
+            In that case, will have measure and init of the same qubit at the same time in the hardware circuit. */
+
+            // Update logical operator
+            unsigned int weight_diff = pauli_weight(logical_operator_default_edge);
+            logical_operator_default_edge = get_logical_operator_default_edge(type);
+            weight_diff = pauli_weight(logical_operator_default_edge) - weight_diff;
+            i += weight_diff - 1;
+
 
             // Print for debugging purposes
-            // std::cout << std::endl << "Updated logical operator: ";
-            // std::cout << std::endl;
-            // std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(binary_operator_to_qsites(logical_operator_default_edge), true);
-            // grid.print_grid(ascii_grid);
+            if (debug) {
+                std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
+                grid.print_grid(ascii_grid);
+            }
+
+          if (time_tmp > time_to_return) time_to_return = time_tmp;
 
         }
 
-        /* No (little) validity checking is currently implemented */
-
-        return time;
+        return time_to_return;
 
     }
 
