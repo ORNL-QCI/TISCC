@@ -726,7 +726,7 @@ namespace TISCC
             abort();
         }
 
-        // In some cases, a hardware instruction is added and time needs to be tracked
+        // In some cases, a hardware instruction is added, so time needs to be tracked
         double time_tmp = time;
 
         // Create vector of all plaquettes for convenience
@@ -739,9 +739,9 @@ namespace TISCC
             - We tease out that case using differences in the set of occupied sites.
         */
 
-        // Create optional added_qubit and set of previously occupied qsites
+        // Create optional added_qubit and set of (just data) qsites previously occupied by this lq 
         std::optional<unsigned int> added_qubit;
-        std::set<unsigned int> previously_occupied_sites = grid.get_occ_sites();
+        std::set<unsigned int> previously_occupied_sites = occupied_sites(true);
 
         // Construct new Plaquette from the grid without explicitly adding it yet
         // (note that more validity checks take place within this function)
@@ -807,9 +807,9 @@ namespace TISCC
                             std::vector<bool> plaquette_with_added_qubit = parity_check_matrix[i];
                             plaquette_with_added_qubit[qsite_to_index[added_qubit.value()] + (type == 'Z')*qsite_to_index.size()] = 1;
                             if (bin_dot_prod_mod_2(plaquette_with_added_qubit, new_row_transformed)) {
-                                // std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
-                                throw std::runtime_error("LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added.");
-                                // abort();   
+                                std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
+                                abort();   
+                                // throw std::runtime_error("LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added.");
                             }
                             else {
 
@@ -825,9 +825,9 @@ namespace TISCC
                         }
 
                         else {
-                            // std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
-                            // abort(); 
-                            throw std::runtime_error("LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added."); 
+                            std::cerr << "LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added." << std::endl;
+                            abort(); 
+                            // throw std::runtime_error("LogicalQubit::add_stabilizer: Stabilizers that anti-commute with any non-boundary plaquettes are not allowed to be added."); 
                         }
   
                     }
@@ -862,16 +862,17 @@ namespace TISCC
         }
 
         // We remove the measure qubits corresponding with the anti-commuting stabilizers from the grid's occupied_sites set
-        for (unsigned int index: anticommuting_stabilizers) {
+        // ** we are removing this for now because (a) it causes problems when checking hardware validity of the final circuit and (b) it isn't clear that it is necessary
+        // for (unsigned int index: anticommuting_stabilizers) {
 
-            // Remove the stabilizers that anticommute with the new one
-            if (index < z_plaquettes.size()) {
-                grid.deoccupy_site(z_plaquettes[index].get_qsite('m'));        
-            }
-            else {
-                grid.deoccupy_site(x_plaquettes[index - z_plaquettes.size()].get_qsite('m'));
-            }
-        }
+        //     // Remove the stabilizers that anticommute with the new one
+        //     if (index < z_plaquettes.size()) {
+        //         grid.deoccupy_site(z_plaquettes[index].get_qsite('m'));        
+        //     }
+        //     else {
+        //         grid.deoccupy_site(x_plaquettes[index - z_plaquettes.size()].get_qsite('m'));
+        //     }
+        // }
 
         // Print stabilizers/qubits to be added/removed and logical ops to be updated
         if (debug) {
@@ -1046,9 +1047,9 @@ namespace TISCC
 
             // Now, if there is still no overlapping qubit, then this is an invalid path
             if (!overlapping_index) {
-                throw std::runtime_error("LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement.");
-                // std::cerr << "LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement." << std::endl;
-                // abort();
+                std::cerr << "LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement." << std::endl;
+                abort();
+                // throw std::runtime_error("LogicalQubit::add_stabilizer: Measured stabilizer does not correspond with corner movement.");
             }
 
         }
@@ -1098,7 +1099,8 @@ namespace TISCC
                 time_tmp = TI_model.add_meas(overlapping_index.value(), time, 0, grid, hw_master);
             }
             parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')][qsite_to_index[overlapping_index.value()] + (type=='X')*qsite_to_index.size()] = 0;
-            grid.deoccupy_site(overlapping_index.value());
+            // ** note: we comment this for now because of problems downstream when checking hardware validity of the final circuit
+            // grid.deoccupy_site(overlapping_index.value());
         }
 
         // If we had to add a qubit, add appropriate hardware instructions to initialize it
@@ -1183,6 +1185,12 @@ namespace TISCC
         if (debug) {
             std::cout << std::endl << "New code distances: dx = " << dx_ << " and dz = " << dz_ << "." << std::endl;
         }
+
+        // if (debug) {
+        //     std::cout << std::endl << "Final stabilizer arrangement: " << std::endl;
+        //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);       
+        //     grid.print_grid(ascii_grid);
+        // }
 
         return time_tmp;
     }

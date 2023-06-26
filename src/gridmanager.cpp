@@ -189,6 +189,7 @@ namespace TISCC
         }
         else {
             std::cerr << "GridManager::move_qubit: Operation inconsistent with state of occupied_sites set." << std::endl;
+            std::cerr <<  site1 << ": " << is_occupied(site1) << ", " << site2 << ": " << is_occupied(site2) << std::endl;
             abort();
         }
 
@@ -273,6 +274,7 @@ namespace TISCC
         HardwareModel TI_model;
 
         // Initialize time counter and define a time_offset that will be used to resolve junction conflicts
+        // ** note: the time offset is Move + Junction because, recall, a junction move is through TWO sites
         double time = 0; 
         double time_offset = TI_model.get_ops().at("Move") + TI_model.get_ops().at("Junction");
 
@@ -323,6 +325,8 @@ namespace TISCC
             }
 
             // Update time by copying with time_offset
+            // ** note: we have made an assumption that, if a junction conflict arises in a given time slice,
+            //  then EVERYTHING in the following time slice needs to wait for its resolution.
             if (num_shifts != 0) {
                 instruction = HW_Instruction(instruction, num_shifts*time_offset); 
             }

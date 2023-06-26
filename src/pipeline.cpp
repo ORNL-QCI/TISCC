@@ -168,6 +168,10 @@ namespace TISCC
                 lq.add_stabilizer(5, 2, 's', 'X', grid, hw_master, time, debug);
                 lq.add_stabilizer(5, 3, 's', 'Z', grid, hw_master, time, debug);
                 lq.add_stabilizer(5, 1, 's', 'Z', grid, hw_master, time, debug);
+                lq.reset_stabilizer_circuit_patterns();
+                time = lq.idle(1, grid, hw_master, time);
+                std::set<unsigned int> occupied_sites = lq.occupied_sites(false);
+                grid.enforce_hw_master_validity(hw_master);
             }
 
             else {
@@ -200,9 +204,6 @@ namespace TISCC
                 // Initialize logical qubit object using the grid
                 LogicalQubit lq(dx, dz, 0, 0, grid);
 
-                // Grab all of the occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites(false);
-
                 // Perform associated transversal operation
                 if (s != "idle") {
                     lq.transversal_op(s, grid, hw_master, time);
@@ -217,6 +218,9 @@ namespace TISCC
                 if (s == "test") {
                     time = lq.test_circuits(grid, hw_master, time);
                 }
+
+                // Grab all of the occupied sites (to be used in printing)
+                std::set<unsigned int> occupied_sites = lq.occupied_sites(false);
 
                 // Enforce validity of final instruction list
                 /* TODO: 
@@ -253,9 +257,6 @@ namespace TISCC
 
                 // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid);   
-
-                // Grab all of the merged patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);        
@@ -418,40 +419,54 @@ namespace TISCC
                     // Reset stabilizer circuit patterns to default values. This should be improved later.
                     lq.reset_stabilizer_circuit_patterns();
 
-                    // Measure the new stabilizer fault-tolerantly
+                    // Measure the new stabilizers fault-tolerantly
                     time = lq.idle(cycles, grid, hw_master, time);
 
                     std::cout << "Made it out (2)." << std::endl;
 
-                    /* Contraction */
-                    // Perform measure x on the half to be cropped
-                    lq1.transversal_op("measx", grid, hw_master, time);
+                    /* For the below, need to think through how the non-standard stabilizer pattern influences logical ops in contractions and extensions */
+                    // /* Contraction */
+                    // // Perform measure x on the half to be cropped
+                    // // (we choose X because )
+                    // lq1.transversal_op("measx", grid, hw_master, time);
 
-                    // Perform measure x on the strip
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
+                    // // Perform measure x on the strip
+                    // double time_tmp = 0;
+                    // for (unsigned int site : strip) {
+                    //     time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                    //     time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+                    // }
 
-                    // Set time to start next operation
-                    time = time_tmp;
+                    // // Set time to start next operation
+                    // time = time_tmp;
 
-                    /* Extension */
-                    // Prepare the physical qubits on lq2 in the X basis
-                    lq1.transversal_op("prepx", grid, hw_master, time);
+                    // /* Extension */
+                    // // Prepare the physical qubits on lq2 in the X basis ([?] which basis should this be?)
+                    // lq1.transversal_op("prepx", grid, hw_master, time);
 
-                    // Prepare qsites on the strip in the X basis
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-                    }
+                    // // Prepare qsites on the strip in the X basis
+                    // for (unsigned int site : strip) {
+                    //     time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+                    //     time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
+                    // }
 
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    // time = lq.idle(cycles, grid, hw_master, time);
 
-                    /* Final Contraction */
-                    std::cout << "Made it out (3)." << std::endl;
+                    // /* Final Contraction */
+                    // std::cout << "Made it out (3)." << std::endl;
+
+                    // lq1.transversal_op("measx", grid, hw_master, time);
+
+                    // // Perform measure x on the strip
+                    // double time_tmp = 0;
+                    // for (unsigned int site : strip) {
+                    //     time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+                    //     time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
+                    // }
                 }
+
+                // Grab all of the merged patch's occupied sites (to be used in printing)
+                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -483,9 +498,6 @@ namespace TISCC
 
                 // Create a merged qubit
                 LogicalQubit lq = merge(lq1, lq2, grid);
-
-                // Grab all of the larger patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
                 std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
@@ -602,6 +614,9 @@ namespace TISCC
                     /* TODO: consider whether this op can be done in a single `time step'. */
 
                 }
+
+                // Grab all of the larger patch's occupied sites (to be used in printing)
+                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
