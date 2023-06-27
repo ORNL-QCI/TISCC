@@ -220,6 +220,28 @@ namespace TISCC
         return qsite_rep;
     }
 
+    // Transform operators from binary representation to string e.g. 11000101 -> ZYIX
+    std::string LogicalQubit::binary_operator_to_pauli_string(const std::vector<bool>& binary_rep) {
+        std::string result;
+        for (unsigned int k = 0; k < qsite_to_index.size(); k++) {
+            if (binary_rep[k]) {
+                result.push_back('Z');
+            }
+            else {
+                result.push_back('I');
+            }
+        }
+        for (unsigned int k = 0; k < qsite_to_index.size(); k++) {
+            if ((binary_rep[qsite_to_index.size() + k]) && (result[k] == 'I')) {
+                result[k] = 'X';
+            }
+            else if ((binary_rep[qsite_to_index.size() + k]) && (result[k] == 'Z')) {
+                result[k] = 'Y';
+            }
+        }
+        return result;
+    }
+
     /* Construct parity check matrix:
         - Rows refer to stabilizers and columns refer to qsites (repeated twice)
         - The final two rows are logical operators (Z and X, respectively)
