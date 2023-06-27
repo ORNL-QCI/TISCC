@@ -618,6 +618,34 @@ namespace TISCC
 
     }
 
+    double LogicalQubit::apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        // Obtain appropriate logical operator
+        std::vector<bool> logical_operator;
+        if (pauli == 'Z') {logical_operator = get_logical_operator_default_edge('Z');}
+        else if (pauli == 'X') {logical_operator = get_logical_operator_default_edge('X');}
+        else if (pauli == 'Y') {logical_operator = operator_product_binary_format(get_logical_operator_default_edge('Z'), get_logical_operator_default_edge('X'));}
+        else {std::cerr << "LogicalQubit::apply_pauli: Invalid Pauli operator given." << std::endl; abort();}
+
+        // Loop over sites on the operator and apply Pauli operators. 
+        // ** Y is covered by applying X_{pi/2}*Z_{pi/2}. (X_{pi/2}*Z_{pi/2} = -i*X -i*Z = - X*Z = -iY = Y_{pi/2})
+        std::vector<double> times(qsite_to_index.size(), time);
+        for (unsigned int i=0; i<logical_operator.size(); i++) {
+            if ((i < qsite_to_index.size()) && (logical_operator[i])) {
+                times[i] = TI_model.add_Z(index_to_qsite[i], times[i], 0, grid, hw_master);
+            }
+
+            else if ((i >= qsite_to_index.size()) && (logical_operator[i])) {
+                times[i-qsite_to_index.size()] = TI_model.add_X(index_to_qsite[i], times[i-qsite_to_index.size()], 0, grid, hw_master);
+            }
+        }
+
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
+        return *std::max_element(times.begin(), times.end());
+    }
+
     // Placeholder function to help implement little test circuits
     double LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         // Bell state preparation
