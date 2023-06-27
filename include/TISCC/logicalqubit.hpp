@@ -106,9 +106,6 @@ private:
     // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
     std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);
 
-    // Transform operators from binary representation to string e.g. 11000101 -> ZYIX
-    std::string binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
-
     // Obtain pair<qsite unsigned int, Pauli char> for each stabilizer measure qubit for the purpose of labeling on the grid
     std::vector<std::pair<unsigned int, char>> syndrome_measurement_qsites();
 
@@ -135,6 +132,7 @@ bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2)
 std::vector<bool> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2);
 std::vector<bool> symplectic_transform(const std::vector<bool>& v);
 unsigned int pauli_weight(const std::vector<bool>& v);
+std::string binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
 
 }
 
