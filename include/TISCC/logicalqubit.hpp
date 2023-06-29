@@ -44,6 +44,7 @@ public:
     double idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
+    double inject_y_state(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
     // Placeholder function to help implement little test circuits
     double test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);

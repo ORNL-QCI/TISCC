@@ -109,6 +109,23 @@ namespace TISCC
 
     }
 
+    double HardwareModel::add_sqrt_Z(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_sqrt_Z: Can only apply sqrt(Z) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Z_pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Z_pi/4");
+
+    }
+
     // Helper function to add H gate in terms of native TI gates to a circuit given a plaquette and a qubit label
     double HardwareModel::add_H(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
         

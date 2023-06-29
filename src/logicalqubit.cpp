@@ -649,6 +649,33 @@ namespace TISCC
         return *std::max_element(times.begin(), times.end());
     }
 
+    // This is not a good state injection protocol; it is just an easy way to generate the positive Y eigenstate in the case of zero noise 
+    double LogicalQubit::inject_y_state(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+        double time_tmp;
+        time = transversal_op("prepz", grid, hw_master, time);
+        std::vector<bool> logical_operator = get_logical_operator_default_edge('X');
+        for (unsigned int i=logical_operator.size()/2; i<logical_operator.size(); i++) {
+            if (logical_operator[i]) {
+                time_tmp = TI_model.add_H(index_to_qsite[i], time, 0, grid, hw_master);
+            }
+        }
+        time = time_tmp;
+        auto y_string = binary_operator_to_pauli_string(operator_product_binary_format(get_logical_operator_default_edge('X'), get_logical_operator_default_edge('Z')));
+        bool y_found = 0;
+        for (unsigned int i=0; i<y_string.size(); i++) {
+            if (y_string[i] == 'Y') {
+                if (y_found == 1) {
+                    std::cerr << "LogicalQubit::inject_y_state: found two Y's in y_string." << std::endl;
+                    abort();
+                }
+                time_tmp = TI_model.add_sqrt_Z(index_to_qsite[i], time, 0, grid, hw_master);
+                y_found = 1;
+            }
+        }
+
+        return time_tmp;
+    }
+
     // Placeholder function to help implement little test circuits
     double LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
         // Bell state preparation
