@@ -231,11 +231,14 @@ namespace TISCC
     // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
     std::vector<std::pair<unsigned int, char>> LogicalQubit::binary_operator_to_qsites(const std::vector<bool>& binary_rep) {
         std::vector<std::pair<unsigned int, char>> qsite_rep;
-        for (unsigned int k = 0; k < 2*qsite_to_index.size(); k++) {
-            if (binary_rep[k] && (k < qsite_to_index.size())) {
-                qsite_rep.emplace_back(index_to_qsite[k], 'Z');
+        for (unsigned int k = 0; k < qsite_to_index.size(); k++) {
+            if (binary_rep[k] && binary_rep[k+qsite_to_index.size()]) {
+                qsite_rep.emplace_back(index_to_qsite[k], 'Y');
             }
             else if (binary_rep[k]) {
+                qsite_rep.emplace_back(index_to_qsite[k], 'Z');
+            }
+            else if (binary_rep[k+qsite_to_index.size()]) {
                 qsite_rep.emplace_back(index_to_qsite[k], 'X');
             }
         }
@@ -706,9 +709,6 @@ namespace TISCC
     // Swap roles of x and z for this patch (used during Hadamard and patch rotation)
     void LogicalQubit::xz_swap(const GridManager& grid) {
 
-        // std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
-        // grid.print_grid(ascii_grid);
-
         // Construct new parity check matrix
         std::vector<std::vector<bool>> new_parity_check_matrix;
         std::vector<bool> tmp_row;
@@ -742,9 +742,6 @@ namespace TISCC
 
         // Update code distances
         recalculate_code_distance();
-
-        // ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);
-        // grid.print_grid(ascii_grid);
 
         // We have changed the stabilizer arrangement
         default_arrangement_ = false;

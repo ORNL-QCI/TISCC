@@ -63,6 +63,12 @@ public:
     // Reset stabilizer circuits to default values
     void reset_stabilizer_circuit_patterns();
 
+    // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
+    std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);
+
+    // Obtain pair<qsite unsigned int, Pauli char> for each stabilizer measure qubit for the purpose of labeling on the grid
+    std::vector<std::pair<unsigned int, char>> syndrome_measurement_qsites();
+
 private:
     // Code distances and location on grid
     unsigned int dx_;
@@ -103,12 +109,6 @@ private:
 
     // Set up the circuits that we intend to use
     void init_circuits();
-
-    // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
-    std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);
-
-    // Obtain pair<qsite unsigned int, Pauli char> for each stabilizer measure qubit for the purpose of labeling on the grid
-    std::vector<std::pair<unsigned int, char>> syndrome_measurement_qsites();
 
     // Construct parity check matrix from stabilizers
     void construct_parity_check_matrix(const GridManager& grid);
