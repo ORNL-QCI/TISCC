@@ -220,7 +220,7 @@ namespace TISCC
                 }
 
                 // Grab all of the occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = lq.occupied_sites(false);
+                std::set<unsigned int> occupied_sites = grid.get_occ_sites();
 
                 // Enforce validity of final instruction list
                 /* TODO: 
@@ -460,7 +460,7 @@ namespace TISCC
                 }
 
                 // Grab all of the merged patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
+                std::set<unsigned int> all_qsites = grid.get_occ_sites();
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);
@@ -610,7 +610,7 @@ namespace TISCC
                 }
 
                 // Grab all of the larger patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = lq.occupied_sites(false);
+                std::set<unsigned int> all_qsites = grid.get_occ_sites();
 
                 // Enforce validity of final instruction list 
                 grid.enforce_hw_master_validity(hw_master);

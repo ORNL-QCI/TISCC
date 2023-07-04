@@ -448,6 +448,17 @@ namespace TISCC
         return tmp_logical_operator;
     }
 
+    // A product between stabilizer measurements taken at these qsites with exp. val. of the current logical op yields correct logical exp. val.
+    std::vector<unsigned int> LogicalQubit::get_logical_deformation_qsites(char type) const {
+        if (type == 'X') {
+            return x_deformation_qsites;
+        }
+        else if (type == 'Z') {
+            return z_deformation_qsites;
+        }
+        else {std::cerr << "LogicalQubit::get_logical_deformation_qsites: invalid input given." << std::endl; abort();}
+    }
+
     // Function to return all qsites occupied by the surface code (or just_data_qubits)
     std::set<unsigned int> LogicalQubit::occupied_sites(bool just_data_qubits) const {
         std::set<unsigned int> sites;
@@ -470,6 +481,12 @@ namespace TISCC
     void LogicalQubit::recalculate_code_distance() {
         dx_ = std::min(pauli_weight(get_logical_operator_default_edge('X')), pauli_weight(get_logical_operator_opposite_edge('X')));
         dz_ = std::min(pauli_weight(get_logical_operator_default_edge('Z')), pauli_weight(get_logical_operator_opposite_edge('Z')));
+    }
+
+    void LogicalQubit::add_logical_deformation_qsites(char type, unsigned int qsite) {
+        if (type == 'X') {x_deformation_qsites.push_back(qsite);}
+        else if (type == 'Z') {z_deformation_qsites.push_back(qsite);}
+        else {std::cerr << "LogicalQubit::add_logical_deformation_qsites: invalid input given." << std::endl; abort();}
     }
 
     // Apply a given ``qubit-level'' instruction to all plaquettes in a given vector and add corresponding HW_Instructions to hw_master
@@ -1046,6 +1063,7 @@ namespace TISCC
             else {
                 std::vector<bool> tmp_logical_operator = operator_product_binary_format(parity_check_matrix[anticommuting_stabilizers[0]], parity_check_matrix[anticommuting_logical_ops[0]]);
                 new_logical_operator_default_edge = std::move(tmp_logical_operator);
+                add_logical_deformation_qsites(opp_type, all_plaquettes[anticommuting_stabilizers[0]].get_qsite('m'));
             }
         }
 
@@ -1079,6 +1097,8 @@ namespace TISCC
             if (overlapping_index.has_value()) {
                 tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[parity_check_matrix.size() - 1 - (type=='X')]);
                 new_logical_operator_default_edge = std::move(tmp_logical_operator);
+                add_logical_deformation_qsites(opp_type, all_plaquettes[anticommuting_stabilizers[0]].get_qsite('m'));
+                add_logical_deformation_qsites(opp_type, all_plaquettes[anticommuting_stabilizers[1]].get_qsite('m'));
 
                 // Visualize new logical operator on grid (for debugging purposes)
                 if (debug) {
@@ -1133,6 +1153,7 @@ namespace TISCC
         std::vector<bool> tmp_row = operator_product_binary_format(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')], new_row);
         if (pauli_weight(tmp_row) <= pauli_weight(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')])) {
             new_same_type_logical_operator = std::move(tmp_row);
+            add_logical_deformation_qsites(type, new_stabilizer.get_qsite('m'));
         }
 
         // Replace the old logical operators with new ones in the parity check mtx

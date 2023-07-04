@@ -34,6 +34,7 @@ public:
     std::set<unsigned int> occupied_sites(bool just_data_qubits) const;
     const std::vector<bool>& get_logical_operator_default_edge(char type) const;
     std::vector<bool> get_logical_operator_opposite_edge(char type) const;
+    std::vector<unsigned int> get_logical_deformation_qsites(char type) const;
     bool default_arrangement() const {return default_arrangement_;}
 
     // Print functions
@@ -102,6 +103,10 @@ private:
     std::vector<Instruction> Z_Circuit_N_Type;
     std::vector<Instruction> X_Circuit_Z_Type;
 
+    // We track stabilizer measurement qsites corresponding with logical operator deformation
+    std::vector<unsigned int> x_deformation_qsites;
+    std::vector<unsigned int> z_deformation_qsites;
+
     // Construct stabilizers and update set of occupied sites in grid
     void init_stabilizers(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid); 
 
@@ -119,6 +124,9 @@ private:
 
     // Recalculate code distance using logical operators
     void recalculate_code_distance(); 
+
+    // Update the logical deformation vectors with qsite
+    void add_logical_deformation_qsites(char type, unsigned int qsite);
 
     // Apply a given instruction to all plaquettes in a given vector
     double apply_instruction(const Instruction& instr, Plaquette& p, double time, unsigned int step,
