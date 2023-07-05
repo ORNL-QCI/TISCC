@@ -478,11 +478,13 @@ namespace TISCC
         return sites;
     }
 
+    // Recalculate code distance using logical operators
     void LogicalQubit::recalculate_code_distance() {
         dx_ = std::min(pauli_weight(get_logical_operator_default_edge('X')), pauli_weight(get_logical_operator_opposite_edge('X')));
         dz_ = std::min(pauli_weight(get_logical_operator_default_edge('Z')), pauli_weight(get_logical_operator_opposite_edge('Z')));
     }
 
+    // Update the logical deformation vectors with qsite
     void LogicalQubit::add_logical_deformation_qsites(char type, unsigned int qsite) {
         if (type == 'X') {x_deformation_qsites.push_back(qsite);}
         else if (type == 'Z') {z_deformation_qsites.push_back(qsite);}
@@ -1194,6 +1196,7 @@ namespace TISCC
                 time_tmp = TI_model.add_meas(overlapping_index.value(), time, 0, grid, hw_master);
             }
             parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')][qsite_to_index[overlapping_index.value()] + (type=='X')*qsite_to_index.size()] = 0;
+            add_logical_deformation_qsites(type, overlapping_index.value());
             // ** note: we comment this for now because of problems downstream when checking hardware validity of the final circuit
             // grid.deoccupy_site(overlapping_index.value());
         }
