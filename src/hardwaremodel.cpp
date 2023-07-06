@@ -92,6 +92,57 @@ namespace TISCC
 
     }
 
+    double HardwareModel::add_sqrt_X(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_sqrt_X: Can only apply sqrt(X) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("X_pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("X_pi/4");
+
+    }
+
+    double HardwareModel::add_Y(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_Y: Can only apply Y gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Y_pi/2", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Y_pi/2");
+
+    }
+
+    double HardwareModel::add_sqrt_Y(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_sqrt_Y: Can only apply sqrt(Y) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Y_pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Y_pi/4");
+
+    }
+
     double HardwareModel::add_Z(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check

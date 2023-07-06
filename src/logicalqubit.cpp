@@ -1195,8 +1195,12 @@ namespace TISCC
                 }
                 time_tmp = TI_model.add_meas(overlapping_index.value(), time, 0, grid, hw_master);
             }
-            parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')][qsite_to_index[overlapping_index.value()] + (type=='X')*qsite_to_index.size()] = 0;
-            add_logical_deformation_qsites(type, overlapping_index.value());
+
+            if (parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')][qsite_to_index[overlapping_index.value()] + (type=='X')*qsite_to_index.size()]) {
+                parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')][qsite_to_index[overlapping_index.value()] + (type=='X')*qsite_to_index.size()] = 0;
+                add_logical_deformation_qsites(type, overlapping_index.value());
+            }
+
             // ** note: we comment this for now because of problems downstream when checking hardware validity of the final circuit
             // grid.deoccupy_site(overlapping_index.value());
         }
