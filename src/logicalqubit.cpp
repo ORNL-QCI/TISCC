@@ -27,6 +27,7 @@ namespace TISCC
     std::vector<bool> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2) {
         if (v1.size() != v2.size()) {
             std::cerr << "operator_product_binary_format: vectors of unequal length given to bin_sym_prod." << std::endl;
+            std::cerr << v1.size() << " " << v2.size() << std::endl;
             abort();
         }
         std::vector<bool> operator_product_binary_format(v1.size());
@@ -74,6 +75,28 @@ namespace TISCC
             }
             else if ((binary_rep[binary_rep.size()/2 + k]) && (result[k] == 'Z')) {
                 result[k] = 'Y';
+            }
+        }
+        return result;
+    }
+
+    // Transform operators from binary representation to string e.g. 11000101 -> ZYIX
+    std::vector<bool> pauli_string_to_binary_operator(const std::string& pauli_string) {
+        std::vector<bool> result(2*pauli_string.size(), 0);
+        for (unsigned int k = 0; k < pauli_string.size(); k++) {
+            if (pauli_string[k] == 'Z') {
+                result[k] = 1;
+            }
+            else if (pauli_string[k] == 'X') {
+                result[k+pauli_string.size()] = 1;
+            }
+            else if (pauli_string[k] == 'Y') {
+                result[k] = 1;
+                result[k+pauli_string.size()] = 1;
+            }
+            else if (pauli_string[k] != 'I') {
+                std::cerr << "pauli_string_to_binary_vector: invalid character found." << std::endl;
+                abort();
             }
         }
         return result;
@@ -684,7 +707,7 @@ namespace TISCC
         for (unsigned int i=0; i<y_string.size(); i++) {
             if (y_string[i] == 'Y') {
                 if (y_found == 1) {
-                    std::cerr << "LogicalQubit::inject_y_state: found two Y's in y_string." << std::endl;
+                    std::cerr << "LogicalQubit::inject_y_state: found > 1 y operator in y_string." << std::endl;
                     abort();
                 }
                 time_tmp = TI_model.add_sqrt_Z(index_to_qsite[i], time, 0, grid, hw_master);
