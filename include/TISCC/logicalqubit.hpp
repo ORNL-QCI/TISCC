@@ -10,6 +10,7 @@
 #include <set>
 #include <map>
 #include <optional>
+#include <complex> 
 
 namespace TISCC {
 
@@ -143,7 +144,7 @@ std::vector<bool> operator_product_binary_format(const std::vector<bool>& v1, co
 std::vector<bool> symplectic_transform(const std::vector<bool>& v);
 unsigned int pauli_weight(const std::vector<bool>& v);
 std::string binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
-std::vector<bool> pauli_string_to_binary_operator(const std::string& pauli_string);
+std::pair<std::vector<bool>, std::complex<double>> pauli_string_to_binary_operator(const std::string& pauli_string);
 
 }
 

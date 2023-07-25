@@ -80,8 +80,9 @@ namespace TISCC
         return result;
     }
 
-    // Transform operators from binary representation to string e.g. 11000101 -> ZYIX
-    std::vector<bool> pauli_string_to_binary_operator(const std::string& pauli_string) {
+    // Transform operators from string to binary representation e.g. ZYIX -> -i*(11000101)
+    std::pair<std::vector<bool>, std::complex<double>> pauli_string_to_binary_operator(const std::string& pauli_string) {
+        std::complex<double> phase = std::complex<double>(1.0, 0.0);
         std::vector<bool> result(2*pauli_string.size(), 0);
         for (unsigned int k = 0; k < pauli_string.size(); k++) {
             if (pauli_string[k] == 'Z') {
@@ -93,13 +94,14 @@ namespace TISCC
             else if (pauli_string[k] == 'Y') {
                 result[k] = 1;
                 result[k+pauli_string.size()] = 1;
+                phase *= std::complex<double>(0.0, -1.0);
             }
             else if (pauli_string[k] != 'I') {
                 std::cerr << "pauli_string_to_binary_vector: invalid character found." << std::endl;
                 abort();
             }
         }
-        return result;
+        return std::make_pair(result, phase);
     }
 
     /* LogicalQubit member functions */
