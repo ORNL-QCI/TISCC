@@ -474,12 +474,12 @@ namespace TISCC
         std::vector<bool> tmp_logical_operator = get_logical_operator_default_edge(type);
         if (type == 'Z') {
             for (unsigned int i=0; i<z_plaquettes.size(); i++) {
-                tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[i]);
+                tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[i]).first;
             }
         }
         else if (type == 'X') {
             for (unsigned int i=0; i<x_plaquettes.size(); i++) {
-                tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[i + z_plaquettes.size()]);
+                tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[i + z_plaquettes.size()]).first;
             }
         }
         return tmp_logical_operator;
@@ -689,7 +689,7 @@ namespace TISCC
         // Loop over sites on the operator and apply Pauli operators. 
         // ** Y is covered by applying Z_{pi/2}*X_{pi/2}. (Z_{pi/2}*X_{pi/2} = -i*Z -i*X = - Z*X = -iY = -Y_{pi/2}) 
         std::vector<double> times(qsite_to_index.size(), time);
-        for (int i=logical_operator.size()-1; i>=0; i--) {
+        for (unsigned int i=logical_operator.size()-1; i < logical_operator.size(); i--) {
             if ((i < qsite_to_index.size()) && (logical_operator[i])) {
                 times[i] = TI_model.add_Z(index_to_qsite[i], times[i], 0, grid, hw_master);
             }
@@ -716,7 +716,8 @@ namespace TISCC
             }
         }
         time = time_tmp;
-        auto y_string = binary_operator_to_pauli_string(operator_product_binary_format(get_logical_operator_default_edge('X'), get_logical_operator_default_edge('Z')));
+        // We locate the site on which Y_L supports a Y. Note Z_{pi/4} |+> = e^{-i*pi/4} S |+> - e^{-i*pi/4} * |Y, +>. We ignore the global phase.
+        auto y_string = binary_operator_to_pauli_string(operator_product_binary_format(get_logical_operator_default_edge('Z'), get_logical_operator_default_edge('X')).first);
         bool y_found = 0;
         for (unsigned int i=0; i<y_string.first.size(); i++) {
             if (y_string.first[i] == 'Y') {
@@ -1098,9 +1099,9 @@ namespace TISCC
 
             }
 
-            // If there is an anti-commuting logical operator along the default edge, take its product with the single anti-commuting stabilizer
+            // If there is an anti-commuting logical operator along the default edge, take its product with the single anti-commuting stabilizer (both assumed to ONLY support Z or ONLY support X)
             else {
-                std::vector<bool> tmp_logical_operator = operator_product_binary_format(parity_check_matrix[anticommuting_stabilizers[0]], parity_check_matrix[anticommuting_logical_ops[0]]);
+                std::vector<bool> tmp_logical_operator = operator_product_binary_format(parity_check_matrix[anticommuting_stabilizers[0]], parity_check_matrix[anticommuting_logical_ops[0]]).first;
                 new_logical_operator_default_edge = std::move(tmp_logical_operator);
                 add_logical_deformation_qsites(opp_type, all_plaquettes[anticommuting_stabilizers[0]].get_qsite('m'));
             }
@@ -1109,8 +1110,8 @@ namespace TISCC
         // If there are two anti-commuting stabilizers, 
         else if (anticommuting_stabilizers.size() == 2) {
 
-            // Take their product
-            std::vector<bool> tmp_logical_operator = operator_product_binary_format(parity_check_matrix[anticommuting_stabilizers[0]], parity_check_matrix[anticommuting_stabilizers[1]]);
+            // Take their product (both assumed to ONLY support Z or ONLY support X)
+            std::vector<bool> tmp_logical_operator = operator_product_binary_format(parity_check_matrix[anticommuting_stabilizers[0]], parity_check_matrix[anticommuting_stabilizers[1]]).first;
 
             // if (debug) {
             //     std::cout << std::endl << "New logical operator comprised of two anti-commuting stabilizers: ";
@@ -1132,9 +1133,9 @@ namespace TISCC
                 }
             }
 
-            // Update the tmp_logical_operator if overlap was found
+            // Update the tmp_logical_operator if overlap was found (both assumed to ONLY support Z or ONLY support X)
             if (overlapping_index.has_value()) {
-                tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[parity_check_matrix.size() - 1 - (type=='X')]);
+                tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[parity_check_matrix.size() - 1 - (type=='X')]).first;
                 new_logical_operator_default_edge = std::move(tmp_logical_operator);
                 add_logical_deformation_qsites(opp_type, all_plaquettes[anticommuting_stabilizers[0]].get_qsite('m'));
                 add_logical_deformation_qsites(opp_type, all_plaquettes[anticommuting_stabilizers[1]].get_qsite('m'));
@@ -1162,9 +1163,9 @@ namespace TISCC
                     }
                 }
 
-                // Update the tmp_logical_operator if overlap was found
+                // Update the tmp_logical_operator if overlap was found (both assumed to ONLY support Z or ONLY support X)
                 if (overlapping_index.has_value()) {
-                    tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, logical_operator_opposite_edge.value());
+                    tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, logical_operator_opposite_edge.value()).first;
                     new_logical_operator_opposite_edge = std::move(tmp_logical_operator);
 
                     // Visualize new logical operator on grid (for debugging purposes)
@@ -1187,9 +1188,9 @@ namespace TISCC
 
         }
 
-        // If the default-edge logical operator of the same type as the added stabilizer has overlap with it, it should be replaced
+        // If the default-edge logical operator of the same type as the added stabilizer has overlap with it, it should be replaced (both assumed to ONLY support Z or ONLY support X)
         std::optional<std::vector<bool>> new_same_type_logical_operator;
-        std::vector<bool> tmp_row = operator_product_binary_format(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')], new_row);
+        std::vector<bool> tmp_row = operator_product_binary_format(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')], new_row).first;
         if (pauli_weight(tmp_row) <= pauli_weight(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')])) {
             new_same_type_logical_operator = std::move(tmp_row);
             add_logical_deformation_qsites(type, new_stabilizer.get_qsite('m'));
