@@ -24,7 +24,7 @@ namespace TISCC
     }
 
     // Helper function to calculate the product of two logical operators expressed in binary symplectic format
-    std::vector<bool> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2) {
+    std::pair<std::vector<bool>, int> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2) {
         if (v1.size() != v2.size()) {
             std::cerr << "operator_product_binary_format: vectors of unequal length given to bin_sym_prod." << std::endl;
             std::cerr << v1.size() << " " << v2.size() << std::endl;
@@ -34,7 +34,16 @@ namespace TISCC
         for (unsigned int k = 0; k < v1.size(); k++) {
             operator_product_binary_format[k] = (v1[k] ^ v2[k]);
         }
-        return operator_product_binary_format;
+        // We employ a convention where Z operators act to the left of X operators and v1 acts to the left of v2.
+        // Thus, a minus sign results from there being, at a given site, an X on v1 and a Z on v2 
+        int sign = 1;
+        for (unsigned int k = 0; k < v1.size()/2; k++) {
+            if (v2[k] && v1[k + v1.size()/2]) {
+                sign *= -1;
+            }
+        }
+
+        return std::make_pair(operator_product_binary_format, sign);
     }
 
     // Helper function to symplectic transform a vector in binary symplectic format
@@ -58,7 +67,7 @@ namespace TISCC
         return weight;
     }
 
-    // Transform operators from binary representation to string e.g. 11000101 -> i*ZYIX
+    // Transform operators from binary representation to string e.g. 11000101 = Z(ZX)IX = i*ZYIX 
     std::pair<std::string, std::complex<double>> binary_operator_to_pauli_string(const std::vector<bool>& binary_rep) {
         std::complex<double> phase = std::complex<double>(1.0, 0.0);
         std::string result;
