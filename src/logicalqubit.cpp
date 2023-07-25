@@ -61,6 +61,7 @@ namespace TISCC
     }
 
     // Helper function to return the Pauli weight of an operator expressed in binary symplectic format
+    // Note: this currently adds a weight of two if there is any ZX on the same site
     unsigned int pauli_weight(const std::vector<bool>& v) {
         unsigned int weight = 0;
         for (bool elem : v) weight += elem;
@@ -682,13 +683,13 @@ namespace TISCC
         std::vector<bool> logical_operator;
         if (pauli == 'Z') {logical_operator = get_logical_operator_default_edge('Z');}
         else if (pauli == 'X') {logical_operator = get_logical_operator_default_edge('X');}
-        else if (pauli == 'Y') {logical_operator = operator_product_binary_format(get_logical_operator_default_edge('Z'), get_logical_operator_default_edge('X'));}
+        else if (pauli == 'Y') {logical_operator = operator_product_binary_format(get_logical_operator_default_edge('Z'), get_logical_operator_default_edge('X')).first;}
         else {std::cerr << "LogicalQubit::apply_pauli: Invalid Pauli operator given." << std::endl; abort();}
 
         // Loop over sites on the operator and apply Pauli operators. 
-        // ** Y is covered by applying X_{pi/2}*Z_{pi/2}. (X_{pi/2}*Z_{pi/2} = -i*X -i*Z = - X*Z = -iY = Y_{pi/2})
+        // ** Y is covered by applying Z_{pi/2}*X_{pi/2}. (Z_{pi/2}*X_{pi/2} = -i*Z -i*X = - Z*X = -iY = -Y_{pi/2}) 
         std::vector<double> times(qsite_to_index.size(), time);
-        for (unsigned int i=0; i<logical_operator.size(); i++) {
+        for (int i=logical_operator.size()-1; i>=0; i--) {
             if ((i < qsite_to_index.size()) && (logical_operator[i])) {
                 times[i] = TI_model.add_Z(index_to_qsite[i], times[i], 0, grid, hw_master);
             }
