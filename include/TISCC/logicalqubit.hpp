@@ -143,7 +143,7 @@ bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2)
 std::vector<bool> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2);
 std::vector<bool> symplectic_transform(const std::vector<bool>& v);
 unsigned int pauli_weight(const std::vector<bool>& v);
-std::string binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
+std::pair<std::string, std::complex<double>> binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
 std::pair<std::vector<bool>, std::complex<double>> pauli_string_to_binary_operator(const std::string& pauli_string);
 
 }

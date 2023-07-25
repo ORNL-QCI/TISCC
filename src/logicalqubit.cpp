@@ -58,8 +58,9 @@ namespace TISCC
         return weight;
     }
 
-    // Transform operators from binary representation to string e.g. 11000101 -> ZYIX
-    std::string binary_operator_to_pauli_string(const std::vector<bool>& binary_rep) {
+    // Transform operators from binary representation to string e.g. 11000101 -> i*ZYIX
+    std::pair<std::string, std::complex<double>> binary_operator_to_pauli_string(const std::vector<bool>& binary_rep) {
+        std::complex<double> phase = std::complex<double>(1.0, 0.0);
         std::string result;
         for (unsigned int k = 0; k < binary_rep.size()/2; k++) {
             if (binary_rep[k]) {
@@ -75,9 +76,10 @@ namespace TISCC
             }
             else if ((binary_rep[binary_rep.size()/2 + k]) && (result[k] == 'Z')) {
                 result[k] = 'Y';
+                phase *= std::complex<double>(0.0, 1.0);
             }
         }
-        return result;
+        return std::make_pair(result, phase);
     }
 
     // Transform operators from string to binary representation e.g. ZYIX -> -i*(11000101)
@@ -706,8 +708,8 @@ namespace TISCC
         time = time_tmp;
         auto y_string = binary_operator_to_pauli_string(operator_product_binary_format(get_logical_operator_default_edge('X'), get_logical_operator_default_edge('Z')));
         bool y_found = 0;
-        for (unsigned int i=0; i<y_string.size(); i++) {
-            if (y_string[i] == 'Y') {
+        for (unsigned int i=0; i<y_string.first.size(); i++) {
+            if (y_string.first[i] == 'Y') {
                 if (y_found == 1) {
                     std::cerr << "LogicalQubit::inject_y_state: found > 1 y operator in y_string." << std::endl;
                     abort();
