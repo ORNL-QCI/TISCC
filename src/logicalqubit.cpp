@@ -266,6 +266,7 @@ namespace TISCC
 
     /* Parity-check matrix related member functions */
     // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
+    // ** Note: this function will convert ZX directly to Y without tracking any phase.
     std::vector<std::pair<unsigned int, char>> LogicalQubit::binary_operator_to_qsites(const std::vector<bool>& binary_rep) {
         std::vector<std::pair<unsigned int, char>> qsite_rep;
         for (unsigned int k = 0; k < qsite_to_index.size(); k++) {
@@ -725,7 +726,7 @@ namespace TISCC
                     std::cerr << "LogicalQubit::inject_y_state: found > 1 y operator in y_string." << std::endl;
                     abort();
                 }
-                time_tmp = TI_model.add_sqrt_Z(index_to_qsite[i], time, 0, grid, hw_master);
+                time_tmp = TI_model.add_Z_pi4(index_to_qsite[i], time, 0, grid, hw_master);
                 y_found = 1;
             }
         }

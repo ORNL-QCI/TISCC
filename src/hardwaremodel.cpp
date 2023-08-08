@@ -92,11 +92,11 @@ namespace TISCC
 
     }
 
-    double HardwareModel::add_sqrt_X(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_X_pi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
         if (grid[site] != 'O') {
-            std::cerr << "HardwareModel::add_sqrt_X: Can only apply sqrt(X) gate at 'O' QSites." << std::endl;
+            std::cerr << "HardwareModel::add_X_pi4: Can only apply sqrt(X) gate at 'O' QSites." << std::endl;
             abort();
         }
 
@@ -106,6 +106,23 @@ namespace TISCC
 
         // Return updated time
         return time + TI_ops.at("X_pi/4");
+
+    }
+
+    double HardwareModel::add_X_mpi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_X_mpi4: Can only apply sqrt(X) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("X_-pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("X_-pi/4");
 
     }
 
@@ -126,11 +143,11 @@ namespace TISCC
 
     }
 
-    double HardwareModel::add_sqrt_Y(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_Y_pi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
         if (grid[site] != 'O') {
-            std::cerr << "HardwareModel::add_sqrt_Y: Can only apply sqrt(Y) gate at 'O' QSites." << std::endl;
+            std::cerr << "HardwareModel::add_Y_pi4: Can only apply sqrt(Y) gate at 'O' QSites." << std::endl;
             abort();
         }
 
@@ -140,6 +157,23 @@ namespace TISCC
 
         // Return updated time
         return time + TI_ops.at("Y_pi/4");
+
+    }
+
+    double HardwareModel::add_Y_mpi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_Y_mpi4: Can only apply sqrt(Y) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Y_-pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Y_-pi/4");
 
     }
 
@@ -160,11 +194,11 @@ namespace TISCC
 
     }
 
-    double HardwareModel::add_sqrt_Z(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+    double HardwareModel::add_Z_pi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
 
         // Perform validity check
         if (grid[site] != 'O') {
-            std::cerr << "HardwareModel::add_sqrt_Z: Can only apply sqrt(Z) gate at 'O' QSites." << std::endl;
+            std::cerr << "HardwareModel::add_Z_pi4: Can only apply sqrt(Z) gate at 'O' QSites." << std::endl;
             abort();
         }
 
@@ -174,6 +208,23 @@ namespace TISCC
 
         // Return updated time
         return time + TI_ops.at("Z_pi/4");
+
+    }
+
+    double HardwareModel::add_Z_mpi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_Z_mpi4: Can only apply sqrt(Z) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Z_-pi/4", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Z_-pi/4");
 
     }
 

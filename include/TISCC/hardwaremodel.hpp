@@ -29,11 +29,14 @@ public:
     double add_init(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
     double add_init(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     double add_X(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
-    double add_sqrt_X(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
+    double add_X_pi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
+    double add_X_mpi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;   
     double add_Y(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
-    double add_sqrt_Y(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
+    double add_Y_pi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
+    double add_Y_mpi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     double add_Z(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
-    double add_sqrt_Z(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
+    double add_Z_pi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
+    double add_Z_mpi4(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     double add_H(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
     double add_H(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     double add_meas(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
