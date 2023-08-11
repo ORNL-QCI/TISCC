@@ -17,6 +17,7 @@ namespace TISCC {
 // Consists of the stabilizer plaquettes of a surface code patch and defined operations on them
 class LogicalQubit {
 public:
+
     // Constructor
     explicit LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid);
 
@@ -136,7 +137,7 @@ private:
 };
 
 // Construct and return a logical qubit that represents the merged product of two input logical qubits
-LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid);
+LogicalQubit* merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid);
 
 // Helper functions related to binary vector math
 bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2);

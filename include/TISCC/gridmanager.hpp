@@ -25,11 +25,11 @@ public:
         Junction = 'J',
         Nothing = ' '
     };
-
-    // Constructor for GridManager
+    
+    // Constructor
     explicit GridManager(unsigned int nrows, unsigned int ncols);
 
-    // Destructor for GridManager
+    // Destructor
     ~GridManager() {delete[] grid_;}
 
     // Providing read-only access to array elements 

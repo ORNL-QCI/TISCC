@@ -164,14 +164,6 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
                 lq.print_parity_check_matrix();
                 std::vector<HW_Instruction> hw_master;
-                double time = 0;
-                lq.add_stabilizer(5, 2, 's', 'X', grid, hw_master, time, debug);
-                lq.add_stabilizer(5, 3, 's', 'Z', grid, hw_master, time, debug);
-                lq.add_stabilizer(5, 1, 's', 'Z', grid, hw_master, time, debug);
-                lq.reset_stabilizer_circuit_patterns();
-                time = lq.idle(1, grid, hw_master, time);
-                std::set<unsigned int> occupied_sites = lq.occupied_sites(false);
-                grid.enforce_hw_master_validity(hw_master);
             }
 
             else {
@@ -256,10 +248,10 @@ namespace TISCC
                 LogicalQubit lq2(dx, dz, 0, ncols, grid);
 
                 // Create a merged qubit
-                LogicalQubit lq = merge(lq1, lq2, grid);   
+                LogicalQubit* lq = merge(lq1, lq2, grid);  
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
-                std::set<unsigned int> strip = lq.get_strip(lq1, lq2);        
+                std::set<unsigned int> strip = lq->get_strip(lq1, lq2);        
 
                 // Debugging output
                 if (debug) {
@@ -270,7 +262,7 @@ namespace TISCC
                     lq2.print_stabilizers();
 
                     std::cout << "Logical Qubit (merged):" << std::endl;
-                    lq.print_stabilizers();
+                    lq->print_stabilizers();
 
                     std::cout << "Data qubits on strip:" << std::endl;
                     for (unsigned int site : strip) {
@@ -289,7 +281,7 @@ namespace TISCC
                     }
 
                     // Perform 'idle' operation on the merged qubit
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                 }
 
@@ -306,7 +298,7 @@ namespace TISCC
                     }
 
                     // Perform 'idle' operation on the merged qubit
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Pauli (X) correction depending on measurement outcome (X^m on final patch) (?) (see notes. i am not convinced this is needed as long as the correct mapping from two to one-qubit states is used.)
 
@@ -341,10 +333,10 @@ namespace TISCC
                     }
 
                     // Perform 'idle' operation on the merged qubit
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Measure out the whole merged patch
-                    time = lq.transversal_op("measx", grid, hw_master, time);
+                    time = lq->transversal_op("measx", grid, hw_master, time);
 
                 }
 
@@ -366,8 +358,8 @@ namespace TISCC
                 else if (s == "bellprepx") {
 
                     // Prepare X and do an idle on the merged patch
-                    lq.transversal_op("prepx", grid, hw_master, time);
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    lq->transversal_op("prepx", grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Measure qsites on the strip in the X basis
                     double time_tmp = 0;
@@ -398,29 +390,29 @@ namespace TISCC
                     }
 
                     // Swap roles of X and Z for merged patch
-                    lq.xz_swap(grid);
+                    lq->xz_swap(grid);
 
                     // Next extend patch rightward by running 'idle' on the merged patch
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Corner movements: all measurements commute so I think they can be done at once
 
                     /* Note: extend_logical_operator_clockwise is still experimental and needs to be used with care. */
-                    if (((lq.get_dx_init() % 2) == 0) || ((lq.get_dz_init() % 2) == 0)) {
+                    if (((lq->get_dx_init() % 2) == 0) || ((lq->get_dz_init() % 2) == 0)) {
                         std::cerr << "Patch rotation only currently implemented for odd code distances." << std::endl;
                         abort();
                     }
-                    lq.extend_logical_operator_clockwise('X', "opposite", lq.get_dz_init()-1, grid, hw_master, time, debug); 
-                    lq.extend_logical_operator_clockwise('Z', "default", lq.get_dz_init()-1, grid, hw_master, time, debug); 
-                    lq.extend_logical_operator_clockwise('X', "default", lq.get_dx_init()-1, grid, hw_master, time, debug); 
+                    lq->extend_logical_operator_clockwise('X', "opposite", lq->get_dz_init()-1, grid, hw_master, time, debug); 
+                    lq->extend_logical_operator_clockwise('Z', "default", lq->get_dz_init()-1, grid, hw_master, time, debug); 
+                    lq->extend_logical_operator_clockwise('X', "default", lq->get_dx_init()-1, grid, hw_master, time, debug); 
 
                     std::cout << "Made it out." << std::endl;
 
                     // Reset stabilizer circuit patterns to default values. This should be improved later.
-                    lq.reset_stabilizer_circuit_patterns();
+                    lq->reset_stabilizer_circuit_patterns();
 
                     // Measure the new stabilizers fault-tolerantly
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     /* Contraction */
                     // Perform measure X on the half to be cropped
@@ -446,7 +438,7 @@ namespace TISCC
                         time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
                     }
 
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     /* Final Contraction */
                     lq1.transversal_op("measx", grid, hw_master, time);
@@ -474,6 +466,9 @@ namespace TISCC
                 if (parser.exists("r")) {
                     grid.resource_counter(hw_master);
                 }
+
+                // Free resources
+                delete lq;
  
             }
 
@@ -491,10 +486,10 @@ namespace TISCC
                 LogicalQubit lq2(dx, dz, nrows, 0, grid);
 
                 // Create a merged qubit
-                LogicalQubit lq = merge(lq1, lq2, grid);
+                LogicalQubit* lq = merge(lq1, lq2, grid);
 
                 // Grab all of the qsites on the `strip' between lq1 and lq2
-                std::set<unsigned int> strip = lq.get_strip(lq1, lq2);
+                std::set<unsigned int> strip = lq->get_strip(lq1, lq2);
 
                 // Debugging output
                 if (debug) {
@@ -505,7 +500,7 @@ namespace TISCC
                     lq2.print_stabilizers();
 
                     std::cout << "Logical Qubit (merged):" << std::endl;
-                    lq.print_stabilizers();
+                    lq->print_stabilizers();
 
                     std::cout << "Data qubits on strip:" << std::endl;
                     for (unsigned int site : strip) {
@@ -522,7 +517,7 @@ namespace TISCC
                     }
 
                     // Perform 'idle' operation on the merged qubit
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                 }
 
@@ -568,10 +563,10 @@ namespace TISCC
                     }
 
                     // Perform 'idle' operation on the merged qubit
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Measure out the whole merged patch
-                    time = lq.transversal_op("measz", grid, hw_master, time);
+                    time = lq->transversal_op("measz", grid, hw_master, time);
 
                 }
 
@@ -591,8 +586,8 @@ namespace TISCC
                 else if (s == "bellprepz") {
 
                     // Prepare Z and idle on the merged patch
-                    lq.transversal_op("prepz", grid, hw_master, time);
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    lq->transversal_op("prepz", grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Measure qsites on the strip in the Z basis
                     for (unsigned int site : strip) {
@@ -624,6 +619,9 @@ namespace TISCC
                 if (parser.exists("r")) {
                     grid.resource_counter(hw_master);
                 }
+
+                // Free resources
+                delete lq;
 
             }
 

@@ -1555,7 +1555,7 @@ namespace TISCC
     }
 
     // Construct and return a logical qubit that represents the merged product of two input logical qubits
-    LogicalQubit merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
+    LogicalQubit* merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 
         // If the stabilizers have been altered at all, don't allow merge
         if ((!lq1.default_arrangement()) || (!lq2.default_arrangement())) {
@@ -1575,7 +1575,7 @@ namespace TISCC
             unsigned int extra_strip = 0;
             if (lq1.get_dx()%2 == 0) {extra_strip = 1;}
             assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1 + extra_strip);
-            return LogicalQubit(lq1.get_dx() + lq2.get_dx() + 1 + extra_strip, lq1.get_dz(), lq1.get_row(), lq1.get_col(), grid);
+            return new LogicalQubit(lq1.get_dx() + lq2.get_dx() + 1 + extra_strip, lq1.get_dz(), lq1.get_row(), lq1.get_col(), grid);
 
         }
 
@@ -1589,7 +1589,7 @@ namespace TISCC
             unsigned int extra_strip = 0;
             if (lq1.get_dz()%2 == 0) {extra_strip = 1;} 
             assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1 + extra_strip);
-            return LogicalQubit(lq1.get_dx(), lq1.get_dz() + lq2.get_dz() + 1 + extra_strip, lq1.get_row(), lq1.get_col(), grid); 
+            return new LogicalQubit(lq1.get_dx(), lq1.get_dz() + lq2.get_dz() + 1 + extra_strip, lq1.get_row(), lq1.get_col(), grid); 
 
         }
 
