@@ -49,9 +49,6 @@ public:
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double inject_y_state(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
-    // Placeholder function to help implement little test circuits
-    double test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
-
     // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
 

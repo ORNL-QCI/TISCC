@@ -734,36 +734,6 @@ namespace TISCC
         return time_tmp;
     }
 
-    // Placeholder function to help implement little test circuits
-    double LogicalQubit::test_circuits(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
-        // Bell state preparation
-        // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
-        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
-        // apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
-        // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 3, grid, hw_master);
-
-        // SWAP gate
-        // apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Prepare_Z", 'm', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
-        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 2, grid, hw_master);
-        // time = apply_instruction(Instruction("CNOT", 'm', 'a'), z_plaquettes, time, 3, grid, hw_master);
-        // time = apply_instruction(Instruction("CNOT", 'a', 'm'), z_plaquettes, time, 4, grid, hw_master);
-        // time = apply_instruction(Instruction("Hadamard", 'm', ' '), z_plaquettes, time, 5, grid, hw_master);
-        // time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 6, grid, hw_master);
-        // time = apply_instruction(Instruction("Measure_Z", 'm', ' '), z_plaquettes, time, 6, grid, hw_master);
-
-        // time = apply_instruction(Instruction("Prepare_Z", 'a', ' '), z_plaquettes, time, 0, grid, hw_master);
-        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 1, grid, hw_master);
-        // time = apply_instruction(Instruction("Test_Gate", 'a', ' '), z_plaquettes, time, 2, grid, hw_master);
-        // time = apply_instruction(Instruction("Hadamard", 'a', ' '), z_plaquettes, time, 3, grid, hw_master);
-        // time = apply_instruction(Instruction("Measure_Z", 'a', ' '), z_plaquettes, time, 4, grid, hw_master);
-
-        return time;
-    }
-
     // Helper function to return the data qubits from this patch that are NOT occupied by two others
     std::set<unsigned int> LogicalQubit::get_strip(LogicalQubit& lq1, LogicalQubit& lq2) {
         std::set<unsigned int> data = occupied_sites(true);
