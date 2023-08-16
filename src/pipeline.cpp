@@ -532,7 +532,7 @@ namespace TISCC
                     }
 
                     // Perform 'idle' operation on the merged qubit
-                    time = lq2.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, grid, hw_master, time);
 
                     // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (?) (see notes. i am not convinced this is needed as long as the correct mapping from two to one-qubit states is used.)
 
