@@ -206,11 +206,6 @@ namespace TISCC
                     time = lq.idle(cycles, grid, hw_master, time);
                 }
 
-                // Placeholder input to help implement little test circuits
-                if (s == "test") {
-                    time = lq.test_circuits(grid, hw_master, time);
-                }
-
                 // Grab all of the occupied sites (to be used in printing)
                 std::set<unsigned int> occupied_sites = grid.get_occ_sites();
 

@@ -55,6 +55,9 @@ public:
     // Swap roles of x and z for this patch (typically used during Hadamard and patch rotation)
     void xz_swap(const GridManager& grid);
 
+    // The resulting arrangement is the same as if we flipped the patch upside down and then applied xz_swap
+    float flip_patch(GridManager& grid, std::vector<HW_Instruction> hw_master, float time, bool debug);
+
     // Add new stabilizer plaquette (typically used in corner movement)
     double add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 

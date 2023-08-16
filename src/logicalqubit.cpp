@@ -576,8 +576,11 @@ namespace TISCC
     double LogicalQubit::idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
 
         // The four circuit types should have the same number of instructions and can be run in parallel on the applicable stabilizers
-        assert((Z_Circuit_Z_Type.size() == X_Circuit_N_Type.size()) && (Z_Circuit_Z_Type.size() == Z_Circuit_N_Type.size())
-            && (Z_Circuit_Z_Type.size() == X_Circuit_Z_Type.size()));
+        if (!(Z_Circuit_Z_Type.size() == X_Circuit_N_Type.size()) && (Z_Circuit_Z_Type.size() == Z_Circuit_N_Type.size())
+            && (Z_Circuit_Z_Type.size() == X_Circuit_Z_Type.size())) {
+                std::cerr << Z_Circuit_Z_Type.size() << " " << X_Circuit_N_Type.size() << " " << Z_Circuit_N_Type.size() << " " << X_Circuit_Z_Type.size() << std::endl;
+                abort();
+        }
         unsigned int num_instructions = Z_Circuit_Z_Type.size();
 
         // Create a vector of all plaquettes for convenience
@@ -803,6 +806,28 @@ namespace TISCC
 
     }
 
+    // The result of this process is the same as if we flipped the patch upside down and then did xz_swap
+    float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction> hw_master, float time, bool debug) {
+
+        // If the stabilizers have been altered at all, don't allow merge
+        if (!default_arrangement_) {
+            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
+            abort();
+        }
+
+        // Recall that order matters
+        extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, grid, hw_master, time, debug);
+        extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, grid, hw_master, time, debug); 
+        extend_logical_operator_clockwise('X', "default", dz_init_ - 1, grid, hw_master, time, debug); 
+        extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, grid, hw_master, time, debug);       
+
+        // We have changed the stabilizer arrangement
+        default_arrangement_ = false;
+
+        return time;
+
+    }
+
    // Add new stabilizer plaquette (to be used in corner movement)
     double LogicalQubit::add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
@@ -962,19 +987,6 @@ namespace TISCC
                 }
             }
         }
-
-        // We remove the measure qubits corresponding with the anti-commuting stabilizers from the grid's occupied_sites set
-        // ** we are removing this for now because (a) it causes problems when checking hardware validity of the final circuit and (b) it isn't clear that it is necessary
-        // for (unsigned int index: anticommuting_stabilizers) {
-
-        //     // Remove the stabilizers that anticommute with the new one
-        //     if (index < z_plaquettes.size()) {
-        //         grid.deoccupy_site(z_plaquettes[index].get_qsite('m'));        
-        //     }
-        //     else {
-        //         grid.deoccupy_site(x_plaquettes[index - z_plaquettes.size()].get_qsite('m'));
-        //     }
-        // }
 
         // Print stabilizers/qubits to be added/removed and logical ops to be updated
         if (debug) {
@@ -1210,8 +1222,6 @@ namespace TISCC
                 add_logical_deformation_qsites(type, overlapping_index.value());
             }
 
-            // ** note: we comment this for now because of problems downstream when checking hardware validity of the final circuit
-            // grid.deoccupy_site(overlapping_index.value());
         }
 
         // If we had to add a qubit, add appropriate hardware instructions to initialize it
@@ -1305,7 +1315,9 @@ namespace TISCC
 
         return time_tmp;
     }
-
+    
+    /* Disclaimer: Unfortunately, the order matters: add_stabilizer will update the default (rather than opposite) logical operator that has support on the added stabilizer, 
+    so when the operator being extended has support on a single qsite it is better to keep the default operator of opposite type "in front" and the opposite "behind" */
     double LogicalQubit::extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, 
         GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
@@ -1430,7 +1442,7 @@ namespace TISCC
             }
 
             if (!supporting_stabilizer_index.has_value()) {
-                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No supporting stabilizer found for qsite in question." << std::endl;
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No supporting boundary stabilizer found at (qsite, pc_column): (" << qsite.value() << ", " << pc_column_index << ")" << std::endl;
                 abort();              
             }
 
