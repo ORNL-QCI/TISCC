@@ -828,6 +828,35 @@ namespace TISCC
 
     }
 
+    // Translate patch n rows "North" or e rows "East" on the underlying grid
+    double LogicalQubit::translate_patch(int n, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        // Handle trivial case
+        if ((n == 0) && (e == 0 )) return time;
+
+        // Rows and columns needed for the patch itself
+        // **Note: In the standard configuration, we need one extra row and column than the code distance to avoid interference between boundary stabilizers of adjacent patches
+        int patch_rows = dz_init_ + 1;
+        int patch_cols = dx_init_ + 1;
+
+        // Check that minimum number of rows and columns needed to execute translation is satisfied by the grid
+        // **Note: Asymmetry between 'n' and 'e' because of where the extra row or col is located on the grid (be mindful of this when implementing new hardware architectures) 
+        int min_rows = row_ + patch_rows;
+        int min_cols = col_ + patch_cols;
+        if (n < 0) {min_rows += n;}
+        if (e > 0) {min_cols += e;}
+
+        if ((min_rows > grid.get_nrows()) || min_cols > grid.get_ncols()) {
+            std::cerr << "LogicalQubit::translate_patch: Ordered patch translation requires larger grid." << std::endl; abort();
+        }
+
+        // Check that negative translations are possible given grid constraints
+        if (((row_ - n) < 0) || ((col_ + e) < 0)) {
+            std::cerr << "LogicalQubit::translate_patch: Ordered patch translation requires larger grid." << std::endl; abort();
+        }        
+
+    }
+
    // Add new stabilizer plaquette (to be used in corner movement)
     double LogicalQubit::add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
@@ -1306,7 +1335,7 @@ namespace TISCC
         if (debug) {
             std::cout << std::endl << "New code distances: dx = " << dx_ << " and dz = " << dz_ << "." << std::endl;
         }
-        
+
         return time_tmp;
     }
     
