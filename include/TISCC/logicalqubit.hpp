@@ -14,7 +14,8 @@
 
 namespace TISCC {
 
-// Consists of the stabilizer plaquettes of a surface code patch and defined operations on them
+/* Consists of the stabilizer plaquettes of a surface code patch, functions to manipulate them, and functions generate circuits for primitive patch operations.
+   Designed to be compatible with grid-like hardware architectures. */
 class LogicalQubit {
 public:
 
@@ -55,8 +56,7 @@ public:
     // Swap roles of x and z for this patch (typically used during Hadamard and patch rotation)
     void xz_swap(const GridManager& grid);
 
-    // The resulting arrangement is the same as if we flipped the patch upside down and then applied xz_swap
-    float flip_patch(GridManager& grid, std::vector<HW_Instruction> hw_master, float time, bool debug);
+    /* Corner-movement related operations */
 
     // Add new stabilizer plaquette (typically used in corner movement)
     double add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
@@ -64,8 +64,13 @@ public:
     // Corner movement 
     double extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 
+    // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
+    float flip_patch(GridManager& grid, std::vector<HW_Instruction> hw_master, float time, bool debug);
+
     // Reset stabilizer circuits to default values
     void reset_stabilizer_circuit_patterns();
+
+    /* Other helpful functions */
 
     // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>
     std::vector<std::pair<unsigned int, char>> binary_operator_to_qsites(const std::vector<bool>& binary_rep);

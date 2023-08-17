@@ -720,7 +720,7 @@ namespace TISCC
             }
         }
         time = time_tmp;
-        // We locate the site on which Y_L supports a Y. Note Z_{pi/4} |+> = e^{-i*pi/4} S |+> - e^{-i*pi/4} * |Y, +>. We ignore the global phase.
+        // We locate the site on which Y_L supports a Y. Note Z_{pi/4} |+> = e^{-i*pi/4} S |+> = e^{-i*pi/4} * |Y, +>. We ignore the global phase.
         auto y_string = binary_operator_to_pauli_string(operator_product_binary_format(get_logical_operator_default_edge('Z'), get_logical_operator_default_edge('X')).first);
         bool y_found = 0;
         for (unsigned int i=0; i<y_string.first.size(); i++) {
@@ -1306,18 +1306,13 @@ namespace TISCC
         if (debug) {
             std::cout << std::endl << "New code distances: dx = " << dx_ << " and dz = " << dz_ << "." << std::endl;
         }
-
-        // if (debug) {
-        //     std::cout << std::endl << "Final stabilizer arrangement: " << std::endl;
-        //     std::vector<std::string> ascii_grid = grid.ascii_grid_with_operator(syndrome_measurement_qsites(), true);       
-        //     grid.print_grid(ascii_grid);
-        // }
-
+        
         return time_tmp;
     }
     
-    /* Disclaimer: Unfortunately, the order matters: add_stabilizer will update the default (rather than opposite) logical operator that has support on the added stabilizer, 
-    so when the operator being extended has support on a single qsite it is better to keep the default operator of opposite type "in front" and the opposite "behind" */
+    // Implements corner movements by figuring out which stabilizers to measure when extending a logical operator `clockwise'
+    /* **Note: add_stabilizer will update the default (rather than opposite) logical operator that has support on the added stabilizer in ambiguous cases,   
+        which may become relevant in the case where the operator to be extended has support on a single qubit */
     double LogicalQubit::extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, 
         GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 

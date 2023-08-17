@@ -199,6 +199,7 @@ namespace TISCC
     }
 
     // Provide a plaquette object ``pinned" at a particular grid point 
+    // **Note: the GridManager does not ensure that the same qsites are not being referred to in multiple plaquettes or multiple copies of the same plaquette
     Plaquette GridManager::get_plaquette(unsigned int row, unsigned int col, char shape, char type) {
         /* Notes: 
             - shape defines either a four-qubit plaquette ('f') or a two-qubit plaquette with directionality {'n','s','e','w'}.
