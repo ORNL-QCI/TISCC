@@ -238,39 +238,33 @@ namespace TISCC
 
             std::string s = parser.get<std::string>("o");
 
-            // Single-tile operations
+            // Single-patch operations
             if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard")) {
-                
-                // Initializing grid using GridManager object. 
-                GridManager grid(nrows, ncols);
-
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
-                    lq.transversal_op(s, grid, hw_master, time);
+                    lq->transversal_op(s, *grid, hw_master, time);
                 }
 
                 else if ((s == "inject_y") || (s == "inject_t")) {
                     char state_label = s.substr(7)[0];
-                    lq.inject_state(state_label, grid, hw_master, time);
+                    lq->inject_state(state_label, *grid, hw_master, time);
                 }
 
                 else if (s == "flip_patch") {
-                    lq.flip_patch(grid, hw_master, time, false);
+                    lq->flip_patch(*grid, hw_master, time, false);
                 }
 
                 // Append an idle operation if applicable 
                 if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard")) {
-                    time = lq.idle(cycles, grid, hw_master, time);
+                    time = lq->idle(cycles, *grid, hw_master, time);
                 }
 
                 // Grab all of the occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = grid.get_occ_sites();
+                std::set<unsigned int> occupied_sites = grid->get_occ_sites();
 
                 // Enforce validity of final instruction list
-                grid.enforce_hw_master_validity(hw_master);
+                grid->enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions
                 if (parser.exists("p")) {
@@ -279,12 +273,12 @@ namespace TISCC
 
                 // Count resources
                 if (parser.exists("r")) {
-                    grid.resource_counter(hw_master);
+                    grid->resource_counter(hw_master);
                 }
 
             }
 
-            // Horizontal two-tile operations 
+            // Two-patch operations
             else if ((s == "contractx") || (s == "mergex") || (s == "bellmeasx") || (s == "extendx") ||
                 (s == "splitx") || (s == "bellprepx") || (s == "hadamardx")) {
                 
