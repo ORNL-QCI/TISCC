@@ -828,11 +828,14 @@ namespace TISCC
 
     }
 
-    // Translate patch n rows "North" or e rows "East" on the underlying grid
-    double LogicalQubit::translate_patch(int n, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+    // Translate patch s rows "South" or e rows "East" on the underlying grid
+    double LogicalQubit::translate_patch(int s, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        std::cerr << "LogicalQubit::translate_patch: not fully implemented." << std::endl;
+        abort();
 
         // Handle trivial case
-        if ((n == 0) && (e == 0 )) return time;
+        if ((s == 0) && (e == 0 )) return time;
 
         // Rows and columns needed for the patch itself
         // **Note: In the standard configuration, we need one extra row and column than the code distance to avoid interference between boundary stabilizers of adjacent patches
@@ -840,10 +843,9 @@ namespace TISCC
         int patch_cols = dx_init_ + 1;
 
         // Check that minimum number of rows and columns needed to execute translation is satisfied by the grid
-        // **Note: Asymmetry between 'n' and 'e' because of where the extra row or col is located on the grid (be mindful of this when implementing new hardware architectures) 
-        int min_rows = row_ + patch_rows;
-        int min_cols = col_ + patch_cols;
-        if (n < 0) {min_rows += n;}
+        unsigned int min_rows = row_ + patch_rows;
+        unsigned int min_cols = col_ + patch_cols;
+        if (s > 0) {min_rows += s;}
         if (e > 0) {min_cols += e;}
 
         if ((min_rows > grid.get_nrows()) || min_cols > grid.get_ncols()) {
@@ -851,10 +853,72 @@ namespace TISCC
         }
 
         // Check that negative translations are possible given grid constraints
-        if (((row_ - n) < 0) || ((col_ + e) < 0)) {
+        if (((row_ + s) < 0) || ((col_ + e) < 0)) {
             std::cerr << "LogicalQubit::translate_patch: Ordered patch translation requires larger grid." << std::endl; abort();
-        }        
+        }  
 
+        /* For now, we only allow e == 1 and s == 0 */
+        if (!((e==1)&&(s==0))) {std::cerr << "LogicalQubit::translate_patch: only implemented for one shift rightwards." << std::endl; abort();}
+
+
+
+        // /* Update plaquettes and parity check matrix */
+        // std::vector<Plaquette> all_plaquettes;
+        // all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        // all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
+        // // Loop over data qsites
+        // for (auto& data_qsite_index_pair : qsite_to_index) {
+
+        //     // Get stabilizer indices for this qsite
+        //     std::vector<unsigned int> stabilizer_indices;
+
+        //     // Find all the stabilizers that have support on this qsite
+        //     unsigned int i=0; 
+        //     for (const std::vector<bool>& stabilizer_vec : parity_check_matrix) {
+        //         if (stabilizer_vec[data_qsite_index_pair.second] || stabilizer_vec[data_qsite_index_pair.second + z_plaquettes.size()]) {
+        //             stabilizer_indices.push_back(i);
+        //         }
+        //         i++;
+        //     }
+
+        //     // Update plaquettes
+        //     unsigned int new_qsite = grid.shift_qsite(data_qsite_index_pair.first, s, e);
+        //     for (unsigned int index : stabilizer_indices) {
+        //         bool found=0;
+        //         for (char qubit : {'a', 'b', 'c', 'd'}) {
+        //             if (all_plaquettes[index].get_qsite(qubit) == data_qsite_index_pair.first) {
+        //                 found = 1;
+        //                 all_plaquettes[index].move_to_site(qubit, new_qsite);
+        //             }
+        //         } 
+        //     }
+
+        //     // 
+        //     data_qsite_index_pair.first = new_qsite;
+
+        // }
+
+        // // Retrieve set of qsites occupied by this patch
+        // std::set<unsigned int> occ_sites = occupied_sites(false);
+
+
+        // // 
+
+        // // Incorporate necessary Move operations on the Grid
+
+
+        // // Make necessary changes to stabilizers
+
+
+        // for (Plaquette& p : all_plaquettes) {
+        //     for (char qubit : {'a', 'b', 'c', 'd'}) {
+        //         p.move_to_site(qubit, grid.shift_qsite(p.get_qsite(qubit), s, e));
+        //     } 
+        // }
+
+        // // Make necessary changes to parity check matrix and related variables
+        return time;
     }
 
    // Add new stabilizer plaquette (to be used in corner movement)

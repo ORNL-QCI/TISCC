@@ -31,6 +31,7 @@ public:
     void set_circuit_pattern(char circuit_pattern) {circuit_pattern_ = circuit_pattern;}
     
     // Move qubit to a specified site after checking validity and recording change on grid
+    // **Note: Be careful. Moving one of these plaquette's qubits here does not update its reference in other plaquettes.
     void move_to_site(char q, unsigned int site);
 
     // Check whether a qubit is currently at its home location on the grid

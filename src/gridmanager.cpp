@@ -110,6 +110,11 @@ namespace TISCC
             }
         }
 
+        else {
+            std::cerr << "GridManager::get_path: Only paths to neighbor Op sites starting from the [1] position are implemented." << std::endl;
+            abort();       
+        }
+
         return seq;
     }
 
