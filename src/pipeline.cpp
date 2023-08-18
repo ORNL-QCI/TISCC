@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz, inject_y, inject_t}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -189,7 +189,7 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
 
             // Single-tile operations
-            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t")) {
+            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard")) {
                 
                 // Initializing grid using GridManager object. 
                 GridManager grid(nrows, ncols);
@@ -198,17 +198,21 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Perform associated transversal operation
-                if ((s != "idle") && (s != "inject_y") && (s!= "inject_t")) {
+                if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
                     lq.transversal_op(s, grid, hw_master, time);
                 }
 
-                else if (s != "idle" ) {
+                else if ((s == "inject_y") || (s == "inject_t")) {
                     char state_label = s.substr(7)[0];
                     lq.inject_state(state_label, grid, hw_master, time);
                 }
 
+                else if (s == "flip_patch") {
+                    lq.flip_patch(grid, hw_master, time, false);
+                }
+
                 // Append an idle operation if applicable 
-                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t")) {
+                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard")) {
                     time = lq.idle(cycles, grid, hw_master, time);
                 }
 
@@ -216,11 +220,6 @@ namespace TISCC
                 std::set<unsigned int> occupied_sites = grid.get_occ_sites();
 
                 // Enforce validity of final instruction list
-                /* TODO: 
-                    - Instead of 'enforcing' hardware validity in this fashion, maybe the circuits itself 
-                    should contain Idles in locations where we know waiting might need to occur.
-                    - However, what we have might make more sense since then a user does not need to account 
-                    for validity up front, but rather the compiler 'makes it work' given hardware constraints. */ 
                 grid.enforce_hw_master_validity(hw_master);
 
                 // Print hardware instructions

@@ -1632,6 +1632,12 @@ namespace TISCC
 
         }
 
+        // **Note: In principle, the stabilizer circuit patterns should change after corner movements; see Fowler '18 Fig. 13. 
+        // It would be good to implement this eventually, and here would be the place to do so.
+        // Instead, we simply reset to default values.
+        // (TISCC currently only deviates from the standard circuit pattern in the case of xz_swap and flip_patch.)
+        reset_stabilizer_circuit_patterns();
+
         return time_to_return;
 
     }
