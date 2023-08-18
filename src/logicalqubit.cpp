@@ -678,6 +678,11 @@ namespace TISCC
             }
         }
 
+        // Update stabilizers appropriately for Hadamard case 
+        if (op == "hadamard") {
+            xz_swap(grid);
+        }
+
         // Sort master list of hardware instructions according to overloaded operator<
         std::stable_sort(hw_master.begin(), hw_master.end());
 
@@ -803,10 +808,12 @@ namespace TISCC
         std::vector<Plaquette> new_x_plaquettes;
         for (Plaquette& p : z_plaquettes) {
             p.change_operator_type('X');
+            p.set_circuit_pattern('N');
             new_x_plaquettes.push_back(p);
         }
         for (Plaquette& p : x_plaquettes) {
             p.change_operator_type('Z');
+            p.set_circuit_pattern('Z');
             new_z_plaquettes.push_back(p);
         }
         z_plaquettes = std::move(new_z_plaquettes);
