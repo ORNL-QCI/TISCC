@@ -78,12 +78,16 @@ namespace TISCC
                 .required(true);
         parser.add_argument()
                 .names({"-i", "--info"})
-                .description("Information to be queried (no operation will be performed). Options: {instructions, plaquettes, grid, parity}")
+                .description("Information to be queried. Options: {instructions, plaquettes, grid, parity}")
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
                 .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}")
                 .required(false);
+        parser.add_argument()
+                .names({"-s", "--tile_spec"})
+                .description("Size of grid. Options: {single (default), double-vert, double-horiz}")
+                .required(false);      
         parser.add_argument()
                 .names({"-d", "--debug"})
                 .description("Provide extra output for the purpose of debugging")
@@ -127,61 +131,107 @@ namespace TISCC
         unsigned int nrows = dz+1+!(dz%2); 
         unsigned int ncols = dx+1+!(dx%2);
 
-        // Query information (no operation will be performed)
-        if ((parser.exists("i")) && (parser.exists("o"))) {
-            std::cerr << "The -i and -o flags are mutually exclusive." << std::endl;
+        // Declare needed variables for one- and two-tile operations
+        TISCC::LogicalQubit* lq;
+        TISCC::LogicalQubit* lq1;
+        TISCC::LogicalQubit* lq2;
+        TISCC::GridManager* grid;
+        std::set<unsigned int> strip;
+
+        // Extract tile_spec
+        std::string tile_spec = "single";
+        if (parser.exists("s")) {
+            tile_spec = parser.get<std::string>("i");
         }
-        else if (parser.exists("i"))
-        {
+
+        // Case-dependent grid & lq initialization
+        if (tile_spec == "single") {
+
+            // Initialize grid
+            grid = new TISCC::GridManager(nrows, ncols);
+
+            // Initialize logical qubit on  grid
+            lq = new TISCC::LogicalQubit(dx, dz, 0, 0, *grid);
+        }
+
+        else if (tile_spec == "double-vert") {
+
+            // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
+            grid = new TISCC::GridManager(2*nrows, ncols);
+
+            // Initialize logical qubit object using the grid
+            lq1 = new TISCC::LogicalQubit(dx, dz, 0, 0, *grid);
+
+            // Initialize second logical qubit object to the bottom of the first
+            lq2 = new TISCC::LogicalQubit(dx, dz, nrows, 0, *grid);
+
+            // Create a merged qubit
+            lq = merge(*lq1, *lq2, *grid);
+
+            // Grab all of the qsites on the `strip' between lq1 and lq2
+            strip = lq->get_strip(*lq1, *lq2);
+        }
+
+        else if (tile_spec == "double-horiz") {
+
+            // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
+            grid = new TISCC::GridManager(nrows, 2*ncols);
+
+            // Initialize logical qubit object using the grid
+            lq1 = new TISCC::LogicalQubit(dx, dz, 0, 0, *grid);
+
+            // Initialize second logical qubit object to the bottom of the first
+            lq2 = new TISCC::LogicalQubit(dx, dz, 0, ncols, *grid);
+
+            // Create a merged qubit
+            lq = merge(*lq1, *lq2, *grid);
+
+            // Grab all of the qsites on the `strip' between lq1 and lq2
+            strip = lq->get_strip(*lq1, *lq2);
+        }
+
+        else {
+            std::cerr << "Invalid tile_spec." << std::endl;
+            abort();
+        }
+
+        if (parser.exists("i")) {
             std::string s = parser.get<std::string>("i");
             
-            /* TODO: This option does not depend on any grid allocation, so it should be decoupled from 
-                command line options related to that. */
             if (s == "instructions") {
                 HardwareModel TI_model;
                 TI_model.print_TI_ops();
             }
 
             else if (s == "plaquettes") {
-                GridManager grid(nrows, ncols);
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-                lq.print_stabilizers();
+                lq->print_stabilizers();
             }
           
             else if (s == "grid") {
-                GridManager grid(nrows, ncols);
-                grid.print_qsite_mapping();
+                grid->print_qsite_mapping();
                 std::cout << std::endl;
-                std::vector<std::string> ascii_grid = grid.ascii_grid(false);
-                grid.print_grid(ascii_grid);
+                std::vector<std::string> ascii_grid = grid->ascii_grid(false);
+                grid->print_grid(ascii_grid);
                 std::cout << std::endl;
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-                ascii_grid = grid.ascii_grid(true);
-                grid.print_grid(ascii_grid);
+                ascii_grid = grid->ascii_grid(true);
+                grid->print_grid(ascii_grid);
             }
 
             else if (s == "parity") {
-                GridManager grid(nrows, ncols);
-                LogicalQubit lq(dx, dz, 0, 0, grid);
-                lq.print_parity_check_matrix();
-                std::vector<HW_Instruction> hw_master;
+                lq->print_parity_check_matrix();
             }
 
             else {
                 std::cerr << "No valid query selected. Options: {instructions, plaquettes, grid, parity}" << std::endl;
             }
             
-            return 0;
         }
 
         // Operation-dependent logic
-        if (parser.exists("o"))
-        {
+        if (parser.exists("o")) {
+
             // Initialize vector of hardware instructions
             std::vector<HW_Instruction> hw_master;
-
-            // Initialize hardware model
-            HardwareModel TI_model;
 
             // Initialize time tracker
             double time = 0;
