@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <set>
 #include <iterator>
+#include <string>
 
 namespace TISCC 
 {
@@ -81,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz, inject_y, inject_t}")
                 .required(false);
         parser.add_argument()
                 .names({"-d", "--debug"})
@@ -188,7 +189,7 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
 
             // Single-tile operations
-            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "test")) {
+            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t")) {
                 
                 // Initializing grid using GridManager object. 
                 GridManager grid(nrows, ncols);
@@ -197,12 +198,17 @@ namespace TISCC
                 LogicalQubit lq(dx, dz, 0, 0, grid);
 
                 // Perform associated transversal operation
-                if (s != "idle") {
+                if ((s != "idle") && (s != "inject_y") && (s!= "inject_t")) {
                     lq.transversal_op(s, grid, hw_master, time);
                 }
 
+                else if (s != "idle" ) {
+                    char state_label = s.substr(7)[0];
+                    lq.inject_state(state_label, grid, hw_master, time);
+                }
+
                 // Append an idle operation if applicable 
-                if ((s == "idle") || (s == "prepz") || (s == "prepx")) {
+                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t")) {
                     time = lq.idle(cycles, grid, hw_master, time);
                 }
 

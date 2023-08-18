@@ -5,7 +5,7 @@
 #include <TISCC/gridmanager.hpp>
 #include <TISCC/plaquette.hpp>
 
-#include<unordered_map>
+#include<map>
 #include<string>
 #include<vector>
 
@@ -23,7 +23,7 @@ public:
     explicit HardwareModel();
 
     // Accessor functions
-    const std::unordered_map<std::string, double>& get_ops() const {return TI_ops;}
+    const std::map<std::string, double>& get_ops() const {return TI_ops;}
 
     // Compile gates to hardware operations (one each for plaquette&qubit vs. site)
     double add_init(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
@@ -61,7 +61,7 @@ private:
     double cell_width; // us
 
     // Hash table to map trapped-ion instructions to time (in microseconds)
-    std::unordered_map<std::string, double> TI_ops;
+    std::map<std::string, double> TI_ops;
 
     // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
     void init_TI_ops();

@@ -716,8 +716,8 @@ namespace TISCC
     // This is not a good state injection protocol; it is just an easy way to generate the positive Y eigenstate in the case of zero noise 
     double LogicalQubit::inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
 
-        if ((label!='Y') && (label!='T')) {
-            std::cerr << "LogicalQubit::inject_state: only 'Y' and 'T' states are available to inject at this time. You entered: " << label << "." << std::endl;
+        if ((label!='y') && (label!='t')) {
+            std::cerr << "LogicalQubit::inject_state: only 'y' and 't' states are available to inject at this time. You entered: " << label << "." << std::endl;
             abort();
         }
 
@@ -739,10 +739,10 @@ namespace TISCC
                     std::cerr << "LogicalQubit::inject_y_state: found > 1 y operator in y_string." << std::endl;
                     abort();
                 }
-                if (label == 'Y') {
+                if (label == 'y') {
                     time_tmp = TI_model.add_Z_pi4(index_to_qsite[i], time, 0, grid, hw_master);
                 }
-                else if (label == 'T') {
+                else if (label == 't') {
                     time_tmp = TI_model.add_Z_pi8(index_to_qsite[i], time, 0, grid, hw_master);
                 }
                 y_found = 1;

@@ -365,7 +365,7 @@ namespace TISCC
         double time_tmp = 0;
 
         // Map to compute zone-seconds per op
-        std::unordered_map<std::string, double> op_vol;
+        std::map<std::string, double> op_vol;
         for (const auto & [ key, value ] : TI_model.get_ops()) {
             op_vol[key] = 0;
         }
