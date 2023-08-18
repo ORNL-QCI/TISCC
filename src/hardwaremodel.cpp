@@ -19,9 +19,11 @@ namespace TISCC
         TI_ops["X_pi/4"] = 10;
         TI_ops["Y_pi/4"] = 10;
         TI_ops["Z_pi/4"] = 3;
+        TI_ops["Z_pi/8"] = 3;
         TI_ops["X_-pi/4"] = 10;
         TI_ops["Y_-pi/4"] = 10;
         TI_ops["Z_-pi/4"] = 3;
+        TI_ops["Z_-pi/8"] = 3;
 
         // Move is currently per-site for two types of sites: trapping zones and junctions
         double move_velocity = 80; // m/s, see https://arxiv.org/pdf/2301.05279.pdf
@@ -225,6 +227,40 @@ namespace TISCC
 
         // Return updated time
         return time + TI_ops.at("Z_-pi/4");
+
+    }
+
+    double HardwareModel::add_Z_pi8(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_Z_pi8: Can only apply sqrt(Z) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Z_pi/8", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Z_pi/8");
+
+    }
+
+    double HardwareModel::add_Z_mpi8(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const {
+
+        // Perform validity check
+        if (grid[site] != 'O') {
+            std::cerr << "HardwareModel::add_Z_mpi8: Can only apply sqrt(Z) gate at 'O' QSites." << std::endl;
+            abort();
+        }
+
+        // Push corresponding HW_Instructions onto the circuit
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
+        circuit.push_back(HW_Instruction("Z_-pi/8", site, uint_max, time, step, 'X', ' ', 'X', 'X'));
+
+        // Return updated time
+        return time + TI_ops.at("Z_-pi/8");
 
     }
 

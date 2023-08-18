@@ -48,7 +48,7 @@ public:
     double idle(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
-    double inject_y_state(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
+    double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double translate_patch(int s, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
     // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
