@@ -71,6 +71,9 @@ public:
     // Reset stabilizer circuits to default values
     void reset_stabilizer_circuit_patterns();
 
+    // Swap stabilizer circuits 
+    void swap_stabilizer_circuit_patterns();
+
     /* Other helpful functions */
 
     // Transform operators from binary representation to pair<qsite unsigned int, Pauli char>

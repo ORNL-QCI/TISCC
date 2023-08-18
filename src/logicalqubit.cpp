@@ -808,12 +808,10 @@ namespace TISCC
         std::vector<Plaquette> new_x_plaquettes;
         for (Plaquette& p : z_plaquettes) {
             p.change_operator_type('X');
-            p.set_circuit_pattern('N');
             new_x_plaquettes.push_back(p);
         }
         for (Plaquette& p : x_plaquettes) {
             p.change_operator_type('Z');
-            p.set_circuit_pattern('Z');
             new_z_plaquettes.push_back(p);
         }
         z_plaquettes = std::move(new_z_plaquettes);
@@ -845,6 +843,9 @@ namespace TISCC
 
         // We have changed the stabilizer arrangement
         default_arrangement_ = false;
+
+        // Swap stabilizer circuit patterns to preserve code distance
+        swap_stabilizer_circuit_patterns();
 
         return time;
 
@@ -1643,6 +1644,17 @@ namespace TISCC
         }
         for (Plaquette& p : x_plaquettes) {
             p.set_circuit_pattern('N');
+        }
+    }
+
+    void LogicalQubit::swap_stabilizer_circuit_patterns() {
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+        for (Plaquette& p : all_plaquettes) {
+            if (p.get_circuit_pattern() == 'Z') {p.set_circuit_pattern('N');}
+            else if (p.get_circuit_pattern() == 'N') {p.set_circuit_pattern('Z');}
+            else {std::cerr << "LogicalQubit::swap_stabilizer_circuit_patterns: Invalid circuit pattern: " << p.get_circuit_pattern() << std::endl; abort();}
         }
     }
 
