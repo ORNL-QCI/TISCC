@@ -718,7 +718,7 @@ namespace TISCC
         return *std::max_element(times.begin(), times.end());
     }
 
-    // This is not a good state injection protocol; it is just an easy way to generate the positive Y eigenstate in the case of zero noise 
+    // Generate the positive Y eigenstate or a T state
     double LogicalQubit::inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
 
         if ((label!='y') && (label!='t')) {
@@ -726,8 +726,13 @@ namespace TISCC
             abort();
         }
 
+        if (!default_arrangement_) std::cerr << "LogicalQubit::inject_state: default stabilizer arrangement required." << std::endl; abort(); 
+
+        // Prepare physical qubits in |0> 
         double time_tmp;
         time = transversal_op("prepz", grid, hw_master, time);
+
+        // Hadamard-transform along the X logical operator
         std::vector<bool> logical_operator = get_logical_operator_default_edge('X');
         for (unsigned int i=logical_operator.size()/2; i<logical_operator.size(); i++) {
             if (logical_operator[i]) {
@@ -735,7 +740,8 @@ namespace TISCC
             }
         }
         time = time_tmp;
-        // We locate the site on which Y_L supports a Y. Note Z_{pi/4} |+> = e^{-i*pi/4} S |+> = e^{-i*pi/4} * |Y, +>. We ignore the global phase.
+
+        // We locate the site on which Y_L supports a Y. Note Z_{pi/4} |+> = e^{-i*pi/4} S |+> = e^{-i*pi/4} * |Y, +>. Similarly for Z_{pi/8}. We ignore the global phases.
         auto y_string = binary_operator_to_pauli_string(operator_product_binary_format(get_logical_operator_default_edge('Z'), get_logical_operator_default_edge('X')).first);
         bool y_found = 0;
         for (unsigned int i=0; i<y_string.first.size(); i++) {
