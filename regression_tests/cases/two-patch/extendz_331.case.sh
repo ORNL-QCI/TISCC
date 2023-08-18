@@ -1,1 +1,1 @@
-TISCC -x 3 -z 3 -t 1 -o "extendz" -p
+TISCC -x 3 -z 3 -t 1 -o "extension" -s "double-vert" -p

@@ -1,1 +1,1 @@
-TISCC -x 3 -z 3 -t 1 -o "extendx" -p
+TISCC -x 3 -z 3 -t 1 -o "extension" -s "double-horiz" -p

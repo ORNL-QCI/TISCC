@@ -1,1 +1,1 @@
-TISCC -x 2 -z 2 -t 1 -o "mergex" -p
+TISCC -x 2 -z 2 -t 1 -o "merge" -s "double-horiz" -p

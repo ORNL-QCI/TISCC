@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -141,7 +141,7 @@ namespace TISCC
         // Extract tile_spec
         std::string tile_spec = "single";
         if (parser.exists("s")) {
-            tile_spec = parser.get<std::string>("i");
+            tile_spec = parser.get<std::string>("s");
         }
 
         // Case-dependent grid & lq initialization
@@ -230,6 +230,9 @@ namespace TISCC
         // Operation-dependent logic
         if (parser.exists("o")) {
 
+            // Initialize Hardware Model
+            HardwareModel TI_model;
+
             // Initialize vector of hardware instructions
             std::vector<HW_Instruction> hw_master;
 
@@ -239,7 +242,7 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
 
             // Single-patch operations
-            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard")) {
+            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard") || (s == "swap_left") || (s == "rotation")) {
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
@@ -251,425 +254,223 @@ namespace TISCC
                     lq->inject_state(state_label, *grid, hw_master, time);
                 }
 
-                else if (s == "flip_patch") {
-                    lq->flip_patch(*grid, hw_master, time, false);
+                else if ((s == "flip_patch") || (s == "rotation")) {
+                    time = lq->flip_patch(*grid, hw_master, time, false);
+                }
+
+                else if ((s == "rotation")) {
+                    // Will need to allocate a grid with one extra column to the right, actually
+                    // In this block, will need to extend to the right and then contract
+                }
+
+                else if ((s == "swap_left") || (s == "rotation")) {
+                    time = lq->swap_left(*grid, hw_master, time);
                 }
 
                 // Append an idle operation if applicable 
-                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard")) {
+                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "swap_left") || (s == "rotation") || (s == "hadamard")) {
                     time = lq->idle(cycles, *grid, hw_master, time);
                 }
 
-                // Grab all of the occupied sites (to be used in printing)
-                std::set<unsigned int> occupied_sites = grid->get_occ_sites();
+            }
 
-                // Enforce validity of final instruction list
-                grid->enforce_hw_master_validity(hw_master);
+            // Patch extensions
+            else if (s == "extension") {
 
-                // Print hardware instructions
-                if (parser.exists("p")) {
-                    print_hw_master(std::cout, hw_master, occupied_sites, debug);
+                if (tile_spec == "single") {std::cerr << "extension: invalid tile_spec given." << std::endl; abort();}
+
+                // Prepare lq2 in approp. basis depending on direction of extension
+                else if (tile_spec == "double-horiz") {
+                    lq2->transversal_op("prepx", *grid, hw_master, time);
                 }
 
-                // Count resources
-                if (parser.exists("r")) {
-                    grid->resource_counter(hw_master);
+                else if (tile_spec == "double-vert") {
+                    lq2->transversal_op("prepz", *grid, hw_master, time);
+                }
+
+                // Prepare strip qubits
+                double time_tmp = 0;
+                for (unsigned int site : strip) {
+                    time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
+
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
+                }
+
+                // Perform idle operation
+                time = lq->idle(cycles, *grid, hw_master, time);
+
+            }
+
+            // Patch contractions
+            else if (s == "contraction") {
+
+                if (tile_spec == "single") {std::cerr << "contraction: invalid tile_spec given." << std::endl; abort();}
+
+                // Measure lq2 in approp. basis depending on direction of contraction
+                else if (tile_spec == "double-vert") {
+                    lq2->transversal_op("measz", *grid, hw_master, time);
+                }
+
+                // Note we have to Hadamard-transform back after measurement in order to obtain correct expectation values
+                else if (tile_spec == "double-horiz") { 
+                    double time_tmp = lq2->transversal_op("measx", *grid, hw_master, time);
+                    lq2->transversal_op("hadamard", *grid, hw_master, time_tmp);
+                }
+
+                // Measure strip qubits
+                double time_tmp;
+                for (unsigned int site : strip) {
+                    time_tmp = time;
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
+
+                    time_tmp = TI_model.add_meas(site, time_tmp, 0, *grid, hw_master);
+
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time_tmp, 0, *grid, hw_master);
+                    
+                }
+
+                // Perform idle operation on lq1
+                time = lq1->idle(cycles, *grid, hw_master, time);
+
+            }
+
+            // Merge two patches
+            else if (s == "merge") {
+
+                if (tile_spec == "single") {std::cerr << "merge: invalid tile_spec given." << std::endl; abort();}
+
+                // Prepare strip qubits
+                double time_tmp = 0;
+                for (unsigned int site : strip) {
+                    time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
+
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
+                }
+
+                // Perform 'idle' operation on the merged qubit
+                time = lq->idle(cycles, *grid, hw_master, time);
+
+            }
+
+            // Split a two-tile patch
+            else if (s == "split") {
+
+                if (tile_spec == "single") {std::cerr << "split: invalid tile_spec given." << std::endl; abort();}
+
+                // Measure strip qubits
+                double time_tmp;
+                for (unsigned int site : strip) {
+                    time_tmp = time;
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
+
+                    time_tmp = TI_model.add_meas(site, time_tmp, 1, *grid, hw_master);
+
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time_tmp, 2, *grid, hw_master);
+                    
+                }
+
+                // Perform 'idle' operation on each separate qubit
+                lq1->idle(cycles, *grid, hw_master, time);
+                time = lq2->idle(cycles, *grid, hw_master, time);
+
+            }
+
+            else if (s == "bellmeas") {
+
+                if (tile_spec == "single") {std::cerr << "bellmeas: invalid tile_spec given." << std::endl; abort();}
+
+                // Prepare strip qubits
+                double time_tmp = 0;
+                for (unsigned int site : strip) {
+                    time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
+
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
+                }
+
+                // Perform 'idle' operation on the merged qubit
+                time = lq->idle(cycles, *grid, hw_master, time);
+
+                // Measure out the whole merged patch
+                if (tile_spec == "double-horiz") {
+                    time = lq->transversal_op("measx", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-vert") {
+                    time = lq->transversal_op("measz", *grid, hw_master, time);
                 }
 
             }
 
-            // Two-patch operations
-            else if ((s == "contractx") || (s == "mergex") || (s == "bellmeasx") || (s == "extendx") ||
-                (s == "splitx") || (s == "bellprepx") || (s == "hadamardx")) {
-                
-                // Construct grid with room for two tiles arranged horizontally
-                GridManager grid(nrows, 2*ncols);
+            else if (s == "bellprep") {
 
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq1(dx, dz, 0, 0, grid);
+                if (tile_spec == "single") {std::cerr << "bellprep: invalid tile_spec given." << std::endl; abort();}
 
-                // Initialize second logical qubit object to the right of the first
-                LogicalQubit lq2(dx, dz, 0, ncols, grid);
-
-                // Create a merged qubit
-                LogicalQubit* lq = merge(lq1, lq2, grid);  
-
-                // Grab all of the qsites on the `strip' between lq1 and lq2
-                std::set<unsigned int> strip = lq->get_strip(lq1, lq2);        
-
-                // Debugging output
-                if (debug) {
-                    std::cout << "Logical Qubit 1:" << std::endl;
-                    lq1.print_stabilizers();
-
-                    std::cout << "Logical Qubit 2:" << std::endl;
-                    lq2.print_stabilizers();
-
-                    std::cout << "Logical Qubit (merged):" << std::endl;
-                    lq->print_stabilizers();
-
-                    std::cout << "Data qubits on strip:" << std::endl;
-                    for (unsigned int site : strip) {
-                        std::cout << site << std::endl;
-                    }
+                // Prepare state and do an idle on the merged patch
+                else if (tile_spec == "double-horiz") {
+                    lq->transversal_op("prepx", *grid, hw_master, time);
                 }
 
-                // Operation-specific instructions
-                if (s == "mergex") {
-
-                    // Prepare qsites on the strip in the X basis
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq->idle(cycles, grid, hw_master, time);
-
+                else if (tile_spec == "double-vert") {
+                    lq->transversal_op("prepx", *grid, hw_master, time);
                 }
 
-                else if (s == "extendx") {
+                time = lq->idle(cycles, *grid, hw_master, time);
 
-                    // Prepare the physical qubits on lq2 in the X basis
-                    lq2.transversal_op("prepx", grid, hw_master, time);
+                // Measure strip qubits
+                double time_tmp;
+                for (unsigned int site : strip) {
+                    time_tmp = time;
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
 
-                    // Prepare qsites on the strip in the X basis
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-                    }
+                    time_tmp = TI_model.add_meas(site, time_tmp, 1, *grid, hw_master);
 
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Pauli (X) correction depending on measurement outcome (X^m on final patch) (?) (see notes. i am not convinced this is needed as long as the correct mapping from two to one-qubit states is used.)
-
+                    if (tile_spec == "double-horiz")
+                        time_tmp = TI_model.add_H(site, time_tmp, 2, *grid, hw_master);
+                    
                 }
 
-                else if (s == "contractx") {
-
-                    // Perform measure x on the half to be cropped
-                    lq2.transversal_op("measx", grid, hw_master, time);
-
-                    // Perform measure x on the strip
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    // Perform idle on remaining patch
-                    time = lq1.idle(cycles, grid, hw_master, time);
-
-                    // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (assumed to be tracked in software for now)
-
-                }
-
-                else if (s == "bellmeasx") {
-
-                    // Prepare qsites on the strip in the X basis
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Measure out the whole merged patch
-                    time = lq->transversal_op("measx", grid, hw_master, time);
-
-                }
-
-                else if (s == "splitx") {
-
-                    // Measure qsites on the strip in the X basis
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on each separate qubit
-                    lq1.idle(cycles, grid, hw_master, time);
-                    time = lq2.idle(cycles, grid, hw_master, time);
-
-                }
-
-                else if (s == "bellprepx") {
-
-                    // Prepare X and do an idle on the merged patch
-                    lq->transversal_op("prepx", grid, hw_master, time);
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Measure qsites on the strip in the X basis
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on each separate qubit
-                    lq1.idle(cycles, grid, hw_master, time);
-                    time = lq2.idle(cycles, grid, hw_master, time);
-
-                    // Pauli Z correction depending on measurement outcome (assumed to be tracked in software for now) (see notes)
-
-                }
-
-                else if (s == "hadamardx") {
-
-                    // First apply transversal Hadamard to qubit 1
-                    lq1.transversal_op("hadamard", grid, hw_master, time);
-
-                    // Prepare the physical qubits on lq2 in the Z basis
-                    lq2.transversal_op("prepz", grid, hw_master, time);
-
-                    // Prepare qsites on the strip in the Z basis
-                    for (unsigned int site : strip) {
-                        TI_model.add_init(site, time, 0, grid, hw_master);
-                    }
-
-                    // Swap roles of X and Z for merged patch
-                    lq->xz_swap(grid);
-
-                    // Next extend patch rightward by running 'idle' on the merged patch
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Corner movements: all measurements commute so I think they can be done at once
-
-                    /* Note: extend_logical_operator_clockwise is still experimental and needs to be used with care. */
-                    if (((lq->get_dx_init() % 2) == 0) || ((lq->get_dz_init() % 2) == 0)) {
-                        std::cerr << "Patch rotation only currently implemented for odd code distances." << std::endl;
-                        abort();
-                    }
-                    lq->extend_logical_operator_clockwise('X', "opposite", lq->get_dz_init()-1, grid, hw_master, time, debug); 
-                    lq->extend_logical_operator_clockwise('Z', "default", lq->get_dz_init()-1, grid, hw_master, time, debug); 
-                    lq->extend_logical_operator_clockwise('X', "default", lq->get_dx_init()-1, grid, hw_master, time, debug); 
-
-                    std::cout << "Made it out." << std::endl;
-
-                    // Reset stabilizer circuit patterns to default values. This should be improved later.
-                    lq->reset_stabilizer_circuit_patterns();
-
-                    // Measure the new stabilizers fault-tolerantly
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    /* Contraction */
-                    // Perform measure X on the half to be cropped
-                    lq1.transversal_op("measx", grid, hw_master, time);
-
-                    // Perform measure x on the strip
-                    double time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    // Set time to start next operation
-                    time = time_tmp;
-
-                    /* Extension */
-                    // Prepare the physical qubits on lq2 in the X basis
-                    lq1.transversal_op("prepx", grid, hw_master, time);
-
-                    // Prepare qsites on the strip in the X basis
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, grid, hw_master);
-                    }
-
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    /* Final Contraction */
-                    lq1.transversal_op("measx", grid, hw_master, time);
-
-                    // Perform measure x on the strip
-                    time_tmp = 0;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                    }
-                }
-
-                // Grab all of the merged patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = grid.get_occ_sites();
-
-                // Enforce validity of final instruction list 
-                grid.enforce_hw_master_validity(hw_master);
-
-                // Print hardware instructions
-                if (parser.exists("p")) {
-                    print_hw_master(std::cout, hw_master, all_qsites, debug);
-                }
-
-                // Count resources
-                if (parser.exists("r")) {
-                    grid.resource_counter(hw_master);
-                }
-
-                // Free resources
-                delete lq;
- 
-            }
-
-            // Vertical two-patch operations
-            else if ((s == "contractz") || (s == "mergez") || (s == "bellmeasz") || (s == "extendz") ||
-                (s == "splitz") || (s == "bellprepz")) {
-
-                // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
-                GridManager grid(2*nrows, ncols);
-
-                // Initialize logical qubit object using the grid
-                LogicalQubit lq1(dx, dz, 0, 0, grid);
-
-                // Initialize second logical qubit object to the bottom of the first
-                LogicalQubit lq2(dx, dz, nrows, 0, grid);
-
-                // Create a merged qubit
-                LogicalQubit* lq = merge(lq1, lq2, grid);
-
-                // Grab all of the qsites on the `strip' between lq1 and lq2
-                std::set<unsigned int> strip = lq->get_strip(lq1, lq2);
-
-                // Debugging output
-                if (debug) {
-                    std::cout << "Logical Qubit 1:" << std::endl;
-                    lq1.print_stabilizers();
-
-                    std::cout << "Logical Qubit 2:" << std::endl;
-                    lq2.print_stabilizers();
-
-                    std::cout << "Logical Qubit (merged):" << std::endl;
-                    lq->print_stabilizers();
-
-                    std::cout << "Data qubits on strip:" << std::endl;
-                    for (unsigned int site : strip) {
-                        std::cout << site << std::endl;
-                    }
-                }
-
-                // Operation-specific instructions
-                if (s == "mergez") {
-
-                    // Prepare qsites on the strip in the Z basis
-                    for (unsigned int site : strip) {
-                        TI_model.add_init(site, time, 0, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                }
-
-                else if (s == "extendz") {
-
-                    // Prepare the physical qubits on lq2 in the Z basis
-                    lq2.transversal_op("prepz", grid, hw_master, time);
-
-                    // Prepare qsites on the strip in the Z basis
-                    for (unsigned int site : strip) {
-                        TI_model.add_init(site, time, 0, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Pauli (Z) correction depending on measurement outcome (Z^m on final patch) (?) (see notes. i am not convinced this is needed as long as the correct mapping from two to one-qubit states is used.)
-
-                }
-
-                else if (s == "contractz") {
-
-                    // Perform measure z on the half to be cropped
-                    lq2.transversal_op("measz", grid, hw_master, time);
-
-                    // Perform measure z on the strip
-                    for (unsigned int site : strip) {
-                        TI_model.add_meas(site, time, 0, grid, hw_master);
-                    }
-
-                    // Perform idle on remaining patch
-                    time = lq1.idle(cycles, grid, hw_master, time);
-
-                    // Pauli (X) correction depending on measurement outcome (X^m) (assumed to be tracked in software for now)
-
-                }
-
-                else if (s == "bellmeasz") {
-
-                    // Prepare qsites on the strip in the Z basis
-                    for (unsigned int site : strip) {
-                        TI_model.add_init(site, time, 0, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on the merged qubit
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Measure out the whole merged patch
-                    time = lq->transversal_op("measz", grid, hw_master, time);
-
-                }
-
-                else if (s == "splitz") {
-
-                    // Measure qsites on the strip in the Z basis
-                    for (unsigned int site : strip) {
-                        TI_model.add_meas(site, time, 0, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on each separate qubit
-                    lq1.idle(cycles, grid, hw_master, time);
-                    time = lq2.idle(cycles, grid, hw_master, time);
-
-                }
-
-                else if (s == "bellprepz") {
-
-                    // Prepare Z and idle on the merged patch
-                    lq->transversal_op("prepz", grid, hw_master, time);
-                    time = lq->idle(cycles, grid, hw_master, time);
-
-                    // Measure qsites on the strip in the Z basis
-                    for (unsigned int site : strip) {
-                        TI_model.add_meas(site, time, 0, grid, hw_master);
-                    }
-
-                    // Perform 'idle' operation on each separate qubit
-                    lq1.idle(cycles, grid, hw_master, time);
-                    time = lq2.idle(cycles, grid, hw_master, time);
-
-                    // Pauli X correction depending on measurement outcome (see notes) (assumed to be tracked in software for now)
-
-                    /* TODO: consider whether this op can be done in a single `time step'. */
-
-                }
-
-                // Grab all of the larger patch's occupied sites (to be used in printing)
-                std::set<unsigned int> all_qsites = grid.get_occ_sites();
-
-                // Enforce validity of final instruction list 
-                grid.enforce_hw_master_validity(hw_master);
-
-                // Print hardware instructions
-                if (parser.exists("p")) {
-                    print_hw_master(std::cout, hw_master, all_qsites, debug);
-                }
-
-                // Count resources
-                if (parser.exists("r")) {
-                    grid.resource_counter(hw_master);
-                }
-
-                // Free resources
-                delete lq;
+                // Perform 'idle' operation on each separate qubit
+                lq1->idle(cycles, *grid, hw_master, time);
+                time = lq2->idle(cycles, *grid, hw_master, time);
+
+                // Post-processing: Pauli Z correction depending on measurement outcome (assumed to be tracked in software for now) (see notes)
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, extendx, extendz, mergex, mergez, splitx, splitz, bellprepx, bellprepz, bellmeasx, bellmeasz}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
+
+            // Grab all of the occupied sites (to be used in printing)
+            std::set<unsigned int> all_qsites = grid->get_occ_sites();
+
+            // Enforce validity of final instruction list 
+            grid->enforce_hw_master_validity(hw_master);
+
+            // Print hardware instructions
+            if (parser.exists("p")) {
+                print_hw_master(std::cout, hw_master, all_qsites, debug);
+            }
+
+            // Count resources
+            if (parser.exists("r")) {
+                grid->resource_counter(hw_master);
+            }
+
+            // Free resources
+            delete lq;
+            if (tile_spec == "double-vert" || tile_spec == "double-horiz") {
+                delete lq1;
+                delete lq2;
+            }
+            delete grid;
+
         }
 
         return 0;

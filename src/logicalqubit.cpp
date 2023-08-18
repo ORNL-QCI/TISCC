@@ -679,7 +679,7 @@ namespace TISCC
         }
 
         // Update stabilizers appropriately for Hadamard case 
-        if (op == "hadamard") {
+        if ((op == "hadamard") || (op == "measx")) {
             xz_swap(grid);
         }
 
@@ -726,7 +726,7 @@ namespace TISCC
             abort();
         }
 
-        if (!default_arrangement_) std::cerr << "LogicalQubit::inject_state: default stabilizer arrangement required." << std::endl; abort(); 
+        if (!default_arrangement_) {std::cerr << "LogicalQubit::inject_state: default stabilizer arrangement required." << std::endl; abort();}
 
         // Prepare physical qubits in |0> 
         double time_tmp;
@@ -855,6 +855,14 @@ namespace TISCC
 
         return time;
 
+    }
+
+    double LogicalQubit::swap_left(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        std::cerr << "LogicalQubit::swap_right: not fully implemented." << std::endl;
+        abort();
+
+        return time;
     }
 
     // Translate patch s rows "South" or e rows "East" on the underlying grid

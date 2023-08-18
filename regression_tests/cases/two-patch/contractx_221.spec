@@ -42,14 +42,14 @@
            10.0         Z_pi/2            138
            10.0        Y_-pi/4             57
            10.0        Y_-pi/4             71
-           13.0      Measure_Z             89
-           13.0      Measure_Z             96
-           13.0      Measure_Z            145
-           13.0      Measure_Z            152
            13.0      Measure_Z             75
            13.0      Measure_Z             82
            13.0      Measure_Z            131
            13.0      Measure_Z            138
+           13.0      Measure_Z             89
+           13.0      Measure_Z             96
+           13.0      Measure_Z            145
+           13.0      Measure_Z            152
            20.0         Z_pi/2             57
            20.0         Z_pi/2             71
            23.0        Y_-pi/4             64
