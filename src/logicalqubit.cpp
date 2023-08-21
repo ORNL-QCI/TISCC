@@ -841,11 +841,19 @@ namespace TISCC
             abort();
         }
 
+        // Only currently works for odd code distances
+        if (!(dz_init_%2) && !(dx_init_%2)) {
+            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances." << std::endl;
+            abort();
+        }
+
         // Recall that order matters
-        extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, grid, hw_master, time, debug);
-        extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, grid, hw_master, time, debug); 
-        extend_logical_operator_clockwise('X', "default", dz_init_ - 1, grid, hw_master, time, debug); 
-        extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, grid, hw_master, time, debug);       
+        // **Note: This actually will work for even code distances >= 6, but not for combos of even and odd code distances
+        float time_tmp = time;
+        time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time_tmp, debug);
+        time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, grid, hw_master, time_tmp, debug); 
+        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time, debug); 
+        time = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, grid, hw_master, time_tmp, debug);       
 
         // We have changed the stabilizer arrangement
         default_arrangement_ = false;
@@ -1504,6 +1512,9 @@ namespace TISCC
                 break;
             }
 
+            // Keep track of which edge we're on
+            char edge_char;
+
             // We make sure we aren't adding a qsite already supported on the logical
             unsigned int pc_column_index = qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size();
             while (logical_operator[pc_column_index]) {
@@ -1515,6 +1526,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         col++;
                     }
+                    edge_char = 'w';
                 }
 
                 else if ((row == row_ + 1) && (col != col_ + dx_init_ - 1)) {
@@ -1523,6 +1535,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         row++;
                     }
+                    edge_char = 'n';
                 }
 
                 else if ((col == col_ + dx_init_ - 1) && (row != row_ + dz_init_)) {
@@ -1531,6 +1544,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         col--;
                     }
+                    edge_char = 'e';
                 }
 
                 else if ((row == row_ + dz_init_) && (col != col_)) {
@@ -1539,6 +1553,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         row--;
                     }
+                    edge_char = 's';
                 }
 
                 else {
@@ -1556,77 +1571,104 @@ namespace TISCC
             all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
             all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
 
-            // Find any boundary stabilizer that has on this qsite corresponding to 'type'
-            std::optional<unsigned int> supporting_stabilizer_index;
-            for (unsigned int i=0; i<all_plaquettes.size(); i++) {
-                if ((parity_check_matrix[i][pc_column_index]) &&
-                    (all_plaquettes[i].get_shape() != 'f')) {
-                    supporting_stabilizer_index = i;
-                    break;
-                }
+            // Take care of the case that this qsite had been measured out from the surface code.
+            std::set<unsigned int> occupied_sites_ = occupied_sites(true);
+            bool qsite_supported;
+            if (occupied_sites_.find(qsite.value()) != occupied_sites_.end()) {
+                qsite_supported = true;
+            }
+            else {
+                qsite_supported = false;
             }
 
-            if (!supporting_stabilizer_index.has_value()) {
-                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No supporting boundary stabilizer found at (qsite, pc_column): (" << qsite.value() << ", " << pc_column_index << ")" << std::endl;
-                abort();              
+            // If the qsite is not currently supported, adding the appropriate stabilizer will cause it to be supported
+            // **Note: We are assuming that this is a removed corner and that the stabilizer to add is on the same edge as the operator being extended
+            // **Note: The shifts might result from peculiarities of our grid def'n
+            if (!qsite_supported) {
+                int shift_horizontal = 0;
+                int shift_vertical = 0;
+                if (edge_char == 'n') {shift_vertical = -1;}
+                else if (edge_char == 'e') {shift_vertical = -1; shift_horizontal = 1;}
+                else if (edge_char == 's') {shift_horizontal = 1;}
+                else if (edge_char == 'w') {}
+                time_tmp = add_stabilizer(row + shift_vertical, col + shift_horizontal, edge_char, opp_type, grid, hw_master, time, debug);  
             }
 
-            // Set up basic parameters for input to add_stabilizer
-            char new_stab_type = opp_type;
-            char new_stab_shape = all_plaquettes[supporting_stabilizer_index.value()].get_shape();
-            unsigned int new_stab_row = all_plaquettes[supporting_stabilizer_index.value()].get_row();
-            unsigned int new_stab_col = all_plaquettes[supporting_stabilizer_index.value()].get_col();
-            int shift_horizontal = 0;
-            int shift_vertical = 0;
-            if (new_stab_shape == 'n') {shift_horizontal = 1;}
-            else if (new_stab_shape == 'e') {shift_vertical = 1;}
-            else if (new_stab_shape == 's') {shift_horizontal = -1;}
-            else if (new_stab_shape == 'w') {shift_vertical = -1;}
-            else {std::cerr << "LogicalQubit::extend_logical_operator_clockwise: invalid stabilizer shape." << std::endl;}
-
-            // We will handle two cases:
-            //  (1) The found boundary stabilizer has no support on the current logical
-            //  (2) The found boundary stabilizer has one qubit of support on the current logical
-
-            // Grab the other qsite associated with this boundary stabilizer
-            std::optional<unsigned int> other_qsite;
-            unsigned int pc_column_index_other;
-            for (char qubit : {'a', 'b', 'c', 'd'}) {
-                if ((all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) != std::numeric_limits<unsigned int>::max()) &&
-                    all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) != qsite.value()) {
-                    if (!other_qsite.has_value()) {
-                        other_qsite = all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit);
+            else {
+                // Find any boundary stabilizer that has on this qsite corresponding to 'type'
+                std::optional<unsigned int> supporting_stabilizer_index;
+                for (unsigned int i=0; i<all_plaquettes.size(); i++) {
+                    if ((parity_check_matrix[i][pc_column_index]) &&
+                        (all_plaquettes[i].get_shape() != 'f')) {
+                        supporting_stabilizer_index = i;
+                        break;
                     }
-                    else {
-                        for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
-                            std::cout << qubit << " " << all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) << std::endl;
+                }
+
+                // There may not be any boundary stabilizers supporting this qsite if the qubit had been removed
+                if (!supporting_stabilizer_index.has_value()) {
+                    std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No supporting boundary stabilizer found at (qsite, pc_column): (" << qsite.value() << ", " << pc_column_index << ")" << std::endl;
+                    abort();              
+                }
+
+                // Set up basic parameters for input to add_stabilizer
+                char new_stab_type = opp_type;
+                char new_stab_shape = all_plaquettes[supporting_stabilizer_index.value()].get_shape();
+                unsigned int new_stab_row = all_plaquettes[supporting_stabilizer_index.value()].get_row();
+                unsigned int new_stab_col = all_plaquettes[supporting_stabilizer_index.value()].get_col();
+                int shift_horizontal = 0;
+                int shift_vertical = 0;
+                if (new_stab_shape == 'n') {shift_horizontal = 1;}
+                else if (new_stab_shape == 'e') {shift_vertical = 1;}
+                else if (new_stab_shape == 's') {shift_horizontal = -1;}
+                else if (new_stab_shape == 'w') {shift_vertical = -1;}
+                else {std::cerr << "LogicalQubit::extend_logical_operator_clockwise: invalid stabilizer shape." << std::endl;}
+
+                // We will handle two cases:
+                //  (1) The found boundary stabilizer has no support on the current logical
+                //  (2) The found boundary stabilizer has one qubit of support on the current logical
+
+                // Grab the other qsite associated with this boundary stabilizer
+                std::optional<unsigned int> other_qsite;
+                unsigned int pc_column_index_other;
+                for (char qubit : {'a', 'b', 'c', 'd'}) {
+                    if ((all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) != std::numeric_limits<unsigned int>::max()) &&
+                        all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) != qsite.value()) {
+                        if (!other_qsite.has_value()) {
+                            other_qsite = all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit);
                         }
-                        std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 1)." << std::endl;
-                        abort();
+                        else {
+                            for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
+                                std::cout << qubit << " " << all_plaquettes[supporting_stabilizer_index.value()].get_qsite(qubit) << std::endl;
+                            }
+                            std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 1)." << std::endl;
+                            abort();
+                        }
                     }
                 }
-            }
-            
-            if (!other_qsite.has_value()) {
-                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 2)." << std::endl;
+                
+                if (!other_qsite.has_value()) {
+                    std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 2)." << std::endl;
+                }
+
+                else {
+                    pc_column_index_other = qsite_to_index[other_qsite.value()] + (type=='X')*qsite_to_index.size();
+                }
+
+                // Check whether logical operator has support here and add_stabilizer depending on the case
+                if (logical_operator[pc_column_index_other]) {
+                    time_tmp = add_stabilizer(new_stab_row+shift_vertical, new_stab_col+shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug);           
+                }
+                else {
+                    time_tmp = add_stabilizer(new_stab_row-shift_vertical, new_stab_col-shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug); 
+                }
+
+                /* Something to note; it is unclear whether there will be cases where qubits will need to be added and removed in the same corner movement. 
+                In that case, will have measure and init of the same qubit at the same time in the hardware circuit, which is a bug */
+    
             }
 
-            else {
-                pc_column_index_other = qsite_to_index[other_qsite.value()] + (type=='X')*qsite_to_index.size();
-            }
-
-            // Check whether logical operator has support here and add_stabilizer depending on the case
-            if (logical_operator[pc_column_index_other]) {
-                time_tmp = add_stabilizer(new_stab_row+shift_vertical, new_stab_col+shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug);           
-            }
-            else {
-                time_tmp = add_stabilizer(new_stab_row-shift_vertical, new_stab_col-shift_horizontal, new_stab_shape, new_stab_type, grid, hw_master, time, debug); 
-            }
-
-            /* Something to note; it is unclear whether there will be cases where qubits will need to be added and removed in the same corner movement. 
-            In that case, will have measure and init of the same qubit at the same time in the hardware circuit. */
-
-            // Update logical operator
+            // Update logical operator and account for weight added
             unsigned int weight_diff = pauli_weight(logical_operator);
             if (edge_type == "default") {logical_operator = get_logical_operator_default_edge(type);}
             else if (edge_type == "opposite") {logical_operator = get_logical_operator_opposite_edge(type);}
