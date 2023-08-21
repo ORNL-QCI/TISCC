@@ -67,7 +67,7 @@ public:
     double extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
 
     // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
-    float flip_patch(GridManager& grid, std::vector<HW_Instruction> hw_master, float time, bool debug);
+    float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool debug);
 
     // Reset stabilizer circuits to default values
     void reset_stabilizer_circuit_patterns();

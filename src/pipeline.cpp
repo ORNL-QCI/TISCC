@@ -312,7 +312,7 @@ namespace TISCC
                     lq2->transversal_op("measz", *grid, hw_master, time);
                 }
 
-                // Note we have to Hadamard-transform back after measurement in order to obtain correct expectation values
+                // Note we have to Hadamard-transform back after measurement in order to obtain correct expectation values when simulating joint operator
                 else if (tile_spec == "double-horiz") { 
                     double time_tmp = lq2->transversal_op("measx", *grid, hw_master, time);
                     lq2->transversal_op("hadamard", *grid, hw_master, time_tmp);

@@ -833,9 +833,9 @@ namespace TISCC
     }
 
     // The result of this process is the same as if we flipped the patch upside down and then did xz_swap
-    float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction> hw_master, float time, bool debug) {
+    float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool debug) {
 
-        // If the stabilizers have been altered at all, don't allow merge
+        // If the stabilizers have been altered at all, don't allow flip_patch
         if (!default_arrangement_) {
             std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
             abort();
