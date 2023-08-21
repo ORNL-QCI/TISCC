@@ -894,23 +894,57 @@ namespace TISCC
         if (e > 0) {min_cols += e;}
 
         if ((min_rows > grid.get_nrows()) || min_cols > grid.get_ncols()) {
-            std::cerr << "LogicalQubit::translate_patch: Ordered patch translation requires larger grid." << std::endl; abort();
+            std::cerr << "LogicalQubit::translate_patch: Patch translation requires larger grid." << std::endl; abort();
         }
 
         // Check that negative translations are possible given grid constraints
         if (((row_ + s) < 0) || ((col_ + e) < 0)) {
-            std::cerr << "LogicalQubit::translate_patch: Ordered patch translation requires larger grid." << std::endl; abort();
+            std::cerr << "LogicalQubit::translate_patch: Patch translation requires larger grid." << std::endl; abort();
         }  
 
-        /* For now, we only allow e == 1 and s == 0 */
-        if (!((e==1)&&(s==0))) {std::cerr << "LogicalQubit::translate_patch: only implemented for one shift rightwards." << std::endl; abort();}
+        /* For now, we only allow e == -1 and s == 0 (i.e. shift_left) */
+        if (!((e==-1)&&(s==0))) {std::cerr << "LogicalQubit::translate_patch: only implemented for one shift rightwards." << std::endl; abort();}
 
+        /* Update plaquettes and parity check matrix */
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
 
+        /* I could easily just use grid.shift_qsite to update all of the qsite labels in LogicalQubit */
 
-        // /* Update plaquettes and parity check matrix */
-        // std::vector<Plaquette> all_plaquettes;
-        // all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
-        // all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+        /* Do I want to be able to modify plaquettes so easily? 
+            - I think that, while GridManager provided the Plaquette, LogicalQubit owns it and has the right to update it. 
+            - However, it has to update it through appropriate means- making sure GridManager knows that a qubit has moved.
+            - Additionally, a hardware circuit needs to be produced. */
+
+        // Update plaquettes
+        for (Plaquette& p : all_plaquettes) {
+           for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
+                p.mod_qsite(qubit) = grid.shift_qsite(p.get_qsite(qubit), s, e);
+            }   
+        }
+
+        // Update qsite_to_index
+        for (std::pair<unsigned int, unsigned int> pair : qsite_to_index) {
+            pair.second = grid.shift_qsite(pair.second, s, e);
+        }
+
+        // Update index_to_qsite
+        for (unsigned int i=0; i<index_to_qsite.size(); i++) {
+            index_to_qsite[i] = grid.shift_qsite(index_to_qsite[i], s, e);
+        }
+
+        // Update operator deformations
+        for (unsigned int i=0; x_deformation_qsites.size(); i++) {
+            x_deformation_qsites[i] = grid.shift_qsite(x_deformation_qsites[i], s, e);
+        }
+        for (unsigned int i=0; z_deformation_qsites.size(); i++) {
+            z_deformation_qsites[i] = grid.shift_qsite(z_deformation_qsites[i], s, e);
+        }
+
+        // Test consistency
+        test_stabilizers();
+
 
         // // Loop over data qsites
         // for (auto& data_qsite_index_pair : qsite_to_index) {

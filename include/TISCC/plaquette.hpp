@@ -47,6 +47,9 @@ public:
     GridManager* grid() const {return grid_;} 
 
 private:
+    // Make LogicalQubit a friend class for now
+    friend class LogicalQubit;
+
     // Plaquette constructor made only accessible to GridManager
     friend class GridManager;
     explicit Plaquette(unsigned int a, unsigned int b, unsigned int c, unsigned int d, unsigned int m, unsigned int row,
