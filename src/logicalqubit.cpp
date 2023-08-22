@@ -868,10 +868,7 @@ namespace TISCC
     }
 
     // Translate patch s rows "South" or e rows "East" on the underlying grid
-    double LogicalQubit::translate_patch(int s, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
-
-        std::cerr << "LogicalQubit::translate_patch: not fully implemented." << std::endl;
-        abort();
+    double LogicalQubit::translate_patch(int s, int e, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
 
         // Handle trivial case
         if ((s == 0) && (e == 0 )) return time;
@@ -886,7 +883,6 @@ namespace TISCC
         unsigned int min_cols = col_ + patch_cols;
         if (s > 0) {min_rows += s;}
         if (e > 0) {min_cols += e;}
-
         if ((min_rows > grid.get_nrows()) || min_cols > grid.get_ncols()) {
             std::cerr << "LogicalQubit::translate_patch: Patch translation requires larger grid." << std::endl; abort();
         }
@@ -896,40 +892,52 @@ namespace TISCC
             std::cerr << "LogicalQubit::translate_patch: Patch translation requires larger grid." << std::endl; abort();
         }  
 
-        /* For now, we only allow e == -1 and s == 0 (i.e. shift_left) */
-        if (!((e==-1)&&(s==0))) {std::cerr << "LogicalQubit::translate_patch: only implemented for one shift rightwards." << std::endl; abort();}
+        /* Do I want to be able to modify plaquettes so easily? 
+            - I think that, while GridManager provided the Plaquette, LogicalQubit owns it and has the right to update it. 
+            - However, it has to update it through appropriate means- making sure GridManager knows that a qubit has moved.
+            - Additionally, a hardware circuit needs to be produced. */
 
         // Now let's actually compile the move operations using the hardware model
-        time = TI_model.shift_left(occupied_sites(true), grid, hw_master, time);
+        /* For now, we only allow e == -1 and s == 0 (i.e. shift_left) */
+        if ((e==-1) && (s==0)) {
+            time = TI_model.shift_left(occupied_sites(true), dx_init_, grid, hw_master, time);
+        }
+        else {
+            std::cerr << "LogicalQubit::translate_patch: only implemented for one shift leftwards (e=-1, s=0)." << std::endl;
+            abort();
+        }
+
+        std::cerr << "Made it." << std::endl;
+        /* I plan to remove the ability for lq to directly change plaquette qsites; I will put a qsite:qsite map within HardwareModel or GridManager for "approved" Move operations */
 
         /* Update plaquettes and parity check matrix */
         std::vector<Plaquette> all_plaquettes;
         all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
         all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
 
-        /* I could easily just use grid.shift_qsite to update all of the qsite labels in LogicalQubit */
-
-        /* Do I want to be able to modify plaquettes so easily? 
-            - I think that, while GridManager provided the Plaquette, LogicalQubit owns it and has the right to update it. 
-            - However, it has to update it through appropriate means- making sure GridManager knows that a qubit has moved.
-            - Additionally, a hardware circuit needs to be produced. */
-
         // Update plaquettes
         for (Plaquette& p : all_plaquettes) {
            for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
                 p.mod_qsite(qubit) = grid.shift_qsite(p.get_qsite(qubit), s, e);
             }   
+            // Make sure 'm' site is occupied!
         }
+
+        std::cerr << "Made it." << std::endl;
 
         // Update qsite_to_index
         for (std::pair<unsigned int, unsigned int> pair : qsite_to_index) {
-            pair.second = grid.shift_qsite(pair.second, s, e);
+            pair.first = grid.shift_qsite(pair.first, s, e);
         }
+
+        std::cerr << "Made it." << std::endl;
 
         // Update index_to_qsite
         for (unsigned int i=0; i<index_to_qsite.size(); i++) {
             index_to_qsite[i] = grid.shift_qsite(index_to_qsite[i], s, e);
         }
+
+        std::cerr << "Made it." << std::endl;
 
         // Update operator deformations
         for (unsigned int i=0; x_deformation_qsites.size(); i++) {
@@ -939,8 +947,12 @@ namespace TISCC
             z_deformation_qsites[i] = grid.shift_qsite(z_deformation_qsites[i], s, e);
         }
 
+        std::cerr << "Made it." << std::endl;
+
         // Test consistency
         test_stabilizers();
+
+        std::cerr << "Made it." << std::endl;
 
         return time;
     }

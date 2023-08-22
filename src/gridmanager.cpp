@@ -117,7 +117,7 @@ namespace TISCC
                 seq.push_back(index_from_coords(row1, col1, 4));
                 seq.push_back(index_from_coords(row1, col1, 3));
                 seq.push_back(index_from_coords(row1, col2, 6));
-                seq.push_back(index_from_coords(row1, col2, 5));
+                // seq.push_back(index_from_coords(row1, col2, 5));
             }
 
             // E
@@ -125,7 +125,7 @@ namespace TISCC
                 seq.push_back(index_from_coords(row1, col1, 6));
                 seq.push_back(index_from_coords(row1, col2, 3));
                 seq.push_back(index_from_coords(row1, col2, 4));
-                seq.push_back(index_from_coords(row1, col2, 5));
+                // seq.push_back(index_from_coords(row1, col2, 5));
             }
 
             else {

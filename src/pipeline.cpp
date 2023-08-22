@@ -310,7 +310,11 @@ namespace TISCC
 
                     std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
                     grid->print_grid(ascii_grid);
-                    // time = lq->swap_left(*grid, hw_master, time);
+                    
+                    time = lq->swap_left(*grid, hw_master, time);
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
                 }
 
                 else if (s == "rotation") {

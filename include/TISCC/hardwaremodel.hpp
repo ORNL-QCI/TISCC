@@ -47,7 +47,7 @@ public:
     double add_CNOT(Plaquette& p, char control, char target, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
 
     // Translate all qubits left one column on the grid
-    double shift_left(const std::set<unsigned int>& qubits, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) const;
+    double shift_left(const std::set<unsigned int>& qubits, unsigned int patch_cols, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) const;
 
     // Print TI_ops
     void print_TI_ops() const;
@@ -71,7 +71,7 @@ private:
     void move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
         const std::vector<unsigned int>& path, const GridManager& grid) const;
     double move_along_path_for_shift(unsigned int qsite, std::vector<HW_Instruction>& circuit, double time,
-        const std::vector<unsigned int>& path, const GridManager& grid) const;
+        const std::vector<unsigned int>& path, GridManager& grid) const;
 };
 
 }

@@ -345,32 +345,6 @@ namespace TISCC
         return time + TI_ops.at("Measure_Z");
     }
 
-    // Move the measure qubit to the closest site adjacent to a data qubit
-    void HardwareModel::move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
-        const std::vector<unsigned int>& path, const GridManager& grid) const {
-
-        // Validity check 
-        if (p.get_qsite('m') != path[0]) {
-            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
-            abort();
-        }
-
-        // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity on the grid)
-        // We note an assumption is that there are never two Junctions in a row on the grid
-        unsigned int through_J = 0;
-        for (unsigned int i=1; i<path.size(); i++) {
-            if (grid[path[i]] == 'J') {
-                through_J = 1;
-                continue;
-            }
-            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_operator_type()));
-            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
-            if (through_J == 1) {through_J = 0;}
-            p.move_to_site('m', path[i]);
-        }
-
-    }
-
     // Helper function to add CNOT gate in terms of native TI gates to a circuit given a plaquette and qubit labels
     double HardwareModel::add_CNOT(Plaquette& p, char control, char target, double time, unsigned int step, const GridManager& grid, 
         std::vector<HW_Instruction>& circuit) const {
@@ -434,14 +408,40 @@ namespace TISCC
         return time + TI_ops.at("Z_-pi/4");
     }
 
+    // Move the measure qubit to the closest site adjacent to a data qubit
+    void HardwareModel::move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
+        const std::vector<unsigned int>& path, const GridManager& grid) const {
+
+        // Validity check 
+        if (p.get_qsite('m') != path[0]) {
+            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
+            abort();
+        }
+
+        // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity on the grid)
+        // We note an assumption is that there are never two Junctions in a row on the grid
+        unsigned int through_J = 0;
+        for (unsigned int i=1; i<path.size(); i++) {
+            if (grid[path[i]] == 'J') {
+                through_J = 1;
+                continue;
+            }
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_operator_type()));
+            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
+            if (through_J == 1) {through_J = 0;}
+            p.move_to_site('m', path[i]);
+        }
+
+    }
 
     // Move the measure qubit to the closest site adjacent to a data qubit
     double HardwareModel::move_along_path_for_shift(unsigned int qsite, std::vector<HW_Instruction>& circuit, double time,
-        const std::vector<unsigned int>& path, const GridManager& grid) const {
+        const std::vector<unsigned int>& path, GridManager& grid) const {
 
         // Validity check 
         if (qsite != path[0]) {
             std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
+            std::cerr << qsite << " " << path[0] << std::endl;
             abort();
         }
 
@@ -455,6 +455,7 @@ namespace TISCC
             }
             circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, 0, 'X', ' ', 'X', 'X'));
             time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
+            grid.move_qubit(path[i-1-through_J], path[i]);
             if (through_J == 1) {through_J = 0;}
         }
 
@@ -463,12 +464,18 @@ namespace TISCC
     }
 
     // Translate all qubits left one column on the grid
-    // **Note: We do not change the set of occupied sites on the grid in this case
-    double HardwareModel::shift_left(const std::set<unsigned int>& qsites, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) const {
+    double HardwareModel::shift_left(const std::set<unsigned int>& qsites, unsigned int patch_cols, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) const {
+
+        // For use in time accounting
         double time_tmp;
 
-        // First, we move them out of the way (south-west next to measure qubit)
+        // Move qubits out of the way (south-west next to measure qubit) in order to shift the left-wards strip of data qubits over
         for (unsigned int q : qsites) {
+
+            // Check that it is occupied
+            if (!grid.is_occupied(q)) {
+                std::cerr << "HardwareModel::shift_left: Movement ordered on unoccupied qsite." << std::endl; abort();
+            }
 
             // Get path next to measure qubit
             unsigned int row = grid.get_row(q);
@@ -479,21 +486,72 @@ namespace TISCC
             path.pop_back();
 
             // Move along path
+            // **Note: This changes the set of occupied sites on the grid
+            time_tmp = move_along_path_for_shift(q, hw_master, time, path, grid);
+
         }
 
-        // Shuttle the occupied sites (if they are indeed occupied) through to the right
+        std::vector<std::string> ascii_grid = grid.ascii_grid(true);
+        grid.print_grid(ascii_grid);
+
+        // Update time
+        time = time_tmp;
+
+        /* Shuttle the occupied sites (if they are indeed occupied) through to the right */
+
+        // First, get the strip to the left 
+        std::set<unsigned int> strip;
+        for (unsigned int q : qsites) {
+            if (qsites.find(grid.shift_qsite(q, 0, -1)) == qsites.end())
+                strip.insert(grid.shift_qsite(q, 0, -1));
+        }
+
+        for (unsigned int q : strip) {
+
+            // Check that it is occupied
+            if (!grid.is_occupied(q)) continue;
+
+            for (unsigned int i = 0; i<patch_cols; i++) {
+
+                // Get path next to measure qubit
+                std::vector<unsigned int> path = grid.get_path(q, grid.shift_qsite(q, 0, 1));
+                path.push_back(grid.shift_qsite(q, 0, 1));
+
+                // Move along path
+                // **Note: This changes the set of occupied sites on the grid
+                time_tmp = move_along_path_for_shift(q, hw_master, time, path, grid);
+
+            }
+
+        }
+
+        ascii_grid = grid.ascii_grid(true);
+        grid.print_grid(ascii_grid);
+
+        // Update time
+        time = time_tmp;
 
         // Then move our data qubits north-west to the position we want
         for (unsigned int q : qsites) {
 
-            
+            // Get path to final site
+            unsigned int row = grid.get_row(q);
+            unsigned int col = grid.get_col(q);
+            std::vector<unsigned int> path = grid.get_path(grid.index_from_coords(row, col, 1), grid.shift_qsite(q, 0, -1));
+            path.push_back(grid.shift_qsite(q, 0, -1));
+            reverse(path.begin(), path.end());
+            path.pop_back();
+            reverse(path.begin(), path.end());
+
+            // Move along path
+            // **Note: This changes the set of occupied sites on the grid
+            time_tmp = move_along_path_for_shift(path[0], hw_master, time, path, grid);
         }
 
-        // for (unsigned int q : qsites) {
-        //     std::vector<unsigned int> path = grid.get_path(q, grid.shift_qsite(q, 0, -1));
-        //     time_tmp = move_along_path_for_shift(q, hw_master, time, path, grid);
-        // }
+        ascii_grid = grid.ascii_grid(true);
+        grid.print_grid(ascii_grid);
 
+        /* Before any subsequent idle operation, will need to make sure measure qubits are there */
         return time_tmp;
     }
 

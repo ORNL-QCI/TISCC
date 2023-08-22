@@ -50,8 +50,7 @@ public:
     double transversal_op(const std::string& op, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
-    double translate_patch(int s, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
-    double swap_left(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
+    double swap_left(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
 
     // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
@@ -144,6 +143,9 @@ private:
     // Apply a given instruction to all plaquettes in a given vector
     double apply_instruction(const Instruction& instr, Plaquette& p, double time, unsigned int step,
         const GridManager& grid, std::vector<HW_Instruction>& hw_master);
+
+    // Translate patch s rows "South" or e rows "East" on the underlying grid (not fully implemented)
+    double translate_patch(int s, int e, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
 };
 
