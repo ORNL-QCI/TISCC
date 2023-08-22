@@ -344,33 +344,9 @@ namespace TISCC
         // Return updated time
         return time + TI_ops.at("Measure_Z");
     }
-    
-    // This is just a placeholder to apply a test gate with
-    double HardwareModel::add_test(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const {
-        
-        // If the plaquette in question does not have the present qubit label, do nothing
-        unsigned int uint_max = std::numeric_limits<unsigned int>::max();
-        if (p.get_qsite(qubit) == uint_max) {
-            return time;
-        }
-
-        // Perform validity check
-        if ((*p.grid())[p.get_qsite(qubit)] != 'O') {
-            std::cerr << "HardwareModel::add_test: Can only apply these gates at 'O' QSites." << std::endl;
-            abort();
-        }
-
-        // Push corresponding HW_Instructions onto the circuit
-        circuit.push_back(HW_Instruction("Y_pi/2", p.get_qsite(qubit), uint_max, time, step, qubit, ' ', p.get_shape(), p.get_operator_type()));
-        circuit.push_back(HW_Instruction("X_pi/2", p.get_qsite(qubit), uint_max, time + TI_ops.at("Y_pi/2"), step, qubit, ' ', p.get_shape(), p.get_operator_type()));
-
-        // Return updated time
-        return time + TI_ops.at("Y_pi/2") + TI_ops.at("X_pi/2");
-
-    }
 
     // Move the measure qubit to the closest site adjacent to a data qubit
-    void HardwareModel::move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
+    void HardwareModel::move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
         const std::vector<unsigned int>& path, const GridManager& grid) const {
 
         // Validity check 
@@ -435,7 +411,7 @@ namespace TISCC
 
         // Retrieve path to data qubit and apply move_along_path
         std::vector<unsigned int> path = grid.get_path(p.get_qsite('m'), p.get_qsite(data_qubit));
-        move_along_path(p, step, circuit, time, path, grid);
+        move_along_path_for_CNOT(p, step, circuit, time, path, grid);
 
         // Apply ZZ operation
         circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, data_qubit, 'm', p.get_shape(), p.get_operator_type()));
@@ -443,7 +419,7 @@ namespace TISCC
 
         // Move the measure qubit back to its home base for further operations
         reverse(path.begin(), path.end());
-        move_along_path(p, step, circuit, time, path, grid);
+        move_along_path_for_CNOT(p, step, circuit, time, path, grid);
 
         // Before final rotations, ensure control and target are home
         assert(p.is_home(control) && p.is_home(target)); 
@@ -456,6 +432,69 @@ namespace TISCC
 
         // Return updated time
         return time + TI_ops.at("Z_-pi/4");
+    }
+
+
+    // Move the measure qubit to the closest site adjacent to a data qubit
+    double HardwareModel::move_along_path_for_shift(unsigned int qsite, std::vector<HW_Instruction>& circuit, double time,
+        const std::vector<unsigned int>& path, const GridManager& grid) const {
+
+        // Validity check 
+        if (qsite != path[0]) {
+            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
+            abort();
+        }
+
+        // Construct HW_Instructions to Move along the path 
+        // We note an assumption is that there are never two Junctions in a row on the grid
+        unsigned int through_J = 0;
+        for (unsigned int i=1; i<path.size(); i++) {
+            if (grid[path[i]] == 'J') {
+                through_J = 1;
+                continue;
+            }
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, 0, 'X', ' ', 'X', 'X'));
+            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
+            if (through_J == 1) {through_J = 0;}
+        }
+
+        return time;
+
+    }
+
+    // Translate all qubits left one column on the grid
+    // **Note: We do not change the set of occupied sites on the grid in this case
+    double HardwareModel::shift_left(const std::set<unsigned int>& qsites, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) const {
+        double time_tmp;
+
+        // First, we move them out of the way (south-west next to measure qubit)
+        for (unsigned int q : qsites) {
+
+            // Get path next to measure qubit
+            unsigned int row = grid.get_row(q);
+            unsigned int col = grid.get_col(q);
+            std::vector<unsigned int> path = grid.get_path(grid.index_from_coords(row, col, 1), q);
+            path.push_back(q);
+            reverse(path.begin(), path.end());
+            path.pop_back();
+
+            // Move along path
+        }
+
+        // Shuttle the occupied sites (if they are indeed occupied) through to the right
+
+        // Then move our data qubits north-west to the position we want
+        for (unsigned int q : qsites) {
+
+            
+        }
+
+        // for (unsigned int q : qsites) {
+        //     std::vector<unsigned int> path = grid.get_path(q, grid.shift_qsite(q, 0, -1));
+        //     time_tmp = move_along_path_for_shift(q, hw_master, time, path, grid);
+        // }
+
+        return time_tmp;
     }
 
     HardwareModel::HardwareModel() : trap_width(420.0) {

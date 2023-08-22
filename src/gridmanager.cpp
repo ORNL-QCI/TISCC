@@ -110,8 +110,31 @@ namespace TISCC
             }
         }
 
+        // A little clunky but these actually give paths directly onto site 2. 
+        else if ((idx1 == 5) && (idx2 == 5)) {
+            // W
+            if ((col1 == col2 + 1) && (row1 == row2)) {
+                seq.push_back(index_from_coords(row1, col1, 4));
+                seq.push_back(index_from_coords(row1, col1, 3));
+                seq.push_back(index_from_coords(row1, col2, 6));
+                seq.push_back(index_from_coords(row1, col2, 5));
+            }
+
+            // E
+            else if ((col1 == col2 - 1) && (row1 == row2)) {
+                seq.push_back(index_from_coords(row1, col1, 6));
+                seq.push_back(index_from_coords(row1, col2, 3));
+                seq.push_back(index_from_coords(row1, col2, 4));
+                seq.push_back(index_from_coords(row1, col2, 5));
+            }
+
+            else {
+                std::cerr << "GridManager::get_path: N & S translations between data qsites not implemented." << std::endl;
+            }
+        }
+
         else {
-            std::cerr << "GridManager::get_path: Only paths to neighbor Op sites starting from the [1] position are implemented." << std::endl;
+            std::cerr << "GridManager::get_path: Only certain path types are implemented; see code for details." << std::endl;
             abort();       
         }
 

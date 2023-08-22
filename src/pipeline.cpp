@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -242,7 +242,8 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
 
             // Single-patch operations
-            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "hadamard") || (s == "swap_left") || (s == "rotation")) {
+            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
+                 || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "rotation")) {
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
@@ -254,21 +255,131 @@ namespace TISCC
                     lq->inject_state(state_label, *grid, hw_master, time);
                 }
 
-                else if ((s == "flip_patch") || (s == "rotation")) {
+                else if (s == "flip_patch") {
                     time = lq->flip_patch(*grid, hw_master, time, false);
                 }
 
-                else if ((s == "rotation")) {
+                else if (s == "move_right") {
+
+                    // move_right requires an additional column of qubits to the right
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // lq is already our standard orientation qubit, but must re-allocate it on new grid
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+
+                    // we need an extended one too
+                    LogicalQubit* lq_extended = new LogicalQubit(tmp_lq->get_dx_init() + 1, tmp_lq->get_dz_init(), 0, 0, *grid);
+
+                    // finally, we need a contracted version (**Note: probably don't actually want the hw_instructions from flip_patch)
+                    LogicalQubit* lq_contracted = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 1, *grid);
+                    time = lq_contracted->flip_patch(*grid, hw_master, time, false);
+                    lq_contracted->xz_swap(*grid);
+
+                    std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    delete tmp_lq;
+                    delete lq_extended;
+                    delete lq_contracted;
+
                     // Will need to allocate a grid with one extra column to the right, actually
                     // In this block, will need to extend to the right and then contract
                 }
 
-                else if ((s == "swap_left") || (s == "rotation")) {
-                    time = lq->swap_left(*grid, hw_master, time);
+                else if (s == "swap_left") {
+                    
+                    // swap_left requires an additional column of qubits to the left; re-allocate grid
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // re-allocate lq and swap x<->z stabilizers
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(grid->get_ncols() - 2, grid->get_nrows() - 1, 0, 1, *grid);
+                    lq->xz_swap(*grid);
+                    delete tmp_lq;
+
+                    std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+                    // time = lq->swap_left(*grid, hw_master, time);
+                }
+
+                else if (s == "rotation") {
+
+                    /* Constructing the appropriate GridManager and LogicalQubit variables */
+
+                    // We require an additional column of qubits to the right to complete the operation (this does not change the needed resources for a logical tile)
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // Re-allocate our standard orientation qubit on the new grid
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+
+                    // We will need extended and contracted qubits for the move_right operation
+                    LogicalQubit* lq_extended = new LogicalQubit(tmp_lq->get_dx_init() + 1, tmp_lq->get_dz_init(), 0, 0, *grid);
+                    LogicalQubit* lq_contracted = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 1, *grid);
+
+                    /* Generate circuits */
+
+                    // Initial corner movements and idle operation
+                    time = lq->flip_patch(*grid, hw_master, time, false);
+                    time = lq->idle(cycles, *grid, hw_master, time);
+
+                    std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    // The patch extension requires initialization of strip qubits in the x basis
+                    strip = lq_extended->get_strip(*lq, *lq);
+                    double time_tmp;
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
+                    }
+
+                    // Get extended patch into desired stabilizer arrangement and do idle op
+                    time = lq_extended->flip_patch(*grid, hw_master, time, false);
+                    lq_extended->idle(cycles, *grid, hw_master, time);
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    // Use xz_swap to achieve the desired pattern of boundary stabilizers on the contracted patch
+                    lq_contracted->xz_swap(*grid);
+
+                    // Measure strip qubits on the left
+                    strip = lq_extended->get_strip(*lq_contracted, *lq_contracted);
+                    for (unsigned int site : strip) {
+                        time_tmp = time;
+                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
+                        time_tmp = TI_model.add_meas(site, time_tmp, 0, *grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 0, *grid, hw_master);
+                    }
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    // swap_left
+
+                    delete tmp_lq;
+                    delete lq_extended;
+                    delete lq_contracted;
+
                 }
 
                 // Append an idle operation if applicable 
-                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || (s == "swap_left") || (s == "rotation") || (s == "hadamard")) {
+                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || 
+                    (s == "move_right") || (s == "swap_left") || (s == "rotation") || (s == "hadamard")) {
                     time = lq->idle(cycles, *grid, hw_master, time);
                 }
 
@@ -445,7 +556,7 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
             std::set<unsigned int> all_qsites = grid->get_occ_sites();

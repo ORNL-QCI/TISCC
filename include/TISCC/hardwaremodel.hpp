@@ -8,6 +8,7 @@
 #include<map>
 #include<string>
 #include<vector>
+#include<set>
 
 namespace TISCC {
 
@@ -45,8 +46,8 @@ public:
     double add_meas(unsigned int site, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
     double add_CNOT(Plaquette& p, char control, char target, double time, unsigned int step, const GridManager& grid, std::vector<HW_Instruction>& circuit) const;
 
-    // This is just a placeholder to apply a test gate with
-    double add_test(const Plaquette& p, char qubit, double time, unsigned int step, std::vector<HW_Instruction>& circuit) const;
+    // Translate all qubits left one column on the grid
+    double shift_left(const std::set<unsigned int>& qubits, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) const;
 
     // Print TI_ops
     void print_TI_ops() const;
@@ -66,8 +67,10 @@ private:
     // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
     void init_TI_ops();
 
-    // HW circuit helper function
-    void move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
+    // HW circuit helper functions to compile Moves
+    void move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
+        const std::vector<unsigned int>& path, const GridManager& grid) const;
+    double move_along_path_for_shift(unsigned int qsite, std::vector<HW_Instruction>& circuit, double time,
         const std::vector<unsigned int>& path, const GridManager& grid) const;
 };
 

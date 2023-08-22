@@ -554,10 +554,6 @@ namespace TISCC
                 time_tmp = TI_model.add_meas(p, instr.get_q1(), time, step, hw_master);
             }
 
-            else if ((instr.get_name() == "Test_Gate") && (instr.get_q2() == ' ')) {
-                time_tmp = TI_model.add_test(p, instr.get_q1(), time, step, hw_master);
-            }
-
             // Add CNOT gate
             else if (instr.get_name() == "CNOT") {
                 time_tmp = TI_model.add_CNOT(p, instr.get_q1(), instr.get_q2(), time, step, grid, hw_master);
@@ -865,14 +861,6 @@ namespace TISCC
 
     }
 
-    double LogicalQubit::swap_left(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
-
-        std::cerr << "LogicalQubit::swap_right: not fully implemented." << std::endl;
-        abort();
-
-        return time;
-    }
-
     // Translate patch s rows "South" or e rows "East" on the underlying grid
     double LogicalQubit::translate_patch(int s, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
 
@@ -904,6 +892,9 @@ namespace TISCC
 
         /* For now, we only allow e == -1 and s == 0 (i.e. shift_left) */
         if (!((e==-1)&&(s==0))) {std::cerr << "LogicalQubit::translate_patch: only implemented for one shift rightwards." << std::endl; abort();}
+
+        // Now let's actually compile the move operations using the hardware model
+        time = TI_model.shift_left(occupied_sites(true), grid, hw_master, time);
 
         /* Update plaquettes and parity check matrix */
         std::vector<Plaquette> all_plaquettes;
@@ -945,58 +936,6 @@ namespace TISCC
         // Test consistency
         test_stabilizers();
 
-
-        // // Loop over data qsites
-        // for (auto& data_qsite_index_pair : qsite_to_index) {
-
-        //     // Get stabilizer indices for this qsite
-        //     std::vector<unsigned int> stabilizer_indices;
-
-        //     // Find all the stabilizers that have support on this qsite
-        //     unsigned int i=0; 
-        //     for (const std::vector<bool>& stabilizer_vec : parity_check_matrix) {
-        //         if (stabilizer_vec[data_qsite_index_pair.second] || stabilizer_vec[data_qsite_index_pair.second + z_plaquettes.size()]) {
-        //             stabilizer_indices.push_back(i);
-        //         }
-        //         i++;
-        //     }
-
-        //     // Update plaquettes
-        //     unsigned int new_qsite = grid.shift_qsite(data_qsite_index_pair.first, s, e);
-        //     for (unsigned int index : stabilizer_indices) {
-        //         bool found=0;
-        //         for (char qubit : {'a', 'b', 'c', 'd'}) {
-        //             if (all_plaquettes[index].get_qsite(qubit) == data_qsite_index_pair.first) {
-        //                 found = 1;
-        //                 all_plaquettes[index].move_to_site(qubit, new_qsite);
-        //             }
-        //         } 
-        //     }
-
-        //     // 
-        //     data_qsite_index_pair.first = new_qsite;
-
-        // }
-
-        // // Retrieve set of qsites occupied by this patch
-        // std::set<unsigned int> occ_sites = occupied_sites(false);
-
-
-        // // 
-
-        // // Incorporate necessary Move operations on the Grid
-
-
-        // // Make necessary changes to stabilizers
-
-
-        // for (Plaquette& p : all_plaquettes) {
-        //     for (char qubit : {'a', 'b', 'c', 'd'}) {
-        //         p.move_to_site(qubit, grid.shift_qsite(p.get_qsite(qubit), s, e));
-        //     } 
-        // }
-
-        // // Make necessary changes to parity check matrix and related variables
         return time;
     }
 
