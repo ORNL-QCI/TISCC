@@ -844,21 +844,18 @@ namespace TISCC
             abort();
         }
 
-        // Only currently works for odd code distances
-        // if (!(dz_init_%2) && !(dx_init_%2)) {
-        //     std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances." << std::endl;
-        //     abort();
-        // }
+        // Only currently works for odd code distances and even code distances < 6
+        if ((!(dz_init_%2) && !(dx_init_%2)) && ((dx_init_ < 6) || (dz_init_ < 6))) {
+            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances lower than 6." << std::endl;
+            abort();
+        }
 
-        // Recall that order matters
-        // **Note: This actually will work for even code distances >= 6, but not for combos of even and odd code distances
+        // We separate these in time 
         float time_tmp = time;
-            time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, grid, hw_master, time_tmp, debug);
-        // time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time_tmp, debug);
-        time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, grid, hw_master, time_tmp, debug); 
-        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, grid, hw_master, time, debug); 
-        // time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time, debug); 
-        time = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, grid, hw_master, time_tmp, debug);       
+        time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, true, grid, hw_master, time_tmp, debug);
+        time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, true, grid, hw_master, time_tmp, debug); 
+        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, true, grid, hw_master, time_tmp, debug); 
+        time_tmp = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, true, grid, hw_master, time_tmp, debug);       
 
         // We have changed the stabilizer arrangement
         default_arrangement_ = false;
@@ -866,7 +863,7 @@ namespace TISCC
         // Swap stabilizer circuit patterns to preserve code distance
         swap_stabilizer_circuit_patterns();
 
-        return time;
+        return time_tmp;
 
     }
 
@@ -969,7 +966,8 @@ namespace TISCC
             ((col == col_ + dx_init_) && (row > row_) && (row < row_ + dz_init_) && (shape == 'e')) || // Right edge
             ((row == row_) && (col > col_) && (col < col_ + dx_init_) && (shape == 'n')) ||  // Top edge
             ((row == row_ + dz_init_) && (col > col_) && (col < col_ + dx_init_) && (shape == 's')))) { // Bottom edge
-            std::cout << "LogicalQubit::add_stabilizer: Newly added plaquettes must lie along boundaries and be of the appropriate shape, as this function is only meant to be used in corner movement." << std::endl;
+            std::cerr << "LogicalQubit::add_stabilizer: Newly added plaquettes must lie along boundaries and be of the appropriate shape, as this function is only meant to be used in corner movement." << std::endl;
+            std::cerr << row << " " << col << " " << shape << " " << type << std::endl;
             abort();
         }
 
@@ -1433,7 +1431,7 @@ namespace TISCC
     // Implements corner movements by figuring out which stabilizers to measure when extending a logical operator `clockwise'
     /* **Note: add_stabilizer will update the default (rather than opposite) logical operator that has support on the added stabilizer in ambiguous cases,   
         which may become relevant where the operator to be extended has support on a single qubit */
-    double LogicalQubit::extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, 
+    double LogicalQubit::extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, bool stop_at_patch_corner, 
         GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
         // We require stabilizers of a known type (X or Z)
@@ -1505,18 +1503,21 @@ namespace TISCC
         unsigned int col = grid.get_col(qsite.value());
         unsigned int index = grid.get_idx(qsite.value());
 
+        // Track whether we have hit a patch corner
+        bool hit_corner = false;
+
         // Loop over single-qubit operators to add in extending the logical operator
         for (unsigned int i=0; i<weight_to_add; i++) {
 
             // Do not proceed if the weight of the cw_logical_operator is only 1
             if (pauli_weight(cw_logical_operator) == 1) {
-                std::cerr << "LogicalQubit::add_stabilizer: No room for operator movement; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No room for operator movement; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
                 break;
             }
 
             // Don't let it try to add above the maximum possible Pauli weight before the operator eats its tail
             if (i >= max_weight_to_add) {
-                std::cerr << "LogicalQubit::add_stabilizer: Can't let operator eat its tail; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Can't let operator eat its tail; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
                 break;
             }
 
@@ -1528,8 +1529,14 @@ namespace TISCC
             while (logical_operator[pc_column_index]) {
 
                 // Figure out which boundary the present qsite lies on. Assign corners assuming movement will be clockwise. Set coords to the next (occupied) clockwise boundary qsite.
+
+                // Left edge
                 if ((col == col_) && (row != row_ + 1)) {
-                    // left edge 
+
+                    // Track whether we have hit a patch corner
+                    if ((row == row_+dz_init_) && (i!=0)) {hit_corner = true;}
+
+                    // Increment variables
                     row--;
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         col++;
@@ -1537,8 +1544,13 @@ namespace TISCC
                     square_edge_char = 'w';
                 }
 
+                // Top edge
                 else if ((row == row_ + 1) && (col != col_ + dx_init_ - 1)) {
-                    // top edge
+
+                    // Track whether we have hit a patch corner
+                    if ((col == col_) && (i!=0)) {hit_corner = true;}
+
+                    // Increment variables
                     col++;
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         row++;
@@ -1546,8 +1558,13 @@ namespace TISCC
                     square_edge_char = 'n';
                 }
 
+                // Right edge
                 else if ((col == col_ + dx_init_ - 1) && (row != row_ + dz_init_)) {
-                    // right edge
+
+                    // Track whether we have hit a patch corner
+                    if ((row == row_) && (i!=0)) {hit_corner = true;}
+
+                    // Increment variables
                     row++;
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         col--;
@@ -1555,8 +1572,13 @@ namespace TISCC
                     square_edge_char = 'e';
                 }
 
+                // Bottom edge
                 else if ((row == row_ + dz_init_) && (col != col_)) {
-                    // bottom edge
+                    
+                    // Track whether we have hit a patch corner
+                    if ((col == col_ + dx_init_ - 1) && (i!=0)) {hit_corner = true;}
+
+                    // Increment variables
                     col--;
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         row--;
@@ -1572,6 +1594,12 @@ namespace TISCC
                 qsite = grid.index_from_coords(row, col, index);
                 pc_column_index = qsite_to_index[qsite.value()] + (type == 'X')*qsite_to_index.size();
 
+            }
+
+            // Stop if we have hit the corner
+            if (stop_at_patch_corner && hit_corner) {
+                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Corner has been hit." << std::endl;
+                break;
             }
 
             // Create vector of all plaquettes for convenience
