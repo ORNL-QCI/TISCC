@@ -305,16 +305,17 @@ namespace TISCC
                     // re-allocate lq and swap x<->z stabilizers
                     LogicalQubit* tmp_lq = lq;
                     lq = new LogicalQubit(grid->get_ncols() - 2, grid->get_nrows() - 1, 0, 1, *grid);
-                    lq->xz_swap(*grid);
+                    // lq->xz_swap(*grid);
                     delete tmp_lq;
 
-                    std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
-                    grid->print_grid(ascii_grid);
+                    // std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    // grid->print_grid(ascii_grid);
                     
                     time = lq->swap_left(*grid, hw_master, time);
 
-                    ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
-                    grid->print_grid(ascii_grid);
+                    // ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    // grid->print_grid(ascii_grid);
+
                 }
 
                 else if (s == "rotation") {

@@ -1,1 +1,1 @@
-TISCC -x 5 -z 5 -t 1 -o "prepz" -d -p
+TISCC -x 5 -z 5 -t 1 -o "prepz" -p

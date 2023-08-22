@@ -12,11 +12,14 @@ namespace TISCC
 {
     // Constructor for GridManager
     GridManager::GridManager(unsigned int nrows, unsigned int ncols) {
+
+        // Construct Grid
         nrows_ = nrows;
         ncols_ = ncols;
         grid_ = new SiteType[nrows*ncols*7];
         for (unsigned int i=0; i<nrows; i++) {
             for (unsigned int j=0; j<ncols; j++) {
+                // Set SiteType for each qsite
                 grid_[(i*ncols+j)*7+0] = SiteType::QSite_Memory;
                 grid_[(i*ncols+j)*7+1] = SiteType::QSite_Memory_and_Ops;
                 grid_[(i*ncols+j)*7+2] = SiteType::QSite_Memory;
@@ -24,8 +27,13 @@ namespace TISCC
                 grid_[(i*ncols+j)*7+4] = SiteType::QSite_Memory;
                 grid_[(i*ncols+j)*7+5] = SiteType::QSite_Memory_and_Ops;
                 grid_[(i*ncols+j)*7+6] = SiteType::QSite_Memory;
+
+                // Initialize occupied_sites of all SiteType::QSite_Memory_and_Ops
+                occupied_sites.insert((i*ncols+j)*7+1);
+                occupied_sites.insert((i*ncols+j)*7+5);
             }
         }
+
     }
 
     // Providing read-only access to array elements from coordinates
@@ -110,14 +118,12 @@ namespace TISCC
             }
         }
 
-        // A little clunky but these actually give paths directly onto site 2. 
         else if ((idx1 == 5) && (idx2 == 5)) {
             // W
             if ((col1 == col2 + 1) && (row1 == row2)) {
                 seq.push_back(index_from_coords(row1, col1, 4));
                 seq.push_back(index_from_coords(row1, col1, 3));
                 seq.push_back(index_from_coords(row1, col2, 6));
-                // seq.push_back(index_from_coords(row1, col2, 5));
             }
 
             // E
@@ -125,7 +131,6 @@ namespace TISCC
                 seq.push_back(index_from_coords(row1, col1, 6));
                 seq.push_back(index_from_coords(row1, col2, 3));
                 seq.push_back(index_from_coords(row1, col2, 4));
-                // seq.push_back(index_from_coords(row1, col2, 5));
             }
 
             else {
@@ -261,36 +266,36 @@ namespace TISCC
             unsigned int b = index_from_coords(row, col, 5);
             unsigned int c = index_from_coords(row+1, col-1, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
-            std::set<unsigned int> sites{a, b, c, d, m};
-            occupied_sites.insert(sites.begin(), sites.end());
+            // std::set<unsigned int> sites{a, b, c, d, m};
+            // occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(a,b,c,d,m,row,col,shape,type,this);
         }
         else if (shape== 'n') {
             unsigned int c = index_from_coords(row+1, col-1, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
-            std::set<unsigned int> sites{c, d, m};
-            occupied_sites.insert(sites.begin(), sites.end());
+            // std::set<unsigned int> sites{c, d, m};
+            // occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(uint_max,uint_max,c,d,m,row,col,shape,type,this);
         }
         else if (shape== 's') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int b = index_from_coords(row, col, 5);
-            std::set<unsigned int> sites{a, b, m};
-            occupied_sites.insert(sites.begin(), sites.end());
+            // std::set<unsigned int> sites{a, b, m};
+            // occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(a,b,uint_max,uint_max,m,row,col,shape,type,this);
         }
         else if (shape== 'e') {
             unsigned int a = index_from_coords(row, col-1, 5);
             unsigned int c = index_from_coords(row+1, col-1, 5);
-            std::set<unsigned int> sites{a, c, m};
-            occupied_sites.insert(sites.begin(), sites.end());
+            // std::set<unsigned int> sites{a, c, m};
+            // occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(a,uint_max,c,uint_max,m,row,col,shape,type,this);
         }
         else if (shape== 'w') {
             unsigned int b = index_from_coords(row, col, 5);
             unsigned int d = index_from_coords(row+1, col, 5);
-            std::set<unsigned int> sites{b, d, m};
-            occupied_sites.insert(sites.begin(), sites.end());
+            // std::set<unsigned int> sites{b, d, m};
+            // occupied_sites.insert(sites.begin(), sites.end());
             return Plaquette(uint_max,b,uint_max,d,m,row,col,shape,type,this);
         }
         else {std::cerr << "GridManager::get_plaquette: Invalid input given." << std::endl; abort();}

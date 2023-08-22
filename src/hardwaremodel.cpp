@@ -491,8 +491,8 @@ namespace TISCC
 
         }
 
-        std::vector<std::string> ascii_grid = grid.ascii_grid(true);
-        grid.print_grid(ascii_grid);
+        // std::vector<std::string> ascii_grid = grid.ascii_grid(true);
+        // grid.print_grid(ascii_grid);
 
         // Update time
         time = time_tmp;
@@ -508,25 +508,27 @@ namespace TISCC
 
         for (unsigned int q : strip) {
 
+            time_tmp = time;
+
             // Check that it is occupied
             if (!grid.is_occupied(q)) continue;
 
             for (unsigned int i = 0; i<patch_cols; i++) {
 
                 // Get path next to measure qubit
-                std::vector<unsigned int> path = grid.get_path(q, grid.shift_qsite(q, 0, 1));
-                path.push_back(grid.shift_qsite(q, 0, 1));
+                std::vector<unsigned int> path = grid.get_path(grid.shift_qsite(q, 0, i), grid.shift_qsite(q, 0, i+1));
+                path.push_back(grid.shift_qsite(q, 0, i+1));
 
                 // Move along path
                 // **Note: This changes the set of occupied sites on the grid
-                time_tmp = move_along_path_for_shift(q, hw_master, time, path, grid);
+                time_tmp = move_along_path_for_shift(grid.shift_qsite(q, 0, i), hw_master, time_tmp, path, grid);
 
             }
 
         }
 
-        ascii_grid = grid.ascii_grid(true);
-        grid.print_grid(ascii_grid);
+        // ascii_grid = grid.ascii_grid(true);
+        // grid.print_grid(ascii_grid);
 
         // Update time
         time = time_tmp;
@@ -548,8 +550,8 @@ namespace TISCC
             time_tmp = move_along_path_for_shift(path[0], hw_master, time, path, grid);
         }
 
-        ascii_grid = grid.ascii_grid(true);
-        grid.print_grid(ascii_grid);
+        // ascii_grid = grid.ascii_grid(true);
+        // grid.print_grid(ascii_grid);
 
         /* Before any subsequent idle operation, will need to make sure measure qubits are there */
         return time_tmp;

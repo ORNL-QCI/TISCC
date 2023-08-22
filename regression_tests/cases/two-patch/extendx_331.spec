@@ -1,6 +1,19 @@
+           -1.0       Qubit_at              1
+           -1.0       Qubit_at              5
+           -1.0       Qubit_at              8
+           -1.0       Qubit_at             12
            -1.0       Qubit_at             15
+           -1.0       Qubit_at             19
+           -1.0       Qubit_at             22
+           -1.0       Qubit_at             26
            -1.0       Qubit_at             29
+           -1.0       Qubit_at             33
+           -1.0       Qubit_at             36
+           -1.0       Qubit_at             40
            -1.0       Qubit_at             43
+           -1.0       Qubit_at             47
+           -1.0       Qubit_at             50
+           -1.0       Qubit_at             54
            -1.0       Qubit_at             57
            -1.0       Qubit_at             61
            -1.0       Qubit_at             64
@@ -15,6 +28,9 @@
            -1.0       Qubit_at             96
            -1.0       Qubit_at             99
            -1.0       Qubit_at            103
+           -1.0       Qubit_at            106
+           -1.0       Qubit_at            110
+           -1.0       Qubit_at            113
            -1.0       Qubit_at            117
            -1.0       Qubit_at            120
            -1.0       Qubit_at            124
@@ -29,16 +45,23 @@
            -1.0       Qubit_at            155
            -1.0       Qubit_at            159
            -1.0       Qubit_at            162
+           -1.0       Qubit_at            166
+           -1.0       Qubit_at            169
            -1.0       Qubit_at            173
            -1.0       Qubit_at            176
            -1.0       Qubit_at            180
+           -1.0       Qubit_at            183
            -1.0       Qubit_at            187
            -1.0       Qubit_at            190
            -1.0       Qubit_at            194
+           -1.0       Qubit_at            197
            -1.0       Qubit_at            201
            -1.0       Qubit_at            204
            -1.0       Qubit_at            208
+           -1.0       Qubit_at            211
            -1.0       Qubit_at            215
+           -1.0       Qubit_at            218
+           -1.0       Qubit_at            222
             0.0      Prepare_Z             89
             0.0      Prepare_Z             96
             0.0      Prepare_Z            103

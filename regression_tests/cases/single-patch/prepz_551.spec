@@ -1,5 +1,15 @@
+           -1.0       Qubit_at              1
+           -1.0       Qubit_at              5
+           -1.0       Qubit_at              8
+           -1.0       Qubit_at             12
            -1.0       Qubit_at             15
+           -1.0       Qubit_at             19
+           -1.0       Qubit_at             22
+           -1.0       Qubit_at             26
            -1.0       Qubit_at             29
+           -1.0       Qubit_at             33
+           -1.0       Qubit_at             36
+           -1.0       Qubit_at             40
            -1.0       Qubit_at             43
            -1.0       Qubit_at             47
            -1.0       Qubit_at             50
@@ -10,6 +20,9 @@
            -1.0       Qubit_at             68
            -1.0       Qubit_at             71
            -1.0       Qubit_at             75
+           -1.0       Qubit_at             78
+           -1.0       Qubit_at             82
+           -1.0       Qubit_at             85
            -1.0       Qubit_at             89
            -1.0       Qubit_at             92
            -1.0       Qubit_at             96
@@ -20,6 +33,7 @@
            -1.0       Qubit_at            113
            -1.0       Qubit_at            117
            -1.0       Qubit_at            120
+           -1.0       Qubit_at            124
            -1.0       Qubit_at            127
            -1.0       Qubit_at            131
            -1.0       Qubit_at            134
@@ -30,6 +44,9 @@
            -1.0       Qubit_at            152
            -1.0       Qubit_at            155
            -1.0       Qubit_at            159
+           -1.0       Qubit_at            162
+           -1.0       Qubit_at            166
+           -1.0       Qubit_at            169
            -1.0       Qubit_at            173
            -1.0       Qubit_at            176
            -1.0       Qubit_at            180
@@ -40,851 +57,857 @@
            -1.0       Qubit_at            197
            -1.0       Qubit_at            201
            -1.0       Qubit_at            204
+           -1.0       Qubit_at            208
+           -1.0       Qubit_at            211
            -1.0       Qubit_at            215
            -1.0       Qubit_at            218
            -1.0       Qubit_at            222
+           -1.0       Qubit_at            225
            -1.0       Qubit_at            229
            -1.0       Qubit_at            232
            -1.0       Qubit_at            236
+           -1.0       Qubit_at            239
            -1.0       Qubit_at            243
-            0.0      Prepare_Z             47              0              X                             X              X
-            0.0      Prepare_Z             54              0              X                             X              X
-            0.0      Prepare_Z             61              0              X                             X              X
-            0.0      Prepare_Z             68              0              X                             X              X
-            0.0      Prepare_Z             75              0              X                             X              X
-            0.0      Prepare_Z             89              0              X                             X              X
-            0.0      Prepare_Z             96              0              X                             X              X
-            0.0      Prepare_Z            103              0              X                             X              X
-            0.0      Prepare_Z            110              0              X                             X              X
-            0.0      Prepare_Z            117              0              X                             X              X
-            0.0      Prepare_Z            131              0              X                             X              X
-            0.0      Prepare_Z            138              0              X                             X              X
-            0.0      Prepare_Z            145              0              X                             X              X
-            0.0      Prepare_Z            152              0              X                             X              X
-            0.0      Prepare_Z            159              0              X                             X              X
-            0.0      Prepare_Z            173              0              X                             X              X
-            0.0      Prepare_Z            180              0              X                             X              X
-            0.0      Prepare_Z            187              0              X                             X              X
-            0.0      Prepare_Z            194              0              X                             X              X
-            0.0      Prepare_Z            201              0              X                             X              X
-            0.0      Prepare_Z            215              0              X                             X              X
-            0.0      Prepare_Z            222              0              X                             X              X
-            0.0      Prepare_Z            229              0              X                             X              X
-            0.0      Prepare_Z            236              0              X                             X              X
-            0.0      Prepare_Z            243              0              X                             X              X
-            0.0      Prepare_Z             50              0              m                             f              Z
-            0.0      Prepare_Z             64              0              m                             f              Z
-            0.0      Prepare_Z             99              0              m                             f              Z
-            0.0      Prepare_Z            113              0              m                             f              Z
-            0.0      Prepare_Z            134              0              m                             f              Z
-            0.0      Prepare_Z            148              0              m                             f              Z
-            0.0      Prepare_Z            183              0              m                             f              Z
-            0.0      Prepare_Z            197              0              m                             f              Z
-            0.0      Prepare_Z             15              0              m                             n              Z
-            0.0      Prepare_Z            218              0              m                             s              Z
-            0.0      Prepare_Z             29              0              m                             n              Z
-            0.0      Prepare_Z            232              0              m                             s              Z
-            0.0      Prepare_Z             57              0              m                             f              X
-            0.0      Prepare_Z             71              0              m                             f              X
-            0.0      Prepare_Z             92              0              m                             f              X
-            0.0      Prepare_Z            106              0              m                             f              X
-            0.0      Prepare_Z            141              0              m                             f              X
-            0.0      Prepare_Z            155              0              m                             f              X
-            0.0      Prepare_Z            176              0              m                             f              X
-            0.0      Prepare_Z            190              0              m                             f              X
-            0.0      Prepare_Z             43              0              m                             w              X
-            0.0      Prepare_Z            127              0              m                             w              X
-            0.0      Prepare_Z            120              0              m                             e              X
-            0.0      Prepare_Z            204              0              m                             e              X
-           10.0        Y_-pi/4             57              1              m                             f              X
-           10.0        Y_-pi/4             71              1              m                             f              X
-           10.0        Y_-pi/4             92              1              m                             f              X
-           10.0        Y_-pi/4            106              1              m                             f              X
-           10.0        Y_-pi/4            141              1              m                             f              X
-           10.0        Y_-pi/4            155              1              m                             f              X
-           10.0        Y_-pi/4            176              1              m                             f              X
-           10.0        Y_-pi/4            190              1              m                             f              X
-           10.0        Y_-pi/4             43              1              m                             w              X
-           10.0        Y_-pi/4            127              1              m                             w              X
-           10.0        Y_-pi/4            120              1              m                             e              X
-           10.0        Y_-pi/4            204              1              m                             e              X
-           20.0         Z_pi/2             57              1              m                             f              X
-           20.0         Z_pi/2             71              1              m                             f              X
-           20.0         Z_pi/2             92              1              m                             f              X
-           20.0         Z_pi/2            106              1              m                             f              X
-           20.0         Z_pi/2            141              1              m                             f              X
-           20.0         Z_pi/2            155              1              m                             f              X
-           20.0         Z_pi/2            176              1              m                             f              X
-           20.0         Z_pi/2            190              1              m                             f              X
-           20.0         Z_pi/2             43              1              m                             w              X
-           20.0         Z_pi/2            127              1              m                             w              X
-           20.0         Z_pi/2            120              1              m                             e              X
-           20.0         Z_pi/2            204              1              m                             e              X
-           23.0        Y_-pi/4             50              2              m                             f              Z
-           23.0        Y_-pi/4             64              2              m                             f              Z
-           23.0        Y_-pi/4             99              2              m                             f              Z
-           23.0        Y_-pi/4            113              2              m                             f              Z
-           23.0        Y_-pi/4            134              2              m                             f              Z
-           23.0        Y_-pi/4            148              2              m                             f              Z
-           23.0        Y_-pi/4            183              2              m                             f              Z
-           23.0        Y_-pi/4            197              2              m                             f              Z
-           23.0        Y_-pi/4            218              2              m                             s              Z
-           23.0        Y_-pi/4            232              2              m                             s              Z
-           23.0        Y_-pi/4             54              2              a                             f              X
-           23.0        Y_-pi/4             68              2              a                             f              X
-           23.0        Y_-pi/4             89              2              a                             f              X
-           23.0        Y_-pi/4            103              2              a                             f              X
-           23.0        Y_-pi/4            138              2              a                             f              X
-           23.0        Y_-pi/4            152              2              a                             f              X
-           23.0        Y_-pi/4            173              2              a                             f              X
-           23.0        Y_-pi/4            187              2              a                             f              X
-           23.0        Y_-pi/4            117              2              a                             e              X
-           23.0        Y_-pi/4            201              2              a                             e              X
-           33.0           Move          50,51              2              m                             f              Z
-           33.0           Move          64,65              2              m                             f              Z
-           33.0           Move         99,100              2              m                             f              Z
-           33.0           Move        113,114              2              m                             f              Z
-           33.0           Move        134,135              2              m                             f              Z
-           33.0           Move        148,149              2              m                             f              Z
-           33.0           Move        183,184              2              m                             f              Z
-           33.0           Move        197,198              2              m                             f              Z
-           33.0           Move        218,219              2              m                             s              Z
-           33.0           Move        232,233              2              m                             s              Z
-           33.0           Move          57,58              2              m                             f              X
-           33.0           Move          71,72              2              m                             f              X
-           33.0           Move          92,93              2              m                             f              X
-           33.0           Move        106,107              2              m                             f              X
-           33.0           Move        141,142              2              m                             f              X
-           33.0           Move        155,156              2              m                             f              X
-           33.0           Move        176,177              2              m                             f              X
-           33.0           Move        190,191              2              m                             f              X
-           33.0           Move        120,121              2              m                             e              X
-           33.0           Move        204,205              2              m                             e              X
-           38.2           Move          51,48              2              m                             f              Z
-           38.2           Move          65,62              2              m                             f              Z
-           38.2           Move         100,97              2              m                             f              Z
-           38.2           Move        114,111              2              m                             f              Z
-           38.2           Move        135,132              2              m                             f              Z
-           38.2           Move        149,146              2              m                             f              Z
-           38.2           Move        184,181              2              m                             f              Z
-           38.2           Move        198,195              2              m                             f              Z
-           38.2           Move        219,216              2              m                             s              Z
-           38.2           Move        233,230              2              m                             s              Z
-           38.2           Move          58,55              2              m                             f              X
-           38.2           Move          72,69              2              m                             f              X
-           38.2           Move          93,90              2              m                             f              X
-           38.2           Move        107,104              2              m                             f              X
-           38.2           Move        142,139              2              m                             f              X
-           38.2           Move        156,153              2              m                             f              X
-           38.2           Move        177,174              2              m                             f              X
-           38.2           Move        191,188              2              m                             f              X
-           38.2           Move        121,118              2              m                             e              X
-           38.2           Move        205,202              2              m                             e              X
-          148.5             ZZ          47,48              2              a              m              f              Z
-          148.5             ZZ          61,62              2              a              m              f              Z
-          148.5             ZZ          96,97              2              a              m              f              Z
-          148.5             ZZ        110,111              2              a              m              f              Z
-          148.5             ZZ        131,132              2              a              m              f              Z
-          148.5             ZZ        145,146              2              a              m              f              Z
-          148.5             ZZ        180,181              2              a              m              f              Z
-          148.5             ZZ        194,195              2              a              m              f              Z
-          148.5             ZZ        215,216              2              a              m              s              Z
-          148.5             ZZ        229,230              2              a              m              s              Z
-          148.5             ZZ          54,55              2              a              m              f              X
-          148.5             ZZ          68,69              2              a              m              f              X
-          148.5             ZZ          89,90              2              a              m              f              X
-          148.5             ZZ        103,104              2              a              m              f              X
-          148.5             ZZ        138,139              2              a              m              f              X
-          148.5             ZZ        152,153              2              a              m              f              X
-          148.5             ZZ        173,174              2              a              m              f              X
-          148.5             ZZ        187,188              2              a              m              f              X
-          148.5             ZZ        117,118              2              a              m              e              X
-          148.5             ZZ        201,202              2              a              m              e              X
-         2148.5           Move          48,51              2              m                             f              Z
-         2148.5           Move          62,65              2              m                             f              Z
-         2148.5           Move         97,100              2              m                             f              Z
-         2148.5           Move        111,114              2              m                             f              Z
-         2148.5           Move        132,135              2              m                             f              Z
-         2148.5           Move        146,149              2              m                             f              Z
-         2148.5           Move        181,184              2              m                             f              Z
-         2148.5           Move        195,198              2              m                             f              Z
-         2148.5           Move        216,219              2              m                             s              Z
-         2148.5           Move        230,233              2              m                             s              Z
-         2148.5           Move          55,58              2              m                             f              X
-         2148.5           Move          69,72              2              m                             f              X
-         2148.5           Move          90,93              2              m                             f              X
-         2148.5           Move        104,107              2              m                             f              X
-         2148.5           Move        139,142              2              m                             f              X
-         2148.5           Move        153,156              2              m                             f              X
-         2148.5           Move        174,177              2              m                             f              X
-         2148.5           Move        188,191              2              m                             f              X
-         2148.5           Move        118,121              2              m                             e              X
-         2148.5           Move        202,205              2              m                             e              X
-         2258.8           Move          51,50              2              m                             f              Z
-         2258.8           Move          65,64              2              m                             f              Z
-         2258.8           Move         100,99              2              m                             f              Z
-         2258.8           Move        114,113              2              m                             f              Z
-         2258.8           Move        135,134              2              m                             f              Z
-         2258.8           Move        149,148              2              m                             f              Z
-         2258.8           Move        184,183              2              m                             f              Z
-         2258.8           Move        198,197              2              m                             f              Z
-         2258.8           Move        219,218              2              m                             s              Z
-         2258.8           Move        233,232              2              m                             s              Z
-         2258.8           Move          58,57              2              m                             f              X
-         2258.8           Move          72,71              2              m                             f              X
-         2258.8           Move          93,92              2              m                             f              X
-         2258.8           Move        107,106              2              m                             f              X
-         2258.8           Move        142,141              2              m                             f              X
-         2258.8           Move        156,155              2              m                             f              X
-         2258.8           Move        177,176              2              m                             f              X
-         2258.8           Move        191,190              2              m                             f              X
-         2258.8           Move        121,120              2              m                             e              X
-         2258.8           Move        205,204              2              m                             e              X
-         2264.0        Z_-pi/4             47              2              a                             f              Z
-         2264.0        X_-pi/4             50              2              m                             f              Z
-         2264.0        Z_-pi/4             61              2              a                             f              Z
-         2264.0        X_-pi/4             64              2              m                             f              Z
-         2264.0        Z_-pi/4             96              2              a                             f              Z
-         2264.0        X_-pi/4             99              2              m                             f              Z
-         2264.0        Z_-pi/4            110              2              a                             f              Z
-         2264.0        X_-pi/4            113              2              m                             f              Z
-         2264.0        Z_-pi/4            131              2              a                             f              Z
-         2264.0        X_-pi/4            134              2              m                             f              Z
-         2264.0        Z_-pi/4            145              2              a                             f              Z
-         2264.0        X_-pi/4            148              2              m                             f              Z
-         2264.0        Z_-pi/4            180              2              a                             f              Z
-         2264.0        X_-pi/4            183              2              m                             f              Z
-         2264.0        Z_-pi/4            194              2              a                             f              Z
-         2264.0        X_-pi/4            197              2              m                             f              Z
-         2264.0        Z_-pi/4            215              2              a                             s              Z
-         2264.0        X_-pi/4            218              2              m                             s              Z
-         2264.0        Z_-pi/4            229              2              a                             s              Z
-         2264.0        X_-pi/4            232              2              m                             s              Z
-         2264.0        Z_-pi/4             57              2              m                             f              X
-         2264.0        X_-pi/4             54              2              a                             f              X
-         2264.0        Z_-pi/4             71              2              m                             f              X
-         2264.0        X_-pi/4             68              2              a                             f              X
-         2264.0        Z_-pi/4             92              2              m                             f              X
-         2264.0        X_-pi/4             89              2              a                             f              X
-         2264.0        Z_-pi/4            106              2              m                             f              X
-         2264.0        X_-pi/4            103              2              a                             f              X
-         2264.0        Z_-pi/4            141              2              m                             f              X
-         2264.0        X_-pi/4            138              2              a                             f              X
-         2264.0        Z_-pi/4            155              2              m                             f              X
-         2264.0        X_-pi/4            152              2              a                             f              X
-         2264.0        Z_-pi/4            176              2              m                             f              X
-         2264.0        X_-pi/4            173              2              a                             f              X
-         2264.0        Z_-pi/4            190              2              m                             f              X
-         2264.0        X_-pi/4            187              2              a                             f              X
-         2264.0        Z_-pi/4            120              2              m                             e              X
-         2264.0        X_-pi/4            117              2              a                             e              X
-         2264.0        Z_-pi/4            204              2              m                             e              X
-         2264.0        X_-pi/4            201              2              a                             e              X
-         2274.0        Z_-pi/4             50              2              m                             f              Z
-         2274.0        Z_-pi/4             64              2              m                             f              Z
-         2274.0        Z_-pi/4             99              2              m                             f              Z
-         2274.0        Z_-pi/4            113              2              m                             f              Z
-         2274.0        Z_-pi/4            134              2              m                             f              Z
-         2274.0        Z_-pi/4            148              2              m                             f              Z
-         2274.0        Z_-pi/4            183              2              m                             f              Z
-         2274.0        Z_-pi/4            197              2              m                             f              Z
-         2274.0        Z_-pi/4            218              2              m                             s              Z
-         2274.0        Z_-pi/4            232              2              m                             s              Z
-         2274.0        Z_-pi/4             54              2              a                             f              X
-         2274.0        Z_-pi/4             68              2              a                             f              X
-         2274.0        Z_-pi/4             89              2              a                             f              X
-         2274.0        Z_-pi/4            103              2              a                             f              X
-         2274.0        Z_-pi/4            138              2              a                             f              X
-         2274.0        Z_-pi/4            152              2              a                             f              X
-         2274.0        Z_-pi/4            173              2              a                             f              X
-         2274.0        Z_-pi/4            187              2              a                             f              X
-         2274.0        Z_-pi/4            117              2              a                             e              X
-         2274.0        Z_-pi/4            201              2              a                             e              X
-         2277.0        Y_-pi/4             50              3              m                             f              Z
-         2277.0        Y_-pi/4             64              3              m                             f              Z
-         2277.0        Y_-pi/4             99              3              m                             f              Z
-         2277.0        Y_-pi/4            113              3              m                             f              Z
-         2277.0        Y_-pi/4            134              3              m                             f              Z
-         2277.0        Y_-pi/4            148              3              m                             f              Z
-         2277.0        Y_-pi/4            183              3              m                             f              Z
-         2277.0        Y_-pi/4            197              3              m                             f              Z
-         2277.0        Y_-pi/4            218              3              m                             s              Z
-         2277.0        Y_-pi/4            232              3              m                             s              Z
-         2277.0        Y_-pi/4             96              3              c                             f              X
-         2277.0        Y_-pi/4            110              3              c                             f              X
-         2277.0        Y_-pi/4            131              3              c                             f              X
-         2277.0        Y_-pi/4            145              3              c                             f              X
-         2277.0        Y_-pi/4            180              3              c                             f              X
-         2277.0        Y_-pi/4            194              3              c                             f              X
-         2277.0        Y_-pi/4            215              3              c                             f              X
-         2277.0        Y_-pi/4            229              3              c                             f              X
-         2277.0        Y_-pi/4            159              3              c                             e              X
-         2277.0        Y_-pi/4            243              3              c                             e              X
-         2287.0           Move          50,51              3              m                             f              Z
-         2287.0           Move          64,65              3              m                             f              Z
-         2287.0           Move         99,100              3              m                             f              Z
-         2287.0           Move        113,114              3              m                             f              Z
-         2287.0           Move        134,135              3              m                             f              Z
-         2287.0           Move        148,149              3              m                             f              Z
-         2287.0           Move        183,184              3              m                             f              Z
-         2287.0           Move        197,198              3              m                             f              Z
-         2287.0           Move        218,219              3              m                             s              Z
-         2287.0           Move        232,233              3              m                             s              Z
-         2287.0           Move          57,56              3              m                             f              X
-         2287.0           Move          71,70              3              m                             f              X
-         2287.0           Move          92,91              3              m                             f              X
-         2287.0           Move        106,105              3              m                             f              X
-         2287.0           Move        141,140              3              m                             f              X
-         2287.0           Move        155,154              3              m                             f              X
-         2287.0           Move        176,175              3              m                             f              X
-         2287.0           Move        190,189              3              m                             f              X
-         2287.0           Move        120,119              3              m                             e              X
-         2287.0           Move        204,203              3              m                             e              X
-         2292.2           Move          51,53              3              m                             f              Z
-         2292.2           Move          65,67              3              m                             f              Z
-         2292.2           Move        100,102              3              m                             f              Z
-         2292.2           Move        114,116              3              m                             f              Z
-         2292.2           Move        135,137              3              m                             f              Z
-         2292.2           Move        149,151              3              m                             f              Z
-         2292.2           Move        184,186              3              m                             f              Z
-         2292.2           Move        198,200              3              m                             f              Z
-         2292.2           Move        219,221              3              m                             s              Z
-         2292.2           Move        233,235              3              m                             s              Z
-         2292.2           Move        119,160              3              m                             e              X
-         2292.2           Move        203,244              3              m                             e              X
-         2402.5           Move          56,97              3              m                             f              X
-         2402.5           Move         70,111              3              m                             f              X
-         2402.5           Move         91,132              3              m                             f              X
-         2402.5           Move        105,146              3              m                             f              X
-         2402.5           Move        140,181              3              m                             f              X
-         2402.5           Move        154,195              3              m                             f              X
-         2402.5           Move        175,216              3              m                             f              X
-         2402.5           Move        189,230              3              m                             f              X
-         2512.8             ZZ          54,53              3              b              m              f              Z
-         2512.8             ZZ          68,67              3              b              m              f              Z
-         2512.8             ZZ        103,102              3              b              m              f              Z
-         2512.8             ZZ        117,116              3              b              m              f              Z
-         2512.8             ZZ        138,137              3              b              m              f              Z
-         2512.8             ZZ        152,151              3              b              m              f              Z
-         2512.8             ZZ        187,186              3              b              m              f              Z
-         2512.8             ZZ        201,200              3              b              m              f              Z
-         2512.8             ZZ        222,221              3              b              m              s              Z
-         2512.8             ZZ        236,235              3              b              m              s              Z
-         2512.8             ZZ          96,97              3              c              m              f              X
-         2512.8             ZZ        110,111              3              c              m              f              X
-         2512.8             ZZ        131,132              3              c              m              f              X
-         2512.8             ZZ        145,146              3              c              m              f              X
-         2512.8             ZZ        180,181              3              c              m              f              X
-         2512.8             ZZ        194,195              3              c              m              f              X
-         2512.8             ZZ        215,216              3              c              m              f              X
-         2512.8             ZZ        229,230              3              c              m              f              X
-         2512.8             ZZ        159,160              3              c              m              e              X
-         2512.8             ZZ        243,244              3              c              m              e              X
-         4512.8           Move          53,51              3              m                             f              Z
-         4512.8           Move          67,65              3              m                             f              Z
-         4512.8           Move        102,100              3              m                             f              Z
-         4512.8           Move        116,114              3              m                             f              Z
-         4512.8           Move        137,135              3              m                             f              Z
-         4512.8           Move        151,149              3              m                             f              Z
-         4512.8           Move        186,184              3              m                             f              Z
-         4512.8           Move        200,198              3              m                             f              Z
-         4512.8           Move        221,219              3              m                             s              Z
-         4512.8           Move        235,233              3              m                             s              Z
-         4512.8           Move        160,119              3              m                             e              X
-         4512.8           Move        244,203              3              m                             e              X
-         4623.0           Move          97,56              3              m                             f              X
-         4623.0           Move         111,70              3              m                             f              X
-         4623.0           Move         132,91              3              m                             f              X
-         4623.0           Move        146,105              3              m                             f              X
-         4623.0           Move        181,140              3              m                             f              X
-         4623.0           Move        195,154              3              m                             f              X
-         4623.0           Move        216,175              3              m                             f              X
-         4623.0           Move        230,189              3              m                             f              X
-         4733.2           Move          51,50              3              m                             f              Z
-         4733.2           Move          65,64              3              m                             f              Z
-         4733.2           Move         100,99              3              m                             f              Z
-         4733.2           Move        114,113              3              m                             f              Z
-         4733.2           Move        135,134              3              m                             f              Z
-         4733.2           Move        149,148              3              m                             f              Z
-         4733.2           Move        184,183              3              m                             f              Z
-         4733.2           Move        198,197              3              m                             f              Z
-         4733.2           Move        219,218              3              m                             s              Z
-         4733.2           Move        233,232              3              m                             s              Z
-         4733.2           Move          56,57              3              m                             f              X
-         4733.2           Move          70,71              3              m                             f              X
-         4733.2           Move          91,92              3              m                             f              X
-         4733.2           Move        105,106              3              m                             f              X
-         4733.2           Move        140,141              3              m                             f              X
-         4733.2           Move        154,155              3              m                             f              X
-         4733.2           Move        175,176              3              m                             f              X
-         4733.2           Move        189,190              3              m                             f              X
-         4733.2           Move        119,120              3              m                             e              X
-         4733.2           Move        203,204              3              m                             e              X
-         4738.5        Z_-pi/4             54              3              b                             f              Z
-         4738.5        X_-pi/4             50              3              m                             f              Z
-         4738.5        Z_-pi/4             68              3              b                             f              Z
-         4738.5        X_-pi/4             64              3              m                             f              Z
-         4738.5        Z_-pi/4            103              3              b                             f              Z
-         4738.5        X_-pi/4             99              3              m                             f              Z
-         4738.5        Z_-pi/4            117              3              b                             f              Z
-         4738.5        X_-pi/4            113              3              m                             f              Z
-         4738.5        Z_-pi/4            138              3              b                             f              Z
-         4738.5        X_-pi/4            134              3              m                             f              Z
-         4738.5        Z_-pi/4            152              3              b                             f              Z
-         4738.5        X_-pi/4            148              3              m                             f              Z
-         4738.5        Z_-pi/4            187              3              b                             f              Z
-         4738.5        X_-pi/4            183              3              m                             f              Z
-         4738.5        Z_-pi/4            201              3              b                             f              Z
-         4738.5        X_-pi/4            197              3              m                             f              Z
-         4738.5        Z_-pi/4            222              3              b                             s              Z
-         4738.5        X_-pi/4            218              3              m                             s              Z
-         4738.5        Z_-pi/4            236              3              b                             s              Z
-         4738.5        X_-pi/4            232              3              m                             s              Z
-         4738.5        Z_-pi/4             57              3              m                             f              X
-         4738.5        X_-pi/4             96              3              c                             f              X
-         4738.5        Z_-pi/4             71              3              m                             f              X
-         4738.5        X_-pi/4            110              3              c                             f              X
-         4738.5        Z_-pi/4             92              3              m                             f              X
-         4738.5        X_-pi/4            131              3              c                             f              X
-         4738.5        Z_-pi/4            106              3              m                             f              X
-         4738.5        X_-pi/4            145              3              c                             f              X
-         4738.5        Z_-pi/4            141              3              m                             f              X
-         4738.5        X_-pi/4            180              3              c                             f              X
-         4738.5        Z_-pi/4            155              3              m                             f              X
-         4738.5        X_-pi/4            194              3              c                             f              X
-         4738.5        Z_-pi/4            176              3              m                             f              X
-         4738.5        X_-pi/4            215              3              c                             f              X
-         4738.5        Z_-pi/4            190              3              m                             f              X
-         4738.5        X_-pi/4            229              3              c                             f              X
-         4738.5        Z_-pi/4            120              3              m                             e              X
-         4738.5        X_-pi/4            159              3              c                             e              X
-         4738.5        Z_-pi/4            204              3              m                             e              X
-         4738.5        X_-pi/4            243              3              c                             e              X
-         4748.5        Z_-pi/4             50              3              m                             f              Z
-         4748.5        Z_-pi/4             64              3              m                             f              Z
-         4748.5        Z_-pi/4             99              3              m                             f              Z
-         4748.5        Z_-pi/4            113              3              m                             f              Z
-         4748.5        Z_-pi/4            134              3              m                             f              Z
-         4748.5        Z_-pi/4            148              3              m                             f              Z
-         4748.5        Z_-pi/4            183              3              m                             f              Z
-         4748.5        Z_-pi/4            197              3              m                             f              Z
-         4748.5        Z_-pi/4            218              3              m                             s              Z
-         4748.5        Z_-pi/4            232              3              m                             s              Z
-         4748.5        Z_-pi/4             96              3              c                             f              X
-         4748.5        Z_-pi/4            110              3              c                             f              X
-         4748.5        Z_-pi/4            131              3              c                             f              X
-         4748.5        Z_-pi/4            145              3              c                             f              X
-         4748.5        Z_-pi/4            180              3              c                             f              X
-         4748.5        Z_-pi/4            194              3              c                             f              X
-         4748.5        Z_-pi/4            215              3              c                             f              X
-         4748.5        Z_-pi/4            229              3              c                             f              X
-         4748.5        Z_-pi/4            159              3              c                             e              X
-         4748.5        Z_-pi/4            243              3              c                             e              X
-         4751.5        Y_-pi/4             50              4              m                             f              Z
-         4751.5        Y_-pi/4             64              4              m                             f              Z
-         4751.5        Y_-pi/4             99              4              m                             f              Z
-         4751.5        Y_-pi/4            113              4              m                             f              Z
-         4751.5        Y_-pi/4            134              4              m                             f              Z
-         4751.5        Y_-pi/4            148              4              m                             f              Z
-         4751.5        Y_-pi/4            183              4              m                             f              Z
-         4751.5        Y_-pi/4            197              4              m                             f              Z
-         4751.5        Y_-pi/4             15              4              m                             n              Z
-         4751.5        Y_-pi/4             29              4              m                             n              Z
-         4751.5        Y_-pi/4             61              4              b                             f              X
-         4751.5        Y_-pi/4             75              4              b                             f              X
-         4751.5        Y_-pi/4             96              4              b                             f              X
-         4751.5        Y_-pi/4            110              4              b                             f              X
-         4751.5        Y_-pi/4            145              4              b                             f              X
-         4751.5        Y_-pi/4            159              4              b                             f              X
-         4751.5        Y_-pi/4            180              4              b                             f              X
-         4751.5        Y_-pi/4            194              4              b                             f              X
-         4751.5        Y_-pi/4             47              4              b                             w              X
-         4751.5        Y_-pi/4            131              4              b                             w              X
-         4761.5           Move          50,49              4              m                             f              Z
-         4761.5           Move          64,63              4              m                             f              Z
-         4761.5           Move          99,98              4              m                             f              Z
-         4761.5           Move        113,112              4              m                             f              Z
-         4761.5           Move        134,133              4              m                             f              Z
-         4761.5           Move        148,147              4              m                             f              Z
-         4761.5           Move        183,182              4              m                             f              Z
-         4761.5           Move        197,196              4              m                             f              Z
-         4761.5           Move          15,14              4              m                             n              Z
-         4761.5           Move          29,28              4              m                             n              Z
-         4761.5           Move          57,58              4              m                             f              X
-         4761.5           Move          71,72              4              m                             f              X
-         4761.5           Move          92,93              4              m                             f              X
-         4761.5           Move        106,107              4              m                             f              X
-         4761.5           Move        141,142              4              m                             f              X
-         4761.5           Move        155,156              4              m                             f              X
-         4761.5           Move        176,177              4              m                             f              X
-         4761.5           Move        190,191              4              m                             f              X
-         4761.5           Move          43,44              4              m                             w              X
-         4761.5           Move        127,128              4              m                             w              X
-         4766.8           Move          49,90              4              m                             f              Z
-         4766.8           Move         63,104              4              m                             f              Z
-         4766.8           Move         98,139              4              m                             f              Z
-         4766.8           Move        112,153              4              m                             f              Z
-         4766.8           Move        133,174              4              m                             f              Z
-         4766.8           Move        147,188              4              m                             f              Z
-         4766.8           Move        182,223              4              m                             f              Z
-         4766.8           Move        196,237              4              m                             f              Z
-         4766.8           Move          14,55              4              m                             n              Z
-         4766.8           Move          28,69              4              m                             n              Z
-         4766.8           Move          44,46              4              m                             w              X
-         4766.8           Move        128,130              4              m                             w              X
-         4877.0           Move          58,60              4              m                             f              X
-         4877.0           Move          72,74              4              m                             f              X
-         4877.0           Move          93,95              4              m                             f              X
-         4877.0           Move        107,109              4              m                             f              X
-         4877.0           Move        142,144              4              m                             f              X
-         4877.0           Move        156,158              4              m                             f              X
-         4877.0           Move        177,179              4              m                             f              X
-         4877.0           Move        191,193              4              m                             f              X
-         4987.2             ZZ          89,90              4              c              m              f              Z
-         4987.2             ZZ        103,104              4              c              m              f              Z
-         4987.2             ZZ        138,139              4              c              m              f              Z
-         4987.2             ZZ        152,153              4              c              m              f              Z
-         4987.2             ZZ        173,174              4              c              m              f              Z
-         4987.2             ZZ        187,188              4              c              m              f              Z
-         4987.2             ZZ        222,223              4              c              m              f              Z
-         4987.2             ZZ        236,237              4              c              m              f              Z
-         4987.2             ZZ          54,55              4              c              m              n              Z
-         4987.2             ZZ          68,69              4              c              m              n              Z
-         4987.2             ZZ          61,60              4              b              m              f              X
-         4987.2             ZZ          75,74              4              b              m              f              X
-         4987.2             ZZ          96,95              4              b              m              f              X
-         4987.2             ZZ        110,109              4              b              m              f              X
-         4987.2             ZZ        145,144              4              b              m              f              X
-         4987.2             ZZ        159,158              4              b              m              f              X
-         4987.2             ZZ        180,179              4              b              m              f              X
-         4987.2             ZZ        194,193              4              b              m              f              X
-         4987.2             ZZ          47,46              4              b              m              w              X
-         4987.2             ZZ        131,130              4              b              m              w              X
-         6987.2           Move          90,49              4              m                             f              Z
-         6987.2           Move         104,63              4              m                             f              Z
-         6987.2           Move         139,98              4              m                             f              Z
-         6987.2           Move        153,112              4              m                             f              Z
-         6987.2           Move        174,133              4              m                             f              Z
-         6987.2           Move        188,147              4              m                             f              Z
-         6987.2           Move        223,182              4              m                             f              Z
-         6987.2           Move        237,196              4              m                             f              Z
-         6987.2           Move          55,14              4              m                             n              Z
-         6987.2           Move          69,28              4              m                             n              Z
-         6987.2           Move          46,44              4              m                             w              X
-         6987.2           Move        130,128              4              m                             w              X
-         7097.5           Move          60,58              4              m                             f              X
-         7097.5           Move          74,72              4              m                             f              X
-         7097.5           Move          95,93              4              m                             f              X
-         7097.5           Move        109,107              4              m                             f              X
-         7097.5           Move        144,142              4              m                             f              X
-         7097.5           Move        158,156              4              m                             f              X
-         7097.5           Move        179,177              4              m                             f              X
-         7097.5           Move        193,191              4              m                             f              X
-         7207.8           Move          49,50              4              m                             f              Z
-         7207.8           Move          63,64              4              m                             f              Z
-         7207.8           Move          98,99              4              m                             f              Z
-         7207.8           Move        112,113              4              m                             f              Z
-         7207.8           Move        133,134              4              m                             f              Z
-         7207.8           Move        147,148              4              m                             f              Z
-         7207.8           Move        182,183              4              m                             f              Z
-         7207.8           Move        196,197              4              m                             f              Z
-         7207.8           Move          14,15              4              m                             n              Z
-         7207.8           Move          28,29              4              m                             n              Z
-         7207.8           Move          58,57              4              m                             f              X
-         7207.8           Move          72,71              4              m                             f              X
-         7207.8           Move          93,92              4              m                             f              X
-         7207.8           Move        107,106              4              m                             f              X
-         7207.8           Move        142,141              4              m                             f              X
-         7207.8           Move        156,155              4              m                             f              X
-         7207.8           Move        177,176              4              m                             f              X
-         7207.8           Move        191,190              4              m                             f              X
-         7207.8           Move          44,43              4              m                             w              X
-         7207.8           Move        128,127              4              m                             w              X
-         7213.0        Z_-pi/4             89              4              c                             f              Z
-         7213.0        X_-pi/4             50              4              m                             f              Z
-         7213.0        Z_-pi/4            103              4              c                             f              Z
-         7213.0        X_-pi/4             64              4              m                             f              Z
-         7213.0        Z_-pi/4            138              4              c                             f              Z
-         7213.0        X_-pi/4             99              4              m                             f              Z
-         7213.0        Z_-pi/4            152              4              c                             f              Z
-         7213.0        X_-pi/4            113              4              m                             f              Z
-         7213.0        Z_-pi/4            173              4              c                             f              Z
-         7213.0        X_-pi/4            134              4              m                             f              Z
-         7213.0        Z_-pi/4            187              4              c                             f              Z
-         7213.0        X_-pi/4            148              4              m                             f              Z
-         7213.0        Z_-pi/4            222              4              c                             f              Z
-         7213.0        X_-pi/4            183              4              m                             f              Z
-         7213.0        Z_-pi/4            236              4              c                             f              Z
-         7213.0        X_-pi/4            197              4              m                             f              Z
-         7213.0        Z_-pi/4             54              4              c                             n              Z
-         7213.0        X_-pi/4             15              4              m                             n              Z
-         7213.0        Z_-pi/4             68              4              c                             n              Z
-         7213.0        X_-pi/4             29              4              m                             n              Z
-         7213.0        Z_-pi/4             57              4              m                             f              X
-         7213.0        X_-pi/4             61              4              b                             f              X
-         7213.0        Z_-pi/4             71              4              m                             f              X
-         7213.0        X_-pi/4             75              4              b                             f              X
-         7213.0        Z_-pi/4             92              4              m                             f              X
-         7213.0        X_-pi/4             96              4              b                             f              X
-         7213.0        Z_-pi/4            106              4              m                             f              X
-         7213.0        X_-pi/4            110              4              b                             f              X
-         7213.0        Z_-pi/4            141              4              m                             f              X
-         7213.0        X_-pi/4            145              4              b                             f              X
-         7213.0        Z_-pi/4            155              4              m                             f              X
-         7213.0        X_-pi/4            159              4              b                             f              X
-         7213.0        Z_-pi/4            176              4              m                             f              X
-         7213.0        X_-pi/4            180              4              b                             f              X
-         7213.0        Z_-pi/4            190              4              m                             f              X
-         7213.0        X_-pi/4            194              4              b                             f              X
-         7213.0        Z_-pi/4             43              4              m                             w              X
-         7213.0        X_-pi/4             47              4              b                             w              X
-         7213.0        Z_-pi/4            127              4              m                             w              X
-         7213.0        X_-pi/4            131              4              b                             w              X
-         7223.0        Z_-pi/4             50              4              m                             f              Z
-         7223.0        Z_-pi/4             64              4              m                             f              Z
-         7223.0        Z_-pi/4             99              4              m                             f              Z
-         7223.0        Z_-pi/4            113              4              m                             f              Z
-         7223.0        Z_-pi/4            134              4              m                             f              Z
-         7223.0        Z_-pi/4            148              4              m                             f              Z
-         7223.0        Z_-pi/4            183              4              m                             f              Z
-         7223.0        Z_-pi/4            197              4              m                             f              Z
-         7223.0        Z_-pi/4             15              4              m                             n              Z
-         7223.0        Z_-pi/4             29              4              m                             n              Z
-         7223.0        Z_-pi/4             61              4              b                             f              X
-         7223.0        Z_-pi/4             75              4              b                             f              X
-         7223.0        Z_-pi/4             96              4              b                             f              X
-         7223.0        Z_-pi/4            110              4              b                             f              X
-         7223.0        Z_-pi/4            145              4              b                             f              X
-         7223.0        Z_-pi/4            159              4              b                             f              X
-         7223.0        Z_-pi/4            180              4              b                             f              X
-         7223.0        Z_-pi/4            194              4              b                             f              X
-         7223.0        Z_-pi/4             47              4              b                             w              X
-         7223.0        Z_-pi/4            131              4              b                             w              X
-         7226.0        Y_-pi/4             50              5              m                             f              Z
-         7226.0        Y_-pi/4             64              5              m                             f              Z
-         7226.0        Y_-pi/4             99              5              m                             f              Z
-         7226.0        Y_-pi/4            113              5              m                             f              Z
-         7226.0        Y_-pi/4            134              5              m                             f              Z
-         7226.0        Y_-pi/4            148              5              m                             f              Z
-         7226.0        Y_-pi/4            183              5              m                             f              Z
-         7226.0        Y_-pi/4            197              5              m                             f              Z
-         7226.0        Y_-pi/4             15              5              m                             n              Z
-         7226.0        Y_-pi/4             29              5              m                             n              Z
-         7226.0        Y_-pi/4            103              5              d                             f              X
-         7226.0        Y_-pi/4            117              5              d                             f              X
-         7226.0        Y_-pi/4            138              5              d                             f              X
-         7226.0        Y_-pi/4            152              5              d                             f              X
-         7226.0        Y_-pi/4            187              5              d                             f              X
-         7226.0        Y_-pi/4            201              5              d                             f              X
-         7226.0        Y_-pi/4            222              5              d                             f              X
-         7226.0        Y_-pi/4            236              5              d                             f              X
-         7226.0        Y_-pi/4             89              5              d                             w              X
-         7226.0        Y_-pi/4            173              5              d                             w              X
-         7236.0           Move          50,49              5              m                             f              Z
-         7236.0           Move          64,63              5              m                             f              Z
-         7236.0           Move          99,98              5              m                             f              Z
-         7236.0           Move        113,112              5              m                             f              Z
-         7236.0           Move        134,133              5              m                             f              Z
-         7236.0           Move        148,147              5              m                             f              Z
-         7236.0           Move        183,182              5              m                             f              Z
-         7236.0           Move        197,196              5              m                             f              Z
-         7236.0           Move          15,14              5              m                             n              Z
-         7236.0           Move          29,28              5              m                             n              Z
-         7236.0           Move          57,56              5              m                             f              X
-         7236.0           Move          71,70              5              m                             f              X
-         7236.0           Move          92,91              5              m                             f              X
-         7236.0           Move        106,105              5              m                             f              X
-         7236.0           Move        141,140              5              m                             f              X
-         7236.0           Move        155,154              5              m                             f              X
-         7236.0           Move        176,175              5              m                             f              X
-         7236.0           Move        190,189              5              m                             f              X
-         7236.0           Move          43,42              5              m                             w              X
-         7236.0           Move        127,126              5              m                             w              X
-         7241.2           Move          49,95              5              m                             f              Z
-         7241.2           Move         63,109              5              m                             f              Z
-         7241.2           Move         98,144              5              m                             f              Z
-         7241.2           Move        112,158              5              m                             f              Z
-         7241.2           Move        133,179              5              m                             f              Z
-         7241.2           Move        147,193              5              m                             f              Z
-         7241.2           Move        182,228              5              m                             f              Z
-         7241.2           Move        196,242              5              m                             f              Z
-         7241.2           Move          14,60              5              m                             n              Z
-         7241.2           Move          28,74              5              m                             n              Z
-         7241.2           Move         56,102              5              m                             f              X
-         7241.2           Move         70,116              5              m                             f              X
-         7241.2           Move         91,137              5              m                             f              X
-         7241.2           Move        105,151              5              m                             f              X
-         7241.2           Move        140,186              5              m                             f              X
-         7241.2           Move        154,200              5              m                             f              X
-         7241.2           Move        175,221              5              m                             f              X
-         7241.2           Move        189,235              5              m                             f              X
-         7241.2           Move          42,88              5              m                             w              X
-         7241.2           Move        126,172              5              m                             w              X
-         7351.5             ZZ          96,95              5              d              m              f              Z
-         7351.5             ZZ        110,109              5              d              m              f              Z
-         7351.5             ZZ        145,144              5              d              m              f              Z
-         7351.5             ZZ        159,158              5              d              m              f              Z
-         7351.5             ZZ        180,179              5              d              m              f              Z
-         7351.5             ZZ        194,193              5              d              m              f              Z
-         7351.5             ZZ        229,228              5              d              m              f              Z
-         7351.5             ZZ        243,242              5              d              m              f              Z
-         7351.5             ZZ          61,60              5              d              m              n              Z
-         7351.5             ZZ          75,74              5              d              m              n              Z
-         7351.5             ZZ        103,102              5              d              m              f              X
-         7351.5             ZZ        117,116              5              d              m              f              X
-         7351.5             ZZ        138,137              5              d              m              f              X
-         7351.5             ZZ        152,151              5              d              m              f              X
-         7351.5             ZZ        187,186              5              d              m              f              X
-         7351.5             ZZ        201,200              5              d              m              f              X
-         7351.5             ZZ        222,221              5              d              m              f              X
-         7351.5             ZZ        236,235              5              d              m              f              X
-         7351.5             ZZ          89,88              5              d              m              w              X
-         7351.5             ZZ        173,172              5              d              m              w              X
-         9351.5           Move          95,49              5              m                             f              Z
-         9351.5           Move         109,63              5              m                             f              Z
-         9351.5           Move         144,98              5              m                             f              Z
-         9351.5           Move        158,112              5              m                             f              Z
-         9351.5           Move        179,133              5              m                             f              Z
-         9351.5           Move        193,147              5              m                             f              Z
-         9351.5           Move        228,182              5              m                             f              Z
-         9351.5           Move        242,196              5              m                             f              Z
-         9351.5           Move          60,14              5              m                             n              Z
-         9351.5           Move          74,28              5              m                             n              Z
-         9351.5           Move         102,56              5              m                             f              X
-         9351.5           Move         116,70              5              m                             f              X
-         9351.5           Move         137,91              5              m                             f              X
-         9351.5           Move        151,105              5              m                             f              X
-         9351.5           Move        186,140              5              m                             f              X
-         9351.5           Move        200,154              5              m                             f              X
-         9351.5           Move        221,175              5              m                             f              X
-         9351.5           Move        235,189              5              m                             f              X
-         9351.5           Move          88,42              5              m                             w              X
-         9351.5           Move        172,126              5              m                             w              X
-         9461.8           Move          49,50              5              m                             f              Z
-         9461.8           Move          63,64              5              m                             f              Z
-         9461.8           Move          98,99              5              m                             f              Z
-         9461.8           Move        112,113              5              m                             f              Z
-         9461.8           Move        133,134              5              m                             f              Z
-         9461.8           Move        147,148              5              m                             f              Z
-         9461.8           Move        182,183              5              m                             f              Z
-         9461.8           Move        196,197              5              m                             f              Z
-         9461.8           Move          14,15              5              m                             n              Z
-         9461.8           Move          28,29              5              m                             n              Z
-         9461.8           Move          56,57              5              m                             f              X
-         9461.8           Move          70,71              5              m                             f              X
-         9461.8           Move          91,92              5              m                             f              X
-         9461.8           Move        105,106              5              m                             f              X
-         9461.8           Move        140,141              5              m                             f              X
-         9461.8           Move        154,155              5              m                             f              X
-         9461.8           Move        175,176              5              m                             f              X
-         9461.8           Move        189,190              5              m                             f              X
-         9461.8           Move          42,43              5              m                             w              X
-         9461.8           Move        126,127              5              m                             w              X
-         9467.0        Z_-pi/4             96              5              d                             f              Z
-         9467.0        X_-pi/4             50              5              m                             f              Z
-         9467.0        Z_-pi/4            110              5              d                             f              Z
-         9467.0        X_-pi/4             64              5              m                             f              Z
-         9467.0        Z_-pi/4            145              5              d                             f              Z
-         9467.0        X_-pi/4             99              5              m                             f              Z
-         9467.0        Z_-pi/4            159              5              d                             f              Z
-         9467.0        X_-pi/4            113              5              m                             f              Z
-         9467.0        Z_-pi/4            180              5              d                             f              Z
-         9467.0        X_-pi/4            134              5              m                             f              Z
-         9467.0        Z_-pi/4            194              5              d                             f              Z
-         9467.0        X_-pi/4            148              5              m                             f              Z
-         9467.0        Z_-pi/4            229              5              d                             f              Z
-         9467.0        X_-pi/4            183              5              m                             f              Z
-         9467.0        Z_-pi/4            243              5              d                             f              Z
-         9467.0        X_-pi/4            197              5              m                             f              Z
-         9467.0        Z_-pi/4             61              5              d                             n              Z
-         9467.0        X_-pi/4             15              5              m                             n              Z
-         9467.0        Z_-pi/4             75              5              d                             n              Z
-         9467.0        X_-pi/4             29              5              m                             n              Z
-         9467.0        Z_-pi/4             57              5              m                             f              X
-         9467.0        X_-pi/4            103              5              d                             f              X
-         9467.0        Z_-pi/4             71              5              m                             f              X
-         9467.0        X_-pi/4            117              5              d                             f              X
-         9467.0        Z_-pi/4             92              5              m                             f              X
-         9467.0        X_-pi/4            138              5              d                             f              X
-         9467.0        Z_-pi/4            106              5              m                             f              X
-         9467.0        X_-pi/4            152              5              d                             f              X
-         9467.0        Z_-pi/4            141              5              m                             f              X
-         9467.0        X_-pi/4            187              5              d                             f              X
-         9467.0        Z_-pi/4            155              5              m                             f              X
-         9467.0        X_-pi/4            201              5              d                             f              X
-         9467.0        Z_-pi/4            176              5              m                             f              X
-         9467.0        X_-pi/4            222              5              d                             f              X
-         9467.0        Z_-pi/4            190              5              m                             f              X
-         9467.0        X_-pi/4            236              5              d                             f              X
-         9467.0        Z_-pi/4             43              5              m                             w              X
-         9467.0        X_-pi/4             89              5              d                             w              X
-         9467.0        Z_-pi/4            127              5              m                             w              X
-         9467.0        X_-pi/4            173              5              d                             w              X
-         9477.0        Z_-pi/4             50              5              m                             f              Z
-         9477.0        Z_-pi/4             64              5              m                             f              Z
-         9477.0        Z_-pi/4             99              5              m                             f              Z
-         9477.0        Z_-pi/4            113              5              m                             f              Z
-         9477.0        Z_-pi/4            134              5              m                             f              Z
-         9477.0        Z_-pi/4            148              5              m                             f              Z
-         9477.0        Z_-pi/4            183              5              m                             f              Z
-         9477.0        Z_-pi/4            197              5              m                             f              Z
-         9477.0        Z_-pi/4             15              5              m                             n              Z
-         9477.0        Z_-pi/4             29              5              m                             n              Z
-         9477.0        Z_-pi/4            103              5              d                             f              X
-         9477.0        Z_-pi/4            117              5              d                             f              X
-         9477.0        Z_-pi/4            138              5              d                             f              X
-         9477.0        Z_-pi/4            152              5              d                             f              X
-         9477.0        Z_-pi/4            187              5              d                             f              X
-         9477.0        Z_-pi/4            201              5              d                             f              X
-         9477.0        Z_-pi/4            222              5              d                             f              X
-         9477.0        Z_-pi/4            236              5              d                             f              X
-         9477.0        Z_-pi/4             89              5              d                             w              X
-         9477.0        Z_-pi/4            173              5              d                             w              X
-         9480.0        Y_-pi/4             57              6              m                             f              X
-         9480.0        Y_-pi/4             71              6              m                             f              X
-         9480.0        Y_-pi/4             92              6              m                             f              X
-         9480.0        Y_-pi/4            106              6              m                             f              X
-         9480.0        Y_-pi/4            141              6              m                             f              X
-         9480.0        Y_-pi/4            155              6              m                             f              X
-         9480.0        Y_-pi/4            176              6              m                             f              X
-         9480.0        Y_-pi/4            190              6              m                             f              X
-         9480.0        Y_-pi/4             43              6              m                             w              X
-         9480.0        Y_-pi/4            127              6              m                             w              X
-         9480.0        Y_-pi/4            120              6              m                             e              X
-         9480.0        Y_-pi/4            204              6              m                             e              X
-         9490.0         Z_pi/2             57              6              m                             f              X
-         9490.0         Z_pi/2             71              6              m                             f              X
-         9490.0         Z_pi/2             92              6              m                             f              X
-         9490.0         Z_pi/2            106              6              m                             f              X
-         9490.0         Z_pi/2            141              6              m                             f              X
-         9490.0         Z_pi/2            155              6              m                             f              X
-         9490.0         Z_pi/2            176              6              m                             f              X
-         9490.0         Z_pi/2            190              6              m                             f              X
-         9490.0         Z_pi/2             43              6              m                             w              X
-         9490.0         Z_pi/2            127              6              m                             w              X
-         9490.0         Z_pi/2            120              6              m                             e              X
-         9490.0         Z_pi/2            204              6              m                             e              X
-         9493.0      Measure_Z             50              7              m                             f              Z
-         9493.0      Measure_Z             64              7              m                             f              Z
-         9493.0      Measure_Z             99              7              m                             f              Z
-         9493.0      Measure_Z            113              7              m                             f              Z
-         9493.0      Measure_Z            134              7              m                             f              Z
-         9493.0      Measure_Z            148              7              m                             f              Z
-         9493.0      Measure_Z            183              7              m                             f              Z
-         9493.0      Measure_Z            197              7              m                             f              Z
-         9493.0      Measure_Z             15              7              m                             n              Z
-         9493.0      Measure_Z            218              7              m                             s              Z
-         9493.0      Measure_Z             29              7              m                             n              Z
-         9493.0      Measure_Z            232              7              m                             s              Z
-         9493.0      Measure_Z             57              7              m                             f              X
-         9493.0      Measure_Z             71              7              m                             f              X
-         9493.0      Measure_Z             92              7              m                             f              X
-         9493.0      Measure_Z            106              7              m                             f              X
-         9493.0      Measure_Z            141              7              m                             f              X
-         9493.0      Measure_Z            155              7              m                             f              X
-         9493.0      Measure_Z            176              7              m                             f              X
-         9493.0      Measure_Z            190              7              m                             f              X
-         9493.0      Measure_Z             43              7              m                             w              X
-         9493.0      Measure_Z            127              7              m                             w              X
-         9493.0      Measure_Z            120              7              m                             e              X
-         9493.0      Measure_Z            204              7              m                             e              X
+           -1.0       Qubit_at            246
+           -1.0       Qubit_at            250
+            0.0      Prepare_Z             47
+            0.0      Prepare_Z             54
+            0.0      Prepare_Z             61
+            0.0      Prepare_Z             68
+            0.0      Prepare_Z             75
+            0.0      Prepare_Z             89
+            0.0      Prepare_Z             96
+            0.0      Prepare_Z            103
+            0.0      Prepare_Z            110
+            0.0      Prepare_Z            117
+            0.0      Prepare_Z            131
+            0.0      Prepare_Z            138
+            0.0      Prepare_Z            145
+            0.0      Prepare_Z            152
+            0.0      Prepare_Z            159
+            0.0      Prepare_Z            173
+            0.0      Prepare_Z            180
+            0.0      Prepare_Z            187
+            0.0      Prepare_Z            194
+            0.0      Prepare_Z            201
+            0.0      Prepare_Z            215
+            0.0      Prepare_Z            222
+            0.0      Prepare_Z            229
+            0.0      Prepare_Z            236
+            0.0      Prepare_Z            243
+            0.0      Prepare_Z             50
+            0.0      Prepare_Z             64
+            0.0      Prepare_Z             99
+            0.0      Prepare_Z            113
+            0.0      Prepare_Z            134
+            0.0      Prepare_Z            148
+            0.0      Prepare_Z            183
+            0.0      Prepare_Z            197
+            0.0      Prepare_Z             15
+            0.0      Prepare_Z            218
+            0.0      Prepare_Z             29
+            0.0      Prepare_Z            232
+            0.0      Prepare_Z             57
+            0.0      Prepare_Z             71
+            0.0      Prepare_Z             92
+            0.0      Prepare_Z            106
+            0.0      Prepare_Z            141
+            0.0      Prepare_Z            155
+            0.0      Prepare_Z            176
+            0.0      Prepare_Z            190
+            0.0      Prepare_Z             43
+            0.0      Prepare_Z            127
+            0.0      Prepare_Z            120
+            0.0      Prepare_Z            204
+           10.0        Y_-pi/4             57
+           10.0        Y_-pi/4             71
+           10.0        Y_-pi/4             92
+           10.0        Y_-pi/4            106
+           10.0        Y_-pi/4            141
+           10.0        Y_-pi/4            155
+           10.0        Y_-pi/4            176
+           10.0        Y_-pi/4            190
+           10.0        Y_-pi/4             43
+           10.0        Y_-pi/4            127
+           10.0        Y_-pi/4            120
+           10.0        Y_-pi/4            204
+           20.0         Z_pi/2             57
+           20.0         Z_pi/2             71
+           20.0         Z_pi/2             92
+           20.0         Z_pi/2            106
+           20.0         Z_pi/2            141
+           20.0         Z_pi/2            155
+           20.0         Z_pi/2            176
+           20.0         Z_pi/2            190
+           20.0         Z_pi/2             43
+           20.0         Z_pi/2            127
+           20.0         Z_pi/2            120
+           20.0         Z_pi/2            204
+           23.0        Y_-pi/4             50
+           23.0        Y_-pi/4             64
+           23.0        Y_-pi/4             99
+           23.0        Y_-pi/4            113
+           23.0        Y_-pi/4            134
+           23.0        Y_-pi/4            148
+           23.0        Y_-pi/4            183
+           23.0        Y_-pi/4            197
+           23.0        Y_-pi/4            218
+           23.0        Y_-pi/4            232
+           23.0        Y_-pi/4             54
+           23.0        Y_-pi/4             68
+           23.0        Y_-pi/4             89
+           23.0        Y_-pi/4            103
+           23.0        Y_-pi/4            138
+           23.0        Y_-pi/4            152
+           23.0        Y_-pi/4            173
+           23.0        Y_-pi/4            187
+           23.0        Y_-pi/4            117
+           23.0        Y_-pi/4            201
+           33.0           Move          50,51
+           33.0           Move          64,65
+           33.0           Move         99,100
+           33.0           Move        113,114
+           33.0           Move        134,135
+           33.0           Move        148,149
+           33.0           Move        183,184
+           33.0           Move        197,198
+           33.0           Move        218,219
+           33.0           Move        232,233
+           33.0           Move          57,58
+           33.0           Move          71,72
+           33.0           Move          92,93
+           33.0           Move        106,107
+           33.0           Move        141,142
+           33.0           Move        155,156
+           33.0           Move        176,177
+           33.0           Move        190,191
+           33.0           Move        120,121
+           33.0           Move        204,205
+           38.2           Move          51,48
+           38.2           Move          65,62
+           38.2           Move         100,97
+           38.2           Move        114,111
+           38.2           Move        135,132
+           38.2           Move        149,146
+           38.2           Move        184,181
+           38.2           Move        198,195
+           38.2           Move        219,216
+           38.2           Move        233,230
+           38.2           Move          58,55
+           38.2           Move          72,69
+           38.2           Move          93,90
+           38.2           Move        107,104
+           38.2           Move        142,139
+           38.2           Move        156,153
+           38.2           Move        177,174
+           38.2           Move        191,188
+           38.2           Move        121,118
+           38.2           Move        205,202
+          148.5             ZZ          47,48
+          148.5             ZZ          61,62
+          148.5             ZZ          96,97
+          148.5             ZZ        110,111
+          148.5             ZZ        131,132
+          148.5             ZZ        145,146
+          148.5             ZZ        180,181
+          148.5             ZZ        194,195
+          148.5             ZZ        215,216
+          148.5             ZZ        229,230
+          148.5             ZZ          54,55
+          148.5             ZZ          68,69
+          148.5             ZZ          89,90
+          148.5             ZZ        103,104
+          148.5             ZZ        138,139
+          148.5             ZZ        152,153
+          148.5             ZZ        173,174
+          148.5             ZZ        187,188
+          148.5             ZZ        117,118
+          148.5             ZZ        201,202
+         2148.5           Move          48,51
+         2148.5           Move          62,65
+         2148.5           Move         97,100
+         2148.5           Move        111,114
+         2148.5           Move        132,135
+         2148.5           Move        146,149
+         2148.5           Move        181,184
+         2148.5           Move        195,198
+         2148.5           Move        216,219
+         2148.5           Move        230,233
+         2148.5           Move          55,58
+         2148.5           Move          69,72
+         2148.5           Move          90,93
+         2148.5           Move        104,107
+         2148.5           Move        139,142
+         2148.5           Move        153,156
+         2148.5           Move        174,177
+         2148.5           Move        188,191
+         2148.5           Move        118,121
+         2148.5           Move        202,205
+         2258.8           Move          51,50
+         2258.8           Move          65,64
+         2258.8           Move         100,99
+         2258.8           Move        114,113
+         2258.8           Move        135,134
+         2258.8           Move        149,148
+         2258.8           Move        184,183
+         2258.8           Move        198,197
+         2258.8           Move        219,218
+         2258.8           Move        233,232
+         2258.8           Move          58,57
+         2258.8           Move          72,71
+         2258.8           Move          93,92
+         2258.8           Move        107,106
+         2258.8           Move        142,141
+         2258.8           Move        156,155
+         2258.8           Move        177,176
+         2258.8           Move        191,190
+         2258.8           Move        121,120
+         2258.8           Move        205,204
+         2264.0        Z_-pi/4             47
+         2264.0        X_-pi/4             50
+         2264.0        Z_-pi/4             61
+         2264.0        X_-pi/4             64
+         2264.0        Z_-pi/4             96
+         2264.0        X_-pi/4             99
+         2264.0        Z_-pi/4            110
+         2264.0        X_-pi/4            113
+         2264.0        Z_-pi/4            131
+         2264.0        X_-pi/4            134
+         2264.0        Z_-pi/4            145
+         2264.0        X_-pi/4            148
+         2264.0        Z_-pi/4            180
+         2264.0        X_-pi/4            183
+         2264.0        Z_-pi/4            194
+         2264.0        X_-pi/4            197
+         2264.0        Z_-pi/4            215
+         2264.0        X_-pi/4            218
+         2264.0        Z_-pi/4            229
+         2264.0        X_-pi/4            232
+         2264.0        Z_-pi/4             57
+         2264.0        X_-pi/4             54
+         2264.0        Z_-pi/4             71
+         2264.0        X_-pi/4             68
+         2264.0        Z_-pi/4             92
+         2264.0        X_-pi/4             89
+         2264.0        Z_-pi/4            106
+         2264.0        X_-pi/4            103
+         2264.0        Z_-pi/4            141
+         2264.0        X_-pi/4            138
+         2264.0        Z_-pi/4            155
+         2264.0        X_-pi/4            152
+         2264.0        Z_-pi/4            176
+         2264.0        X_-pi/4            173
+         2264.0        Z_-pi/4            190
+         2264.0        X_-pi/4            187
+         2264.0        Z_-pi/4            120
+         2264.0        X_-pi/4            117
+         2264.0        Z_-pi/4            204
+         2264.0        X_-pi/4            201
+         2274.0        Z_-pi/4             50
+         2274.0        Z_-pi/4             64
+         2274.0        Z_-pi/4             99
+         2274.0        Z_-pi/4            113
+         2274.0        Z_-pi/4            134
+         2274.0        Z_-pi/4            148
+         2274.0        Z_-pi/4            183
+         2274.0        Z_-pi/4            197
+         2274.0        Z_-pi/4            218
+         2274.0        Z_-pi/4            232
+         2274.0        Z_-pi/4             54
+         2274.0        Z_-pi/4             68
+         2274.0        Z_-pi/4             89
+         2274.0        Z_-pi/4            103
+         2274.0        Z_-pi/4            138
+         2274.0        Z_-pi/4            152
+         2274.0        Z_-pi/4            173
+         2274.0        Z_-pi/4            187
+         2274.0        Z_-pi/4            117
+         2274.0        Z_-pi/4            201
+         2277.0        Y_-pi/4             50
+         2277.0        Y_-pi/4             64
+         2277.0        Y_-pi/4             99
+         2277.0        Y_-pi/4            113
+         2277.0        Y_-pi/4            134
+         2277.0        Y_-pi/4            148
+         2277.0        Y_-pi/4            183
+         2277.0        Y_-pi/4            197
+         2277.0        Y_-pi/4            218
+         2277.0        Y_-pi/4            232
+         2277.0        Y_-pi/4             96
+         2277.0        Y_-pi/4            110
+         2277.0        Y_-pi/4            131
+         2277.0        Y_-pi/4            145
+         2277.0        Y_-pi/4            180
+         2277.0        Y_-pi/4            194
+         2277.0        Y_-pi/4            215
+         2277.0        Y_-pi/4            229
+         2277.0        Y_-pi/4            159
+         2277.0        Y_-pi/4            243
+         2287.0           Move          50,51
+         2287.0           Move          64,65
+         2287.0           Move         99,100
+         2287.0           Move        113,114
+         2287.0           Move        134,135
+         2287.0           Move        148,149
+         2287.0           Move        183,184
+         2287.0           Move        197,198
+         2287.0           Move        218,219
+         2287.0           Move        232,233
+         2287.0           Move          57,56
+         2287.0           Move          71,70
+         2287.0           Move          92,91
+         2287.0           Move        106,105
+         2287.0           Move        141,140
+         2287.0           Move        155,154
+         2287.0           Move        176,175
+         2287.0           Move        190,189
+         2287.0           Move        120,119
+         2287.0           Move        204,203
+         2292.2           Move          51,53
+         2292.2           Move          65,67
+         2292.2           Move        100,102
+         2292.2           Move        114,116
+         2292.2           Move        135,137
+         2292.2           Move        149,151
+         2292.2           Move        184,186
+         2292.2           Move        198,200
+         2292.2           Move        219,221
+         2292.2           Move        233,235
+         2292.2           Move        119,160
+         2292.2           Move        203,244
+         2402.5           Move          56,97
+         2402.5           Move         70,111
+         2402.5           Move         91,132
+         2402.5           Move        105,146
+         2402.5           Move        140,181
+         2402.5           Move        154,195
+         2402.5           Move        175,216
+         2402.5           Move        189,230
+         2512.8             ZZ          54,53
+         2512.8             ZZ          68,67
+         2512.8             ZZ        103,102
+         2512.8             ZZ        117,116
+         2512.8             ZZ        138,137
+         2512.8             ZZ        152,151
+         2512.8             ZZ        187,186
+         2512.8             ZZ        201,200
+         2512.8             ZZ        222,221
+         2512.8             ZZ        236,235
+         2512.8             ZZ          96,97
+         2512.8             ZZ        110,111
+         2512.8             ZZ        131,132
+         2512.8             ZZ        145,146
+         2512.8             ZZ        180,181
+         2512.8             ZZ        194,195
+         2512.8             ZZ        215,216
+         2512.8             ZZ        229,230
+         2512.8             ZZ        159,160
+         2512.8             ZZ        243,244
+         4512.8           Move          53,51
+         4512.8           Move          67,65
+         4512.8           Move        102,100
+         4512.8           Move        116,114
+         4512.8           Move        137,135
+         4512.8           Move        151,149
+         4512.8           Move        186,184
+         4512.8           Move        200,198
+         4512.8           Move        221,219
+         4512.8           Move        235,233
+         4512.8           Move        160,119
+         4512.8           Move        244,203
+         4623.0           Move          97,56
+         4623.0           Move         111,70
+         4623.0           Move         132,91
+         4623.0           Move        146,105
+         4623.0           Move        181,140
+         4623.0           Move        195,154
+         4623.0           Move        216,175
+         4623.0           Move        230,189
+         4733.2           Move          51,50
+         4733.2           Move          65,64
+         4733.2           Move         100,99
+         4733.2           Move        114,113
+         4733.2           Move        135,134
+         4733.2           Move        149,148
+         4733.2           Move        184,183
+         4733.2           Move        198,197
+         4733.2           Move        219,218
+         4733.2           Move        233,232
+         4733.2           Move          56,57
+         4733.2           Move          70,71
+         4733.2           Move          91,92
+         4733.2           Move        105,106
+         4733.2           Move        140,141
+         4733.2           Move        154,155
+         4733.2           Move        175,176
+         4733.2           Move        189,190
+         4733.2           Move        119,120
+         4733.2           Move        203,204
+         4738.5        Z_-pi/4             54
+         4738.5        X_-pi/4             50
+         4738.5        Z_-pi/4             68
+         4738.5        X_-pi/4             64
+         4738.5        Z_-pi/4            103
+         4738.5        X_-pi/4             99
+         4738.5        Z_-pi/4            117
+         4738.5        X_-pi/4            113
+         4738.5        Z_-pi/4            138
+         4738.5        X_-pi/4            134
+         4738.5        Z_-pi/4            152
+         4738.5        X_-pi/4            148
+         4738.5        Z_-pi/4            187
+         4738.5        X_-pi/4            183
+         4738.5        Z_-pi/4            201
+         4738.5        X_-pi/4            197
+         4738.5        Z_-pi/4            222
+         4738.5        X_-pi/4            218
+         4738.5        Z_-pi/4            236
+         4738.5        X_-pi/4            232
+         4738.5        Z_-pi/4             57
+         4738.5        X_-pi/4             96
+         4738.5        Z_-pi/4             71
+         4738.5        X_-pi/4            110
+         4738.5        Z_-pi/4             92
+         4738.5        X_-pi/4            131
+         4738.5        Z_-pi/4            106
+         4738.5        X_-pi/4            145
+         4738.5        Z_-pi/4            141
+         4738.5        X_-pi/4            180
+         4738.5        Z_-pi/4            155
+         4738.5        X_-pi/4            194
+         4738.5        Z_-pi/4            176
+         4738.5        X_-pi/4            215
+         4738.5        Z_-pi/4            190
+         4738.5        X_-pi/4            229
+         4738.5        Z_-pi/4            120
+         4738.5        X_-pi/4            159
+         4738.5        Z_-pi/4            204
+         4738.5        X_-pi/4            243
+         4748.5        Z_-pi/4             50
+         4748.5        Z_-pi/4             64
+         4748.5        Z_-pi/4             99
+         4748.5        Z_-pi/4            113
+         4748.5        Z_-pi/4            134
+         4748.5        Z_-pi/4            148
+         4748.5        Z_-pi/4            183
+         4748.5        Z_-pi/4            197
+         4748.5        Z_-pi/4            218
+         4748.5        Z_-pi/4            232
+         4748.5        Z_-pi/4             96
+         4748.5        Z_-pi/4            110
+         4748.5        Z_-pi/4            131
+         4748.5        Z_-pi/4            145
+         4748.5        Z_-pi/4            180
+         4748.5        Z_-pi/4            194
+         4748.5        Z_-pi/4            215
+         4748.5        Z_-pi/4            229
+         4748.5        Z_-pi/4            159
+         4748.5        Z_-pi/4            243
+         4751.5        Y_-pi/4             50
+         4751.5        Y_-pi/4             64
+         4751.5        Y_-pi/4             99
+         4751.5        Y_-pi/4            113
+         4751.5        Y_-pi/4            134
+         4751.5        Y_-pi/4            148
+         4751.5        Y_-pi/4            183
+         4751.5        Y_-pi/4            197
+         4751.5        Y_-pi/4             15
+         4751.5        Y_-pi/4             29
+         4751.5        Y_-pi/4             61
+         4751.5        Y_-pi/4             75
+         4751.5        Y_-pi/4             96
+         4751.5        Y_-pi/4            110
+         4751.5        Y_-pi/4            145
+         4751.5        Y_-pi/4            159
+         4751.5        Y_-pi/4            180
+         4751.5        Y_-pi/4            194
+         4751.5        Y_-pi/4             47
+         4751.5        Y_-pi/4            131
+         4761.5           Move          50,49
+         4761.5           Move          64,63
+         4761.5           Move          99,98
+         4761.5           Move        113,112
+         4761.5           Move        134,133
+         4761.5           Move        148,147
+         4761.5           Move        183,182
+         4761.5           Move        197,196
+         4761.5           Move          15,14
+         4761.5           Move          29,28
+         4761.5           Move          57,58
+         4761.5           Move          71,72
+         4761.5           Move          92,93
+         4761.5           Move        106,107
+         4761.5           Move        141,142
+         4761.5           Move        155,156
+         4761.5           Move        176,177
+         4761.5           Move        190,191
+         4761.5           Move          43,44
+         4761.5           Move        127,128
+         4766.8           Move          49,90
+         4766.8           Move         63,104
+         4766.8           Move         98,139
+         4766.8           Move        112,153
+         4766.8           Move        133,174
+         4766.8           Move        147,188
+         4766.8           Move        182,223
+         4766.8           Move        196,237
+         4766.8           Move          14,55
+         4766.8           Move          28,69
+         4766.8           Move          44,46
+         4766.8           Move        128,130
+         4877.0           Move          58,60
+         4877.0           Move          72,74
+         4877.0           Move          93,95
+         4877.0           Move        107,109
+         4877.0           Move        142,144
+         4877.0           Move        156,158
+         4877.0           Move        177,179
+         4877.0           Move        191,193
+         4987.2             ZZ          89,90
+         4987.2             ZZ        103,104
+         4987.2             ZZ        138,139
+         4987.2             ZZ        152,153
+         4987.2             ZZ        173,174
+         4987.2             ZZ        187,188
+         4987.2             ZZ        222,223
+         4987.2             ZZ        236,237
+         4987.2             ZZ          54,55
+         4987.2             ZZ          68,69
+         4987.2             ZZ          61,60
+         4987.2             ZZ          75,74
+         4987.2             ZZ          96,95
+         4987.2             ZZ        110,109
+         4987.2             ZZ        145,144
+         4987.2             ZZ        159,158
+         4987.2             ZZ        180,179
+         4987.2             ZZ        194,193
+         4987.2             ZZ          47,46
+         4987.2             ZZ        131,130
+         6987.2           Move          90,49
+         6987.2           Move         104,63
+         6987.2           Move         139,98
+         6987.2           Move        153,112
+         6987.2           Move        174,133
+         6987.2           Move        188,147
+         6987.2           Move        223,182
+         6987.2           Move        237,196
+         6987.2           Move          55,14
+         6987.2           Move          69,28
+         6987.2           Move          46,44
+         6987.2           Move        130,128
+         7097.5           Move          60,58
+         7097.5           Move          74,72
+         7097.5           Move          95,93
+         7097.5           Move        109,107
+         7097.5           Move        144,142
+         7097.5           Move        158,156
+         7097.5           Move        179,177
+         7097.5           Move        193,191
+         7207.8           Move          49,50
+         7207.8           Move          63,64
+         7207.8           Move          98,99
+         7207.8           Move        112,113
+         7207.8           Move        133,134
+         7207.8           Move        147,148
+         7207.8           Move        182,183
+         7207.8           Move        196,197
+         7207.8           Move          14,15
+         7207.8           Move          28,29
+         7207.8           Move          58,57
+         7207.8           Move          72,71
+         7207.8           Move          93,92
+         7207.8           Move        107,106
+         7207.8           Move        142,141
+         7207.8           Move        156,155
+         7207.8           Move        177,176
+         7207.8           Move        191,190
+         7207.8           Move          44,43
+         7207.8           Move        128,127
+         7213.0        Z_-pi/4             89
+         7213.0        X_-pi/4             50
+         7213.0        Z_-pi/4            103
+         7213.0        X_-pi/4             64
+         7213.0        Z_-pi/4            138
+         7213.0        X_-pi/4             99
+         7213.0        Z_-pi/4            152
+         7213.0        X_-pi/4            113
+         7213.0        Z_-pi/4            173
+         7213.0        X_-pi/4            134
+         7213.0        Z_-pi/4            187
+         7213.0        X_-pi/4            148
+         7213.0        Z_-pi/4            222
+         7213.0        X_-pi/4            183
+         7213.0        Z_-pi/4            236
+         7213.0        X_-pi/4            197
+         7213.0        Z_-pi/4             54
+         7213.0        X_-pi/4             15
+         7213.0        Z_-pi/4             68
+         7213.0        X_-pi/4             29
+         7213.0        Z_-pi/4             57
+         7213.0        X_-pi/4             61
+         7213.0        Z_-pi/4             71
+         7213.0        X_-pi/4             75
+         7213.0        Z_-pi/4             92
+         7213.0        X_-pi/4             96
+         7213.0        Z_-pi/4            106
+         7213.0        X_-pi/4            110
+         7213.0        Z_-pi/4            141
+         7213.0        X_-pi/4            145
+         7213.0        Z_-pi/4            155
+         7213.0        X_-pi/4            159
+         7213.0        Z_-pi/4            176
+         7213.0        X_-pi/4            180
+         7213.0        Z_-pi/4            190
+         7213.0        X_-pi/4            194
+         7213.0        Z_-pi/4             43
+         7213.0        X_-pi/4             47
+         7213.0        Z_-pi/4            127
+         7213.0        X_-pi/4            131
+         7223.0        Z_-pi/4             50
+         7223.0        Z_-pi/4             64
+         7223.0        Z_-pi/4             99
+         7223.0        Z_-pi/4            113
+         7223.0        Z_-pi/4            134
+         7223.0        Z_-pi/4            148
+         7223.0        Z_-pi/4            183
+         7223.0        Z_-pi/4            197
+         7223.0        Z_-pi/4             15
+         7223.0        Z_-pi/4             29
+         7223.0        Z_-pi/4             61
+         7223.0        Z_-pi/4             75
+         7223.0        Z_-pi/4             96
+         7223.0        Z_-pi/4            110
+         7223.0        Z_-pi/4            145
+         7223.0        Z_-pi/4            159
+         7223.0        Z_-pi/4            180
+         7223.0        Z_-pi/4            194
+         7223.0        Z_-pi/4             47
+         7223.0        Z_-pi/4            131
+         7226.0        Y_-pi/4             50
+         7226.0        Y_-pi/4             64
+         7226.0        Y_-pi/4             99
+         7226.0        Y_-pi/4            113
+         7226.0        Y_-pi/4            134
+         7226.0        Y_-pi/4            148
+         7226.0        Y_-pi/4            183
+         7226.0        Y_-pi/4            197
+         7226.0        Y_-pi/4             15
+         7226.0        Y_-pi/4             29
+         7226.0        Y_-pi/4            103
+         7226.0        Y_-pi/4            117
+         7226.0        Y_-pi/4            138
+         7226.0        Y_-pi/4            152
+         7226.0        Y_-pi/4            187
+         7226.0        Y_-pi/4            201
+         7226.0        Y_-pi/4            222
+         7226.0        Y_-pi/4            236
+         7226.0        Y_-pi/4             89
+         7226.0        Y_-pi/4            173
+         7236.0           Move          50,49
+         7236.0           Move          64,63
+         7236.0           Move          99,98
+         7236.0           Move        113,112
+         7236.0           Move        134,133
+         7236.0           Move        148,147
+         7236.0           Move        183,182
+         7236.0           Move        197,196
+         7236.0           Move          15,14
+         7236.0           Move          29,28
+         7236.0           Move          57,56
+         7236.0           Move          71,70
+         7236.0           Move          92,91
+         7236.0           Move        106,105
+         7236.0           Move        141,140
+         7236.0           Move        155,154
+         7236.0           Move        176,175
+         7236.0           Move        190,189
+         7236.0           Move          43,42
+         7236.0           Move        127,126
+         7241.2           Move          49,95
+         7241.2           Move         63,109
+         7241.2           Move         98,144
+         7241.2           Move        112,158
+         7241.2           Move        133,179
+         7241.2           Move        147,193
+         7241.2           Move        182,228
+         7241.2           Move        196,242
+         7241.2           Move          14,60
+         7241.2           Move          28,74
+         7241.2           Move         56,102
+         7241.2           Move         70,116
+         7241.2           Move         91,137
+         7241.2           Move        105,151
+         7241.2           Move        140,186
+         7241.2           Move        154,200
+         7241.2           Move        175,221
+         7241.2           Move        189,235
+         7241.2           Move          42,88
+         7241.2           Move        126,172
+         7351.5             ZZ          96,95
+         7351.5             ZZ        110,109
+         7351.5             ZZ        145,144
+         7351.5             ZZ        159,158
+         7351.5             ZZ        180,179
+         7351.5             ZZ        194,193
+         7351.5             ZZ        229,228
+         7351.5             ZZ        243,242
+         7351.5             ZZ          61,60
+         7351.5             ZZ          75,74
+         7351.5             ZZ        103,102
+         7351.5             ZZ        117,116
+         7351.5             ZZ        138,137
+         7351.5             ZZ        152,151
+         7351.5             ZZ        187,186
+         7351.5             ZZ        201,200
+         7351.5             ZZ        222,221
+         7351.5             ZZ        236,235
+         7351.5             ZZ          89,88
+         7351.5             ZZ        173,172
+         9351.5           Move          95,49
+         9351.5           Move         109,63
+         9351.5           Move         144,98
+         9351.5           Move        158,112
+         9351.5           Move        179,133
+         9351.5           Move        193,147
+         9351.5           Move        228,182
+         9351.5           Move        242,196
+         9351.5           Move          60,14
+         9351.5           Move          74,28
+         9351.5           Move         102,56
+         9351.5           Move         116,70
+         9351.5           Move         137,91
+         9351.5           Move        151,105
+         9351.5           Move        186,140
+         9351.5           Move        200,154
+         9351.5           Move        221,175
+         9351.5           Move        235,189
+         9351.5           Move          88,42
+         9351.5           Move        172,126
+         9461.8           Move          49,50
+         9461.8           Move          63,64
+         9461.8           Move          98,99
+         9461.8           Move        112,113
+         9461.8           Move        133,134
+         9461.8           Move        147,148
+         9461.8           Move        182,183
+         9461.8           Move        196,197
+         9461.8           Move          14,15
+         9461.8           Move          28,29
+         9461.8           Move          56,57
+         9461.8           Move          70,71
+         9461.8           Move          91,92
+         9461.8           Move        105,106
+         9461.8           Move        140,141
+         9461.8           Move        154,155
+         9461.8           Move        175,176
+         9461.8           Move        189,190
+         9461.8           Move          42,43
+         9461.8           Move        126,127
+         9467.0        Z_-pi/4             96
+         9467.0        X_-pi/4             50
+         9467.0        Z_-pi/4            110
+         9467.0        X_-pi/4             64
+         9467.0        Z_-pi/4            145
+         9467.0        X_-pi/4             99
+         9467.0        Z_-pi/4            159
+         9467.0        X_-pi/4            113
+         9467.0        Z_-pi/4            180
+         9467.0        X_-pi/4            134
+         9467.0        Z_-pi/4            194
+         9467.0        X_-pi/4            148
+         9467.0        Z_-pi/4            229
+         9467.0        X_-pi/4            183
+         9467.0        Z_-pi/4            243
+         9467.0        X_-pi/4            197
+         9467.0        Z_-pi/4             61
+         9467.0        X_-pi/4             15
+         9467.0        Z_-pi/4             75
+         9467.0        X_-pi/4             29
+         9467.0        Z_-pi/4             57
+         9467.0        X_-pi/4            103
+         9467.0        Z_-pi/4             71
+         9467.0        X_-pi/4            117
+         9467.0        Z_-pi/4             92
+         9467.0        X_-pi/4            138
+         9467.0        Z_-pi/4            106
+         9467.0        X_-pi/4            152
+         9467.0        Z_-pi/4            141
+         9467.0        X_-pi/4            187
+         9467.0        Z_-pi/4            155
+         9467.0        X_-pi/4            201
+         9467.0        Z_-pi/4            176
+         9467.0        X_-pi/4            222
+         9467.0        Z_-pi/4            190
+         9467.0        X_-pi/4            236
+         9467.0        Z_-pi/4             43
+         9467.0        X_-pi/4             89
+         9467.0        Z_-pi/4            127
+         9467.0        X_-pi/4            173
+         9477.0        Z_-pi/4             50
+         9477.0        Z_-pi/4             64
+         9477.0        Z_-pi/4             99
+         9477.0        Z_-pi/4            113
+         9477.0        Z_-pi/4            134
+         9477.0        Z_-pi/4            148
+         9477.0        Z_-pi/4            183
+         9477.0        Z_-pi/4            197
+         9477.0        Z_-pi/4             15
+         9477.0        Z_-pi/4             29
+         9477.0        Z_-pi/4            103
+         9477.0        Z_-pi/4            117
+         9477.0        Z_-pi/4            138
+         9477.0        Z_-pi/4            152
+         9477.0        Z_-pi/4            187
+         9477.0        Z_-pi/4            201
+         9477.0        Z_-pi/4            222
+         9477.0        Z_-pi/4            236
+         9477.0        Z_-pi/4             89
+         9477.0        Z_-pi/4            173
+         9480.0        Y_-pi/4             57
+         9480.0        Y_-pi/4             71
+         9480.0        Y_-pi/4             92
+         9480.0        Y_-pi/4            106
+         9480.0        Y_-pi/4            141
+         9480.0        Y_-pi/4            155
+         9480.0        Y_-pi/4            176
+         9480.0        Y_-pi/4            190
+         9480.0        Y_-pi/4             43
+         9480.0        Y_-pi/4            127
+         9480.0        Y_-pi/4            120
+         9480.0        Y_-pi/4            204
+         9490.0         Z_pi/2             57
+         9490.0         Z_pi/2             71
+         9490.0         Z_pi/2             92
+         9490.0         Z_pi/2            106
+         9490.0         Z_pi/2            141
+         9490.0         Z_pi/2            155
+         9490.0         Z_pi/2            176
+         9490.0         Z_pi/2            190
+         9490.0         Z_pi/2             43
+         9490.0         Z_pi/2            127
+         9490.0         Z_pi/2            120
+         9490.0         Z_pi/2            204
+         9493.0      Measure_Z             50
+         9493.0      Measure_Z             64
+         9493.0      Measure_Z             99
+         9493.0      Measure_Z            113
+         9493.0      Measure_Z            134
+         9493.0      Measure_Z            148
+         9493.0      Measure_Z            183
+         9493.0      Measure_Z            197
+         9493.0      Measure_Z             15
+         9493.0      Measure_Z            218
+         9493.0      Measure_Z             29
+         9493.0      Measure_Z            232
+         9493.0      Measure_Z             57
+         9493.0      Measure_Z             71
+         9493.0      Measure_Z             92
+         9493.0      Measure_Z            106
+         9493.0      Measure_Z            141
+         9493.0      Measure_Z            155
+         9493.0      Measure_Z            176
+         9493.0      Measure_Z            190
+         9493.0      Measure_Z             43
+         9493.0      Measure_Z            127
+         9493.0      Measure_Z            120
+         9493.0      Measure_Z            204

@@ -763,6 +763,8 @@ namespace TISCC
             }
         }
 
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
         return time_tmp;
     }
 
@@ -863,6 +865,8 @@ namespace TISCC
         // Swap stabilizer circuit patterns to preserve code distance
         swap_stabilizer_circuit_patterns();
 
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
         return time_tmp;
 
     }
@@ -892,11 +896,6 @@ namespace TISCC
             std::cerr << "LogicalQubit::translate_patch: Patch translation requires larger grid." << std::endl; abort();
         }  
 
-        /* Do I want to be able to modify plaquettes so easily? 
-            - I think that, while GridManager provided the Plaquette, LogicalQubit owns it and has the right to update it. 
-            - However, it has to update it through appropriate means- making sure GridManager knows that a qubit has moved.
-            - Additionally, a hardware circuit needs to be produced. */
-
         // Now let's actually compile the move operations using the hardware model
         /* For now, we only allow e == -1 and s == 0 (i.e. shift_left) */
         if ((e==-1) && (s==0)) {
@@ -907,37 +906,40 @@ namespace TISCC
             abort();
         }
 
-        std::cerr << "Made it." << std::endl;
+        /* Update plaquettes and parity check matrix */
+
+        /* Notes: Do I want to be able to modify plaquettes so easily? 
+            - I think that, while GridManager provided the Plaquette, LogicalQubit owns it and has the right to update it. 
+            - However, it has to update it through appropriate means- making sure GridManager knows that a qubit has moved. */
         /* I plan to remove the ability for lq to directly change plaquette qsites; I will put a qsite:qsite map within HardwareModel or GridManager for "approved" Move operations */
 
-        /* Update plaquettes and parity check matrix */
-        std::vector<Plaquette> all_plaquettes;
-        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
-        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
-
         // Update plaquettes
-        for (Plaquette& p : all_plaquettes) {
+        for (Plaquette& p : z_plaquettes) {
            for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
                 p.mod_qsite(qubit) = grid.shift_qsite(p.get_qsite(qubit), s, e);
             }   
-            // Make sure 'm' site is occupied!
+            p.col_ += e;
+            p.row_ += s;
+        }
+        for (Plaquette& p : x_plaquettes) {
+           for (char qubit : {'a', 'b', 'c', 'd', 'm'}) {
+                p.mod_qsite(qubit) = grid.shift_qsite(p.get_qsite(qubit), s, e);
+            }   
+            p.col_ += e;
+            p.row_ += s;
         }
 
-        std::cerr << "Made it." << std::endl;
-
-        // Update qsite_to_index
+        // Update qsite_to_index map
+        std::map<unsigned int, unsigned int> qsite_to_index_new;
         for (std::pair<unsigned int, unsigned int> pair : qsite_to_index) {
-            pair.first = grid.shift_qsite(pair.first, s, e);
+            qsite_to_index_new[grid.shift_qsite(pair.first, s, e)] = pair.second;
         }
-
-        std::cerr << "Made it." << std::endl;
+        qsite_to_index = std::move(qsite_to_index_new);
 
         // Update index_to_qsite
         for (unsigned int i=0; i<index_to_qsite.size(); i++) {
             index_to_qsite[i] = grid.shift_qsite(index_to_qsite[i], s, e);
         }
-
-        std::cerr << "Made it." << std::endl;
 
         // Update operator deformations
         for (unsigned int i=0; x_deformation_qsites.size(); i++) {
@@ -947,12 +949,11 @@ namespace TISCC
             z_deformation_qsites[i] = grid.shift_qsite(z_deformation_qsites[i], s, e);
         }
 
-        std::cerr << "Made it." << std::endl;
-
         // Test consistency
         test_stabilizers();
 
-        std::cerr << "Made it." << std::endl;
+        // Sort circuit
+        std::stable_sort(hw_master.begin(), hw_master.end());
 
         return time;
     }
@@ -1358,7 +1359,7 @@ namespace TISCC
         if (added_qubit.has_value()) {
             time_tmp = TI_model.add_init(added_qubit.value(), time, 0, grid, hw_master);
             if (type=='Z') {
-                time_tmp = TI_model.add_H(added_qubit.value(), time, 1, grid, hw_master);
+                time_tmp = TI_model.add_H(added_qubit.value(), time_tmp, 1, grid, hw_master);
             }
         }
 
