@@ -37,6 +37,7 @@ public:
     std::set<unsigned int> occupied_sites(bool just_data_qubits) const;
     const std::vector<bool>& get_logical_operator_default_edge(char type) const;
     std::vector<bool> get_logical_operator_opposite_edge(char type) const;
+    std::vector<bool> get_logical_operator(char type, std::string_view edge_type) const;
     std::vector<unsigned int> get_logical_deformation_qsites(char type) const;
     bool default_arrangement() const {return default_arrangement_;}
 
@@ -50,7 +51,7 @@ public:
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double translate_patch(int s, int e, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
-    double swap_left(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {translate_patch(0, -1, grid, hw_master, time);}
+    double swap_left(const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
 
     // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);

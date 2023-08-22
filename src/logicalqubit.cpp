@@ -486,6 +486,13 @@ namespace TISCC
         return tmp_logical_operator;
     }
 
+    std::vector<bool> LogicalQubit::get_logical_operator(char type, std::string_view edge_type) const {
+        std::vector<bool> logical_operator;
+        if (edge_type == "default") logical_operator = get_logical_operator_default_edge(type);
+        else if (edge_type == "opposite") logical_operator = get_logical_operator_opposite_edge(type);
+        return logical_operator;
+    }
+
     // A product between stabilizer measurements taken at these qsites with exp. val. of the current logical op yields correct logical exp. val.
     std::vector<unsigned int> LogicalQubit::get_logical_deformation_qsites(char type) const {
         if (type == 'X') {
@@ -838,17 +845,19 @@ namespace TISCC
         }
 
         // Only currently works for odd code distances
-        if (!(dz_init_%2) && !(dx_init_%2)) {
-            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances." << std::endl;
-            abort();
-        }
+        // if (!(dz_init_%2) && !(dx_init_%2)) {
+        //     std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances." << std::endl;
+        //     abort();
+        // }
 
         // Recall that order matters
         // **Note: This actually will work for even code distances >= 6, but not for combos of even and odd code distances
         float time_tmp = time;
-        time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time_tmp, debug);
+            time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, grid, hw_master, time_tmp, debug);
+        // time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time_tmp, debug);
         time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, grid, hw_master, time_tmp, debug); 
-        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time, debug); 
+        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, grid, hw_master, time, debug); 
+        // time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1 - !(dz_init_%2), grid, hw_master, time, debug); 
         time = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, grid, hw_master, time_tmp, debug);       
 
         // We have changed the stabilizer arrangement
@@ -1423,7 +1432,7 @@ namespace TISCC
     
     // Implements corner movements by figuring out which stabilizers to measure when extending a logical operator `clockwise'
     /* **Note: add_stabilizer will update the default (rather than opposite) logical operator that has support on the added stabilizer in ambiguous cases,   
-        which may become relevant in the case where the operator to be extended has support on a single qubit */
+        which may become relevant where the operator to be extended has support on a single qubit */
     double LogicalQubit::extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, 
         GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
@@ -1440,16 +1449,35 @@ namespace TISCC
             abort(); 
         }
 
+        // We require edges of a known type ("default" or "opposite")
+        std::string opp_edge_type;
+        if (edge_type == "default") {
+            opp_edge_type = "opposite";
+        }
+        else if (edge_type == "opposite") {
+            opp_edge_type = "default";
+        }
+        else {
+            std::cerr << "LogicalQubit::add_stabilizer: Invalid edge type ('default' or 'opposite') given." << std::endl;
+            abort(); 
+        }
+
+        // Grab logical operators of 'type' on default or opposite edge
+        std::vector<bool> logical_operator;
+        logical_operator = get_logical_operator(type, edge_type);
+
+        // Grab the logical operator located clockwise from the one to be extended
+        std::string cw_edge_type;
+        if (type == 'X') cw_edge_type = opp_edge_type;
+        else if (type == 'Z') cw_edge_type = edge_type;
+        std::vector<bool> cw_logical_operator = get_logical_operator(opp_type, cw_edge_type);
+
+        // Max weight possible before operator eats its tail (computation should stop way before then due to stronger condition on cw_logical_op)
+        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - pauli_weight(logical_operator);
+
         // Hardware instructions may be added in add_stabilizer, so we need to track time
         double time_tmp;
         double time_to_return = time;
-
-        // Grab logical operators of 'type' on default and opposite edge
-        std::vector<bool> logical_operator;
-        if (edge_type == "default") {logical_operator = get_logical_operator_default_edge(type);}
-        else if (edge_type == "opposite") {logical_operator = get_logical_operator_opposite_edge(type);}
-        else {std::cerr << "LogicalQubit::extend_logical_operator_clockwise: invalid input for edge_type." << std::endl; abort();}
-        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - pauli_weight(logical_operator);
 
         // Find any qsite supported on the logical operator
         std::optional<unsigned int> qsite;
@@ -1480,13 +1508,20 @@ namespace TISCC
         // Loop over single-qubit operators to add in extending the logical operator
         for (unsigned int i=0; i<weight_to_add; i++) {
 
-            // Don't let it try to add above the maximum Pauli weight before the operator eats its tail
-            if (i >= max_weight_to_add) {
+            // Do not proceed if the weight of the cw_logical_operator is only 1
+            if (pauli_weight(cw_logical_operator) == 1) {
+                std::cerr << "LogicalQubit::add_stabilizer: No room for operator movement; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
                 break;
             }
 
-            // Keep track of which edge we're on
-            char edge_char;
+            // Don't let it try to add above the maximum possible Pauli weight before the operator eats its tail
+            if (i >= max_weight_to_add) {
+                std::cerr << "LogicalQubit::add_stabilizer: Can't let operator eat its tail; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
+                break;
+            }
+
+            // Keep track of which edge (of the square) we're on
+            char square_edge_char;
 
             // We make sure we aren't adding a qsite already supported on the logical
             unsigned int pc_column_index = qsite_to_index[grid.index_from_coords(row, col, index)] + (type == 'X')*qsite_to_index.size();
@@ -1499,7 +1534,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         col++;
                     }
-                    edge_char = 'w';
+                    square_edge_char = 'w';
                 }
 
                 else if ((row == row_ + 1) && (col != col_ + dx_init_ - 1)) {
@@ -1508,7 +1543,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         row++;
                     }
-                    edge_char = 'n';
+                    square_edge_char = 'n';
                 }
 
                 else if ((col == col_ + dx_init_ - 1) && (row != row_ + dz_init_)) {
@@ -1517,7 +1552,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         col--;
                     }
-                    edge_char = 'e';
+                    square_edge_char = 'e';
                 }
 
                 else if ((row == row_ + dz_init_) && (col != col_)) {
@@ -1526,7 +1561,7 @@ namespace TISCC
                     if (!grid.is_occupied(grid.index_from_coords(row, col, index))) {
                         row--;
                     }
-                    edge_char = 's';
+                    square_edge_char = 's';
                 }
 
                 else {
@@ -1560,11 +1595,11 @@ namespace TISCC
             if (!qsite_supported) {
                 int shift_horizontal = 0;
                 int shift_vertical = 0;
-                if (edge_char == 'n') {shift_vertical = -1;}
-                else if (edge_char == 'e') {shift_vertical = -1; shift_horizontal = 1;}
-                else if (edge_char == 's') {shift_horizontal = 1;}
-                else if (edge_char == 'w') {}
-                time_tmp = add_stabilizer(row + shift_vertical, col + shift_horizontal, edge_char, opp_type, grid, hw_master, time, debug);  
+                if (square_edge_char == 'n') {shift_vertical = -1;}
+                else if (square_edge_char == 'e') {shift_vertical = -1; shift_horizontal = 1;}
+                else if (square_edge_char == 's') {shift_horizontal = 1;}
+                else if (square_edge_char == 'w') {}
+                time_tmp = add_stabilizer(row + shift_vertical, col + shift_horizontal, square_edge_char, opp_type, grid, hw_master, time, debug);  
             }
 
             else {
@@ -1657,7 +1692,10 @@ namespace TISCC
                 grid.print_grid(ascii_grid);
             }
 
-          if (time_tmp > time_to_return) time_to_return = time_tmp;
+            if (time_tmp > time_to_return) time_to_return = time_tmp;
+
+            // Update cw_logical_operator
+            cw_logical_operator = get_logical_operator(opp_type, cw_edge_type);
 
         }
 
