@@ -334,7 +334,7 @@ namespace TISCC
 
                     // Initial corner movements and idle operation
                     time = lq->flip_patch(*grid, hw_master, time, false);
-                    time = lq->idle(cycles, *grid, hw_master, time);
+                    // time = lq->idle(cycles, *grid, hw_master, time);
 
                     std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
                     grid->print_grid(ascii_grid);
@@ -349,7 +349,7 @@ namespace TISCC
 
                     // Get extended patch into desired stabilizer arrangement and do idle op
                     time = lq_extended->flip_patch(*grid, hw_master, time, false);
-                    lq_extended->idle(cycles, *grid, hw_master, time);
+                    // lq_extended->idle(cycles, *grid, hw_master, time);
 
                     ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);
                     grid->print_grid(ascii_grid);

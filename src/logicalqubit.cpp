@@ -1511,13 +1511,13 @@ namespace TISCC
 
             // Do not proceed if the weight of the cw_logical_operator is only 1
             if (pauli_weight(cw_logical_operator) == 1) {
-                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No room for operator movement; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
+                if (debug) std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No room for operator movement; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
                 break;
             }
 
             // Don't let it try to add above the maximum possible Pauli weight before the operator eats its tail
             if (i >= max_weight_to_add) {
-                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Can't let operator eat its tail; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
+                if (debug) std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Can't let operator eat its tail; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
                 break;
             }
 
@@ -1598,7 +1598,7 @@ namespace TISCC
 
             // Stop if we have hit the corner
             if (stop_at_patch_corner && hit_corner) {
-                std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Corner has been hit." << std::endl;
+                if (debug) std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Corner has been hit." << std::endl;
                 break;
             }
 
