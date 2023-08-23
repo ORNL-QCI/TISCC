@@ -838,7 +838,7 @@ namespace TISCC
     }
 
     // The result of this process is the same as if we flipped the patch upside down and then did xz_swap
-    float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool debug) {
+    float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug) {
 
         // If the stabilizers have been altered at all, don't allow flip_patch
         if (!default_arrangement_) {
@@ -846,28 +846,39 @@ namespace TISCC
             abort();
         }
 
-        // Only currently works for odd code distances and even code distances < 6
+        // Only currently works for odd code distances and even code distances > 6
         if ((!(dz_init_%2) && !(dx_init_%2)) && ((dx_init_ < 6) || (dz_init_ < 6))) {
             std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances lower than 6." << std::endl;
             abort();
         }
 
+        // Create vector of ops to either append or not
+        std::vector<HW_Instruction> tmp_ops;
+
+
         // We separate these in time 
         float time_tmp = time;
-        time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, true, grid, hw_master, time_tmp, debug);
-        time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, true, grid, hw_master, time_tmp, debug); 
-        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, true, grid, hw_master, time_tmp, debug); 
-        time_tmp = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, true, grid, hw_master, time_tmp, debug);       
+        time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug);
+        time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+        time_tmp = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug);       
 
         // We have changed the stabilizer arrangement
         default_arrangement_ = false;
 
-        // Swap stabilizer circuit patterns to preserve code distance
+        // Swap stabilizer circuit patterns to preserve code distance (logical ops have changed directions)
         swap_stabilizer_circuit_patterns();
 
-        std::stable_sort(hw_master.begin(), hw_master.end());
+        // If we want to explicitly compile this op to hardware ops, append to back of the circuit
+        if (compile_ops) {
+            hw_master.insert(hw_master.end(), tmp_ops.begin(), tmp_ops.end());
+            std::stable_sort(hw_master.begin(), hw_master.end());
+            return time_tmp;
+        }
 
-        return time_tmp;
+        else {
+            return time;
+        }
 
     }
 

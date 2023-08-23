@@ -256,7 +256,7 @@ namespace TISCC
                 }
 
                 else if (s == "flip_patch") {
-                    time = lq->flip_patch(*grid, hw_master, time, false);
+                    time = lq->flip_patch(*grid, hw_master, time, true, false);
                 }
 
                 else if (s == "move_right") {
@@ -270,12 +270,12 @@ namespace TISCC
                     LogicalQubit* tmp_lq = lq;
                     lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
 
-                    // we need an extended one too
+                    // We need another lq extended by one column
                     LogicalQubit* lq_extended = new LogicalQubit(tmp_lq->get_dx_init() + 1, tmp_lq->get_dz_init(), 0, 0, *grid);
 
-                    // finally, we need a contracted version (**Note: probably don't actually want the hw_instructions from flip_patch)
+                    // Finally, we need a lq contracted by a column to the left (**Note: probably don't actually want the hw_instructions from flip_patch)
                     LogicalQubit* lq_contracted = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 1, *grid);
-                    time = lq_contracted->flip_patch(*grid, hw_master, time, false);
+                    time = lq_contracted->flip_patch(*grid, hw_master, time, false, false);
                     lq_contracted->xz_swap(*grid);
 
                     std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
@@ -344,7 +344,7 @@ namespace TISCC
                     /* Generate circuits */
 
                     // Initial corner movements and idle operation
-                    time = lq->flip_patch(*grid, hw_master, time, false);
+                    time = lq->flip_patch(*grid, hw_master, time, true, false);
                     // time = lq->idle(cycles, *grid, hw_master, time);
 
                     std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
@@ -359,7 +359,7 @@ namespace TISCC
                     }
 
                     // Get extended patch into desired stabilizer arrangement and do idle op
-                    time = lq_extended->flip_patch(*grid, hw_master, time, false);
+                    time = lq_extended->flip_patch(*grid, hw_master, time, false, false);
                     // lq_extended->idle(cycles, *grid, hw_master, time);
 
                     ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);

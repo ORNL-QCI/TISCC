@@ -52,6 +52,9 @@ public:
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double swap_left(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
 
+    // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
+    float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug);
+
     // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
 
@@ -65,9 +68,6 @@ public:
 
     // Corner movement 
     double extend_logical_operator_clockwise(char type, std::string_view edge_type, unsigned int weight_to_add, bool stop_at_patch_corner, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug);
-
-    // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
-    float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool debug);
 
     // Reset stabilizer circuits to default values
     void reset_stabilizer_circuit_patterns();
