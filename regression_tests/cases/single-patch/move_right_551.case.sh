@@ -1,0 +1,1 @@
+TISCC -x 5 -z 5 -t 1 -o "move_right" -p -d

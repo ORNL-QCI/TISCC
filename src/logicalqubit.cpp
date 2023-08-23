@@ -493,7 +493,7 @@ namespace TISCC
         return logical_operator;
     }
 
-    // A product between stabilizer measurements taken at these qsites with exp. val. of the current logical op yields correct logical exp. val.
+    // A product between stabilizer measurements taken at these qsites with exp. val. of the current logical op yields correct logical exp. val. (deformation tracked from corner movements)
     std::vector<unsigned int> LogicalQubit::get_logical_deformation_qsites(char type) const {
         if (type == 'X') {
             return x_deformation_qsites;
@@ -502,6 +502,22 @@ namespace TISCC
             return z_deformation_qsites;
         }
         else {std::cerr << "LogicalQubit::get_logical_deformation_qsites: invalid input given." << std::endl; abort();}
+    }
+
+    // Return the stabilizers (given by their 'm' qsite) needed to obtain one logical op from another by taking products of their measurement outcomes
+    std::vector<unsigned int> LogicalQubit::get_logical_deformation_between_edges(char type) const {
+        std::vector<unsigned int> deformation;
+        if (type == 'Z') {
+            for (const Plaquette& p : z_plaquettes) {
+                deformation.push_back(p.get_qsite('m'));
+            }
+        }
+        else if (type == 'X') {
+            for (const Plaquette& p : x_plaquettes) {
+                deformation.push_back(p.get_qsite('m'));
+            }
+        }
+        return deformation;
     }
 
     // Function to return all qsites occupied by the surface code (or just_data_qubits)
@@ -869,6 +885,8 @@ namespace TISCC
         // Swap stabilizer circuit patterns to preserve code distance (logical ops have changed directions)
         swap_stabilizer_circuit_patterns();
 
+        // TODO: Make sure the default edge is maintained
+
         // If we want to explicitly compile this op to hardware ops, append to back of the circuit
         if (compile_ops) {
             hw_master.insert(hw_master.end(), tmp_ops.begin(), tmp_ops.end());
@@ -877,6 +895,9 @@ namespace TISCC
         }
 
         else {
+            // We assume that, if hardware ops aren't compiled, we also don't want to track deformations 
+            x_deformation_qsites.clear();
+            z_deformation_qsites.clear();
             return time;
         }
 

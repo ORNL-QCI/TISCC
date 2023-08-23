@@ -39,6 +39,7 @@ public:
     std::vector<bool> get_logical_operator_opposite_edge(char type) const;
     std::vector<bool> get_logical_operator(char type, std::string_view edge_type) const;
     std::vector<unsigned int> get_logical_deformation_qsites(char type) const;
+    std::vector<unsigned int> get_logical_deformation_between_edges(char type) const;
     bool default_arrangement() const {return default_arrangement_;}
 
     // Print functions
