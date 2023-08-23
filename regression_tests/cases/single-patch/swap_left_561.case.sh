@@ -1,0 +1,1 @@
+TISCC -x 5 -z 6 -t 1 -o "swap_left" -p -d

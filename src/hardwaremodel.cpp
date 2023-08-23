@@ -385,7 +385,7 @@ namespace TISCC
 
         // Retrieve path to data qubit and apply move_along_path
         std::vector<unsigned int> path = grid.get_path(p.get_qsite('m'), p.get_qsite(data_qubit));
-        move_along_path_for_CNOT(p, step, circuit, time, path, grid);
+        move_along_path(p, step, circuit, time, path, grid);
 
         // Apply ZZ operation
         circuit.push_back(HW_Instruction("ZZ", p.get_qsite(data_qubit), p.get_qsite('m'), time, step, data_qubit, 'm', p.get_shape(), p.get_operator_type()));
@@ -393,7 +393,7 @@ namespace TISCC
 
         // Move the measure qubit back to its home base for further operations
         reverse(path.begin(), path.end());
-        move_along_path_for_CNOT(p, step, circuit, time, path, grid);
+        move_along_path(p, step, circuit, time, path, grid);
 
         // Before final rotations, ensure control and target are home
         assert(p.is_home(control) && p.is_home(target)); 
@@ -406,61 +406,6 @@ namespace TISCC
 
         // Return updated time
         return time + TI_ops.at("Z_-pi/4");
-    }
-
-    // Move the measure qubit to the closest site adjacent to a data qubit
-    void HardwareModel::move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
-        const std::vector<unsigned int>& path, const GridManager& grid) const {
-
-        // Validity check 
-        if (p.get_qsite('m') != path[0]) {
-            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
-            abort();
-        }
-
-        // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity on the grid)
-        // We note an assumption is that there are never two Junctions in a row on the grid
-        unsigned int through_J = 0;
-        for (unsigned int i=1; i<path.size(); i++) {
-            if (grid[path[i]] == 'J') {
-                through_J = 1;
-                continue;
-            }
-            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_operator_type()));
-            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
-            if (through_J == 1) {through_J = 0;}
-            p.move_to_site('m', path[i]);
-        }
-
-    }
-
-    // Move the measure qubit to the closest site adjacent to a data qubit
-    double HardwareModel::move_along_path_for_shift(unsigned int qsite, std::vector<HW_Instruction>& circuit, double time,
-        const std::vector<unsigned int>& path, GridManager& grid) const {
-
-        // Validity check 
-        if (qsite != path[0]) {
-            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
-            std::cerr << qsite << " " << path[0] << std::endl;
-            abort();
-        }
-
-        // Construct HW_Instructions to Move along the path 
-        // We note an assumption is that there are never two Junctions in a row on the grid
-        unsigned int through_J = 0;
-        for (unsigned int i=1; i<path.size(); i++) {
-            if (grid[path[i]] == 'J') {
-                through_J = 1;
-                continue;
-            }
-            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, 0, 'X', ' ', 'X', 'X'));
-            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
-            grid.move_qubit(path[i-1-through_J], path[i]);
-            if (through_J == 1) {through_J = 0;}
-        }
-
-        return time;
-
     }
 
     // Translate all qubits left one column on the grid
@@ -487,7 +432,7 @@ namespace TISCC
 
             // Move along path
             // **Note: This changes the set of occupied sites on the grid
-            time_tmp = move_along_path_for_shift(q, hw_master, time, path, grid);
+            time_tmp = move_along_path(q, 0, hw_master, time, path, grid);
 
         }
 
@@ -521,7 +466,7 @@ namespace TISCC
 
                 // Move along path
                 // **Note: This changes the set of occupied sites on the grid
-                time_tmp = move_along_path_for_shift(grid.shift_qsite(q, 0, i), hw_master, time_tmp, path, grid);
+                time_tmp = move_along_path(grid.shift_qsite(q, 0, i), 0, hw_master, time_tmp, path, grid);
 
             }
 
@@ -547,7 +492,7 @@ namespace TISCC
 
             // Move along path
             // **Note: This changes the set of occupied sites on the grid
-            time_tmp = move_along_path_for_shift(path[0], hw_master, time, path, grid);
+            time_tmp = move_along_path(path[0], 0, hw_master, time, path, grid);
         }
 
         // ascii_grid = grid.ascii_grid(true);
@@ -557,6 +502,60 @@ namespace TISCC
         return time_tmp;
     }
 
+    // Move the measure qubit of a given plaquette along a path (to the closest site adjacent to a data qubit)
+    void HardwareModel::move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
+        const std::vector<unsigned int>& path, const GridManager& grid) const {
+
+        // Validity check 
+        if (p.get_qsite('m') != path[0]) {
+            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
+            abort();
+        }
+
+        // Construct HW_Instructions to Move 'm' along the path while also applying the move_to_site plaquette member function (this ensures validity on the grid)
+        // We note an assumption is that there are never two Junctions in a row on the grid
+        unsigned int through_J = 0;
+        for (unsigned int i=1; i<path.size(); i++) {
+            if (grid[path[i]] == 'J') {
+                through_J = 1;
+                continue;
+            }
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'm', ' ', p.get_shape(), p.get_operator_type()));
+            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
+            if (through_J == 1) {through_J = 0;}
+            p.move_to_site('m', path[i]);
+        }
+
+    }
+
+    // Move a qubit starting at qsite along a path
+    double HardwareModel::move_along_path(unsigned int qsite, unsigned int step, std::vector<HW_Instruction>& circuit, double time,
+        const std::vector<unsigned int>& path, GridManager& grid) const {
+
+        // Validity check 
+        if (qsite != path[0]) {
+            std::cerr << "HardwareModel::move_along_path: current site inconsistent with path given." << std::endl;
+            std::cerr << qsite << " " << path[0] << std::endl;
+            abort();
+        }
+
+        // Construct HW_Instructions to Move along the path 
+        // We note an assumption is that there are never two Junctions in a row on the grid
+        unsigned int through_J = 0;
+        for (unsigned int i=1; i<path.size(); i++) {
+            if (grid[path[i]] == 'J') {
+                through_J = 1;
+                continue;
+            }
+            circuit.push_back(HW_Instruction("Move", path[i-1-through_J], path[i], time, step, 'X', ' ', 'X', 'X'));
+            time += TI_ops.at("Move") + through_J*TI_ops.at("Junction");
+            grid.move_qubit(path[i-1-through_J], path[i]);
+            if (through_J == 1) {through_J = 0;}
+        }
+
+        return time;
+
+    }
     HardwareModel::HardwareModel() : trap_width(420.0) {
         cell_width = 4*trap_width;
         init_TI_ops();

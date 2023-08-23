@@ -68,9 +68,9 @@ private:
     void init_TI_ops();
 
     // HW circuit helper functions to compile Moves
-    void move_along_path_for_CNOT(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
+    void move_along_path(Plaquette& p, unsigned int step, std::vector<HW_Instruction>& circuit, double& time,
         const std::vector<unsigned int>& path, const GridManager& grid) const;
-    double move_along_path_for_shift(unsigned int qsite, std::vector<HW_Instruction>& circuit, double time,
+    double move_along_path(unsigned int qsite, unsigned int step, std::vector<HW_Instruction>& circuit, double time,
         const std::vector<unsigned int>& path, GridManager& grid) const;
 };
 

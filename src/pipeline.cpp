@@ -243,7 +243,7 @@ namespace TISCC
 
             // Single-patch operations
             if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
-                 || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "rotation")) {
+            || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "rotation")) {
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
@@ -304,17 +304,23 @@ namespace TISCC
 
                     // re-allocate lq and swap x<->z stabilizers
                     LogicalQubit* tmp_lq = lq;
-                    lq = new LogicalQubit(grid->get_ncols() - 2, grid->get_nrows() - 1, 0, 1, *grid);
-                    // lq->xz_swap(*grid);
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 1, *grid);
                     delete tmp_lq;
 
-                    // std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
-                    // grid->print_grid(ascii_grid);
+                    std::vector<std::string> ascii_grid;
+                    if (debug) {
+                        std::cout << "Configuration before swap_left:" << std::endl;
+                        ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                        grid->print_grid(ascii_grid);
+                    }
                     
                     time = lq->swap_left(*grid, hw_master, time);
 
-                    // ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
-                    // grid->print_grid(ascii_grid);
+                    if (debug) {
+                        std::cout << std::endl << "Configuration after swap_left:" << std::endl;
+                        ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                        grid->print_grid(ascii_grid);
+                    }
 
                 }
 
@@ -564,6 +570,7 @@ namespace TISCC
             else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
+            // **Note: This being after circuit generation assumes that the occupancy of the grid post-circuit is equivalent to the occupancy pre-circuit
             std::set<unsigned int> all_qsites = grid->get_occ_sites();
 
             // Enforce validity of final instruction list 
