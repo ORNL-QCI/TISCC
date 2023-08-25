@@ -504,7 +504,7 @@ namespace TISCC
         else {std::cerr << "LogicalQubit::get_logical_deformation_qsites: invalid input given." << std::endl; abort();}
     }
 
-    // Return the stabilizers (given by their 'm' qsite) needed to obtain one logical op from another by taking products of their measurement outcomes
+    // Return the stabilizers (given by their 'm' qsite) needed to obtain the opposite edge logical op of 'type' from the default edge one by taking their product with the latter
     std::vector<unsigned int> LogicalQubit::get_logical_deformation_between_edges(char type) const {
         std::vector<unsigned int> deformation;
         if (type == 'Z') {
@@ -517,6 +517,101 @@ namespace TISCC
                 deformation.push_back(p.get_qsite('m'));
             }
         }
+        return deformation;
+    }
+
+    // Operator movement a la Fowler, 2018. Only valid for operators with support all on one column or all on one row.
+    std::vector<unsigned int> LogicalQubit::get_logical_deformation_operator_movement(char type, int n, const GridManager& grid) {
+
+        // Should implement validity checks on n
+
+        // Set up variables
+        std::vector<bool> logical_operator = get_logical_operator_default_edge(type);
+        std::vector<unsigned int> deformation;
+
+        unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
+        unsigned int col = uint_max;
+        unsigned int row = uint_max;
+
+        bool shift_by_row = true;
+        bool shift_by_col = true;
+
+        // Figure out whether the operator in question should be shifted by columns or by rows by finding where it has support
+        for (unsigned int i = 0; i < index_to_qsite.size(); i++) {
+
+            if (logical_operator[i]) {
+                if (col == uint_max) {
+                    col = grid.get_col(index_to_qsite[i]);
+                }
+                
+                else if ( (col != uint_max) && (col != grid.get_col(index_to_qsite[i])) ) {
+                    shift_by_col = false;
+                }
+
+                if (row == uint_max) {
+                    row = grid.get_row(index_to_qsite[i]);
+                }
+
+                else if ( (row != uint_max) && (row != grid.get_row(index_to_qsite[i])) ) {
+                    shift_by_row = false; 
+                }
+
+            }
+
+        }
+
+        // Create a vector of all plaquettes for convenience
+        std::vector<Plaquette> all_plaquettes;
+        all_plaquettes.insert(all_plaquettes.end(), z_plaquettes.begin(), z_plaquettes.end());
+        all_plaquettes.insert(all_plaquettes.end(), x_plaquettes.begin(), x_plaquettes.end());
+
+        // Depending on the case, find intervening plaquettes of relevant operator_type
+        if (shift_by_row && !shift_by_col) {
+
+            for (const Plaquette& p : all_plaquettes) {
+
+                if (n >= 0) {
+                    if ((p.get_operator_type() == type) && (p.get_row() >= row) && (p.get_row() < row + n)) {
+                        deformation.push_back(p.get_qsite('m'));
+                    }
+                }
+
+                else {
+                    if ((p.get_operator_type() == type) && (p.get_row() < row) && (p.get_row() >= row + n)) {
+                        deformation.push_back(p.get_qsite('m'));
+                    }                    
+                }
+            }
+
+        }
+
+        else if (shift_by_col && !shift_by_row) {
+
+            for (const Plaquette& p : all_plaquettes) {
+
+                if (n >= 0) {
+                    if ((p.get_operator_type() == type) && (p.get_col() > col) && (p.get_col() <= col + n)) {
+                        deformation.push_back(p.get_qsite('m'));
+                    }
+                }
+
+                else {
+                    if ((p.get_operator_type() == type) && (p.get_col() <= col) && (p.get_col() > col + n)) {
+                        deformation.push_back(p.get_qsite('m'));
+                    }    
+                }
+
+            }
+
+        }
+
+        else {
+
+            std::cerr << "LogicalQubit::get_logical_deformation_operator_movement: Invalid case for operator movement." << std::endl;
+            abort();
+
+        }
+
         return deformation;
     }
 
