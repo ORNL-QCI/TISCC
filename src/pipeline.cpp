@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -243,7 +243,7 @@ namespace TISCC
 
             // Single-patch operations
             if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
-            || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "rotation")) {
+            || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation") || (s == "rotation")) {
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
@@ -356,6 +356,100 @@ namespace TISCC
                         ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
                         grid->print_grid(ascii_grid);
                     }
+
+                }
+
+                else if (s == "single_tile_rotation") {
+
+                    /* Constructing the appropriate GridManager and LogicalQubit variables */
+
+                    // Single-tile rotation requires an additional column of qubits to the right
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // lq is already our standard orientation qubit, but must re-allocate it on new grid
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+                    delete tmp_lq;
+
+                    std::vector<std::string> ascii_grid;
+                    if (debug) {
+                        std::cout << "Configuration before flip_patch:" << std::endl;
+                        ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                        grid->print_grid(ascii_grid);
+                    }
+
+                    /* Flip the patch in one logical time-step */
+                    time = lq->flip_patch(*grid, hw_master, time, true, false);
+                    time = lq->idle(cycles, *grid, hw_master, time);
+
+                    /* Move the patch one column to the right */
+
+                    // Construct extended and contracted qubits
+                    LogicalQubit* lq_extended = new LogicalQubit(lq->get_dx_init() + 1, lq->get_dz_init(), 0, 0, *grid);
+                    lq_extended->flip_patch(*grid, hw_master, time, false, false);
+                    LogicalQubit* lq_contracted = new LogicalQubit(lq->get_dx_init(), lq->get_dz_init(), 0, 1, *grid);
+                    lq_contracted->xz_swap(*grid);
+
+                    // Visualize if debug flag is on
+                    if (debug) {
+                        std::cout << "Configuration before move_right:" << std::endl;
+                        ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                        grid->print_grid(ascii_grid);
+                        std::cout << "Configuration after extension:" << std::endl;
+                        ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);
+                        grid->print_grid(ascii_grid);
+                        std::cout << "Configuration after move_right:" << std::endl;
+                        ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
+                        grid->print_grid(ascii_grid);
+                    }
+
+                    // The patch extension requires initialization of strip qubits in the Z basis (note Z logical is now horizontal)
+                    strip = lq_extended->get_strip(*lq, *lq);
+                    for (unsigned int site : strip) {
+                        TI_model.add_init(site, time, 0, *grid, hw_master);
+                    }
+
+                    // Do idle op on extended patch
+                    time = lq_extended->idle(cycles, *grid, hw_master, time);
+
+                    // Measure strip qubits on the left in the Z basis (note Z logical is now horizontal)
+                    strip = lq_extended->get_strip(*lq_contracted, *lq_contracted);
+                    for (unsigned int site : strip) {
+                        TI_model.add_meas(site, time, 0, *grid, hw_master);
+                    }
+
+                    // Transfer resources appropriately for later processing
+
+                    // Replace lq with lq1 
+                    tmp_lq = lq1;
+                    lq1 = lq;
+                    lq = tmp_lq;
+                    if (lq != nullptr) {
+                        delete lq;
+                    }
+
+                    // Replace lq_contracted with lq
+                    tmp_lq = lq;
+                    lq = lq_contracted;
+                    lq_contracted = tmp_lq;
+                    delete lq_contracted;
+
+                    // Replace lq_extended with lq2
+                    tmp_lq = lq2;
+                    lq2 = lq_extended;
+                    lq_extended = tmp_lq;
+                    if (lq_extended != nullptr) {
+                        delete lq_extended;               
+                    }
+
+                    // Lastly, swap left (process has not been verified with this line included)
+                    time = lq->swap_left(*grid, hw_master, time);
+
+                    // Perform idle operation on lq_contracted
+                    time = lq->idle(cycles, *grid, hw_master, time);
+
 
                 }
 
@@ -623,10 +717,8 @@ namespace TISCC
 
             // Free resources
             delete lq;
-            if (tile_spec == "double-vert" || tile_spec == "double-horiz") {
-                delete lq1;
-                delete lq2;
-            }
+            if (lq1 != nullptr) delete lq1;
+            if (lq2 != nullptr) delete lq2;
             delete grid;
 
         }
