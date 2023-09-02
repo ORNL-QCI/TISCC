@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -244,7 +244,8 @@ namespace TISCC
             std::string s = parser.get<std::string>("o");
 
             // Single-patch operations
-            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
+            if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "pauli_x") || (s == "pauli_y") || (s == "pauli_z") 
+            || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
             || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation") || (s == "rotation")) {
 
                 // Perform associated transversal operation
@@ -255,6 +256,11 @@ namespace TISCC
                 else if ((s == "inject_y") || (s == "inject_t")) {
                     char state_label = s.substr(7)[0];
                     lq->inject_state(state_label, *grid, hw_master, time);
+                }
+
+                else if ((s == "pauli_x") || (s == "pauli_y") || (s == "pauli_z")) {
+                    char pauli_label = s.substr(6)[0];
+                    lq->apply_pauli(pauli_label, *grid, hw_master, time);
                 }
 
                 else if (s == "flip_patch") {
@@ -446,12 +452,8 @@ namespace TISCC
                         delete lq_extended;               
                     }
 
-                    // Lastly, swap left (process has not been verified with this line included)
+                    // Lastly, swap left (whole rotation was verified without this line; the primitives were verified separately anyway)
                     time = lq->swap_left(*grid, hw_master, time);
-
-                    // Perform idle operation on lq_contracted
-                    time = lq->idle(cycles, *grid, hw_master, time);
-
 
                 }
 
@@ -519,8 +521,7 @@ namespace TISCC
                 }
 
                 // Append an idle operation if applicable 
-                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch") || 
-                    (s == "move_right") || (s == "swap_left") || (s == "rotation") || (s == "hadamard")) {
+                if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")) {
                     time = lq->idle(cycles, *grid, hw_master, time);
                 }
 
@@ -697,7 +698,7 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
             // **Note: This being after circuit generation assumes that the occupancy of the grid post-circuit is equivalent to the occupancy pre-circuit
