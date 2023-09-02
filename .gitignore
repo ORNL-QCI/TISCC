@@ -7,3 +7,5 @@ build
 *.vscode
 tests_*
 .DS_Store
+*.py
+*.txt

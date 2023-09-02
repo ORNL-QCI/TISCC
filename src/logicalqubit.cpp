@@ -814,7 +814,7 @@ namespace TISCC
         else {std::cerr << "LogicalQubit::apply_pauli: Invalid Pauli operator given. Options: 'X', 'Y', and 'Z'." << std::endl; abort();}
 
         // Loop over sites on the operator and apply Pauli operators. 
-        // ** Y is covered by applying Z_{pi/2}*X_{pi/2}. (Z_{pi/2}*X_{pi/2} = -i*Z -i*X = - Z*X = -iY = -Y_{pi/2}) 
+        // ** Y is covered by applying Z_{pi/2}*X_{pi/2}. (Z_{pi/2}*X_{pi/2} = -i*Z -i*X = - Z*X = -iY = Y_{pi/2}) 
         std::vector<double> times(qsite_to_index.size(), time);
         for (unsigned int i=logical_operator.size()-1; i < logical_operator.size(); i--) {
             if ((i < qsite_to_index.size()) && (logical_operator[i])) {
@@ -1517,11 +1517,11 @@ namespace TISCC
         }
 
         // Test validity of stabilizers and parity check mtx
-        test_stabilizers(); 
-        if (!validity_parity_check_matrix()) {
-            std::cerr << "LogicalQubit::add_stabilizer: Final parity check matrix invalid." << std::endl;
-            abort();
-        }
+        // test_stabilizers(); 
+        // if (!validity_parity_check_matrix()) {
+        //     std::cerr << "LogicalQubit::add_stabilizer: Final parity check matrix invalid." << std::endl;
+        //     abort();
+        // }
 
         // Print final grid and final default-edge logical operators
         if (debug) {

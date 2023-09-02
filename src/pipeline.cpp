@@ -215,6 +215,8 @@ namespace TISCC
                 std::cout << std::endl;
                 ascii_grid = grid->ascii_grid(true);
                 grid->print_grid(ascii_grid);
+                ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                grid->print_grid(ascii_grid);
             }
 
             else if (s == "parity") {
@@ -256,7 +258,7 @@ namespace TISCC
                 }
 
                 else if (s == "flip_patch") {
-                    time = lq->flip_patch(*grid, hw_master, time, true, false);
+                    time = lq->flip_patch(*grid, hw_master, time, true, true);
                 }
 
                 else if (s == "move_right") {
