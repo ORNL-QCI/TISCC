@@ -41,7 +41,9 @@ public:
     std::vector<unsigned int> get_logical_deformation_qsites(char type) const;
     std::vector<unsigned int> get_logical_deformation_between_edges(char type) const;
     std::vector<unsigned int> get_logical_deformation_operator_movement(char type, int n, const GridManager& grid);
-    bool default_arrangement() const {return default_arrangement_;}
+    bool canonical_arrangement() const {return canonical_arrangement_;}
+    bool xz_swap_tracker() const {return xz_swap_tracker_;}
+    bool flipped_tracker() const {return flipped_tracker_;}
 
     // Print functions
     void print_stabilizers() const;
@@ -95,7 +97,13 @@ private:
     unsigned int col_;
 
     // Track whether deformations have taken place
-    bool default_arrangement_;
+    bool canonical_arrangement_;
+
+    // Boolean to toggle each time xz_swap is applied
+    bool xz_swap_tracker_;
+
+    // Boolean to toggle each time flip_patch is applied
+    bool flipped_tracker_;
 
     // Contains details of hardware native gates and stabilizer circuits
     HardwareModel TI_model;

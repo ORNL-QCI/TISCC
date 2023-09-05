@@ -457,7 +457,7 @@ namespace TISCC
     }
 
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : 
-        dx_(dx), dx_init_(dx), dz_(dz), dz_init_(dz), row_(row), col_(col), default_arrangement_(true), TI_model() { 
+        dx_(dx), dx_init_(dx), dz_(dz), dz_init_(dz), row_(row), col_(col), canonical_arrangement_(true), xz_swap_tracker_(false), flipped_tracker_(false) { 
         init_stabilizers(dx, dz, row, col, grid);
         construct_parity_check_matrix(grid);
         init_circuits();
@@ -840,7 +840,7 @@ namespace TISCC
             abort();
         }
 
-        if (!default_arrangement_) {std::cerr << "LogicalQubit::inject_state: default stabilizer arrangement required." << std::endl; abort();}
+        // if (!canonical_arrangement_) {std::cerr << "LogicalQubit::inject_state: default stabilizer arrangement required." << std::endl; abort();}
 
         // Prepare physical qubits in |0> 
         double time_tmp;
@@ -861,7 +861,7 @@ namespace TISCC
         for (unsigned int i=0; i<y_string.first.size(); i++) {
             if (y_string.first[i] == 'Y') {
                 if (y_found == 1) {
-                    std::cerr << "LogicalQubit::inject_y_state: found > 1 y operator in y_string." << std::endl;
+                    std::cerr << "LogicalQubit::inject_state: found > 1 y operator in y_string." << std::endl;
                     abort();
                 }
                 if (label == 'y') {
@@ -872,6 +872,11 @@ namespace TISCC
                 }
                 y_found = 1;
             }
+        }
+
+        if (y_found == 0) {
+            std::cerr << "LogicalQubit::inject_state: No Y operator found in y_string." << std::endl;
+            abort();
         }
 
         std::stable_sort(hw_master.begin(), hw_master.end());
@@ -944,16 +949,17 @@ namespace TISCC
         recalculate_code_distance();
 
         // We have changed the stabilizer arrangement
-        default_arrangement_ = false;
+        // canonical_arrangement_ = false;
+        xz_swap_tracker_ = true;
 
     }
 
     // The result of this process is the same as if we flipped the patch upside down and then did xz_swap
     float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug) {
 
-        // If the stabilizers have been altered at all, don't allow flip_patch
-        if (!default_arrangement_) {
-            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
+        // If the stabilizers have been altered at all (other than by xz_swap), don't allow flip_patch
+        if (!canonical_arrangement_)  {
+            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for patches that do not have a canonical stabilizer arrangement." << std::endl;
             abort();
         }
 
@@ -974,13 +980,12 @@ namespace TISCC
         time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
         time_tmp = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug);       
 
-        // We have changed the stabilizer arrangement
-        default_arrangement_ = false;
+        // We have changed the stabilizer arrangement back to a canonical one
+        if (!canonical_arrangement_) canonical_arrangement_ = true;
+        flipped_tracker_ = true;
 
         // Swap stabilizer circuit patterns to preserve code distance (logical ops have changed directions)
         swap_stabilizer_circuit_patterns();
-
-        // TODO: Make sure the default edge is maintained
 
         // If we want to explicitly compile this op to hardware ops, append to back of the circuit
         if (compile_ops) {
@@ -1557,7 +1562,7 @@ namespace TISCC
         }
 
         // Set this variable to indicate that the stabilizer arrangement has been altered
-        default_arrangement_ = false;
+        canonical_arrangement_ = false;
 
         // Recalculate code distance
         recalculate_code_distance();
@@ -1903,7 +1908,7 @@ namespace TISCC
     LogicalQubit* merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
 
         // If the stabilizers have been altered at all, don't allow merge
-        if ((!lq1.default_arrangement()) || (!lq2.default_arrangement())) {
+        if (lq1.flipped_tracker() || lq1.xz_swap_tracker() || !lq1.canonical_arrangement() || lq2.flipped_tracker() || lq2.xz_swap_tracker() || !lq2.canonical_arrangement()) {
             std::cerr << "merge: Merge not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
             abort();
         }
