@@ -56,14 +56,20 @@ public:
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double swap_left(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
     
-    // merge: construct and return a logical qubit that represents the merged product of this qubit with an input one
-    LogicalQubit* merge(LogicalQubit& lq2, GridManager& grid);
+    // Construct and return a logical qubit that represents the merged product of this qubit with an input one
+    LogicalQubit* get_merged_lq(LogicalQubit& lq2, GridManager& grid);
 
-    // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
-    float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug);
+    // merge: Prepare strip and perform idle on merged qubit
+    double merge(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
+
+    // split: Measure strip 
+    double split(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
     // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
     std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
+
+    // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
+    float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug);
 
     // Swap roles of x and z for this patch (typically used during Hadamard and patch rotation)
     void xz_swap(const GridManager& grid);
@@ -131,6 +137,10 @@ private:
     // We track stabilizer measurement qsites corresponding with logical operator deformation
     std::vector<unsigned int> x_deformation_qsites;
     std::vector<unsigned int> z_deformation_qsites;
+
+    // If this is a merged product, we employ pointers to track which lq were merged to produce it
+    LogicalQubit* lq1;
+    LogicalQubit* lq2;
 
     // Construct stabilizers and update set of occupied sites in grid
     void init_stabilizers(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid); 

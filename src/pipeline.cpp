@@ -166,7 +166,7 @@ namespace TISCC
             lq2 = new TISCC::LogicalQubit(dx, dz, nrows, 0, *grid);
 
             // Create a merged qubit
-            lq = lq1->merge(*lq2, *grid);
+            lq = lq1->get_merged_lq(*lq2, *grid);
 
             // Grab all of the qsites on the `strip' between lq1 and lq2
             strip = lq->get_strip(*lq1, *lq2);
@@ -184,7 +184,7 @@ namespace TISCC
             lq2 = new TISCC::LogicalQubit(dx, dz, 0, ncols, *grid);
 
             // Create a merged qubit
-            lq = lq1->merge(*lq2, *grid);
+            lq = lq1->get_merged_lq(*lq2, *grid);
 
             // Grab all of the qsites on the `strip' between lq1 and lq2
             strip = lq->get_strip(*lq1, *lq2);
@@ -541,17 +541,8 @@ namespace TISCC
                     lq2->transversal_op("prepz", *grid, hw_master, time);
                 }
 
-                // Prepare strip qubits
-                double time_tmp = 0;
-                for (unsigned int site : strip) {
-                    time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
-
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
-                }
-
-                // Perform idle operation
-                time = lq->idle(cycles, *grid, hw_master, time);
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
 
             }
 
@@ -565,29 +556,12 @@ namespace TISCC
                     lq2->transversal_op("measz", *grid, hw_master, time);
                 }
 
-                // Note we have to Hadamard-transform back after measurement in order to obtain correct expectation values when simulating joint operator
                 else if (tile_spec == "double-horiz") { 
-                    double time_tmp = lq2->transversal_op("measx", *grid, hw_master, time);
-                    lq2->transversal_op("hadamard", *grid, hw_master, time_tmp);
+                    lq2->transversal_op("measx", *grid, hw_master, time);
                 }
 
-                // Measure strip qubits
-                double time_tmp;
-                for (unsigned int site : strip) {
-                    time_tmp = time;
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
-
-                    time_tmp = TI_model.add_meas(site, time_tmp, 0, *grid, hw_master);
-
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time_tmp, 0, *grid, hw_master);
-                    
-                }
-
-                // Perform idle operation on lq1
-                time = lq1->idle(cycles, *grid, hw_master, time);
-
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
             }
 
             // Merge two patches
@@ -595,17 +569,8 @@ namespace TISCC
 
                 if (tile_spec == "single") {std::cerr << "merge: invalid tile_spec given." << std::endl; abort();}
 
-                // Prepare strip qubits
-                double time_tmp = 0;
-                for (unsigned int site : strip) {
-                    time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
-
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
-                }
-
-                // Perform 'idle' operation on the merged qubit
-                time = lq->idle(cycles, *grid, hw_master, time);
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
 
             }
 
@@ -614,23 +579,8 @@ namespace TISCC
 
                 if (tile_spec == "single") {std::cerr << "split: invalid tile_spec given." << std::endl; abort();}
 
-                // Measure strip qubits
-                double time_tmp;
-                for (unsigned int site : strip) {
-                    time_tmp = time;
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
-
-                    time_tmp = TI_model.add_meas(site, time_tmp, 1, *grid, hw_master);
-
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time_tmp, 2, *grid, hw_master);
-                    
-                }
-
-                // Perform 'idle' operation on each separate qubit
-                lq1->idle(cycles, *grid, hw_master, time);
-                time = lq2->idle(cycles, *grid, hw_master, time);
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
 
             }
 
@@ -638,17 +588,8 @@ namespace TISCC
 
                 if (tile_spec == "single") {std::cerr << "bellmeas: invalid tile_spec given." << std::endl; abort();}
 
-                // Prepare strip qubits
-                double time_tmp = 0;
-                for (unsigned int site : strip) {
-                    time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
-
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
-                }
-
-                // Perform 'idle' operation on the merged qubit
-                time = lq->idle(cycles, *grid, hw_master, time);
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
 
                 // Measure out the whole merged patch
                 if (tile_spec == "double-horiz") {
@@ -665,34 +606,22 @@ namespace TISCC
 
                 if (tile_spec == "single") {std::cerr << "bellprep: invalid tile_spec given." << std::endl; abort();}
 
-                // Prepare state and do an idle on the merged patch
+                // Prepare lq2 in approp. basis depending on direction of extension
                 else if (tile_spec == "double-horiz") {
-                    lq->transversal_op("prepx", *grid, hw_master, time);
+                    lq1->transversal_op("prepx", *grid, hw_master, time);
+                    lq2->transversal_op("prepx", *grid, hw_master, time);
                 }
 
                 else if (tile_spec == "double-vert") {
-                    lq->transversal_op("prepx", *grid, hw_master, time);
+                    lq1->transversal_op("prepz", *grid, hw_master, time);
+                    lq2->transversal_op("prepz", *grid, hw_master, time);
                 }
 
-                time = lq->idle(cycles, *grid, hw_master, time);
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
 
-                // Measure strip qubits
-                double time_tmp;
-                for (unsigned int site : strip) {
-                    time_tmp = time;
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
-
-                    time_tmp = TI_model.add_meas(site, time_tmp, 1, *grid, hw_master);
-
-                    if (tile_spec == "double-horiz")
-                        time_tmp = TI_model.add_H(site, time_tmp, 2, *grid, hw_master);
-                    
-                }
-
-                // Perform 'idle' operation on each separate qubit
-                lq1->idle(cycles, *grid, hw_master, time);
-                time = lq2->idle(cycles, *grid, hw_master, time);
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
 
                 // Post-processing: Pauli Z correction depending on measurement outcome (assumed to be tracked in software for now) (see notes)
 

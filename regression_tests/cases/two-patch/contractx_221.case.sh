@@ -1,1 +1,0 @@
-TISCC -x 2 -z 2 -t 1 -o "contraction" -s "double-horiz" -p

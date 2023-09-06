@@ -1,1 +1,0 @@
-TISCC -x 2 -z 2 -t 1 -o "bellprep" -s "double-horiz" -p

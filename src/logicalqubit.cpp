@@ -457,7 +457,7 @@ namespace TISCC
     }
 
     LogicalQubit::LogicalQubit(unsigned int dx, unsigned int dz, unsigned int row, unsigned int col, GridManager& grid) : 
-        dx_(dx), dx_init_(dx), dz_(dz), dz_init_(dz), row_(row), col_(col), canonical_arrangement_(true), xz_swap_tracker_(false), flipped_tracker_(false) { 
+        dx_(dx), dx_init_(dx), dz_(dz), dz_init_(dz), row_(row), col_(col), canonical_arrangement_(true), xz_swap_tracker_(false), flipped_tracker_(false), lq1(nullptr), lq2(nullptr) { 
         init_stabilizers(dx, dz, row, col, grid);
         construct_parity_check_matrix(grid);
         init_circuits();
@@ -1904,14 +1904,17 @@ namespace TISCC
         }
     }
 
-    // merge: construct and return a logical qubit that represents the merged product of this qubit with an input one
-    LogicalQubit* LogicalQubit::merge(LogicalQubit& lq2, GridManager& grid) {
+    // Construct and return a logical qubit that represents the merged product of this qubit with an input one
+    LogicalQubit* LogicalQubit::get_merged_lq(LogicalQubit& lq2, GridManager& grid) {
 
         // If the stabilizers have been altered at all, don't allow merge
         if (flipped_tracker() || xz_swap_tracker() || !canonical_arrangement() || lq2.flipped_tracker() || lq2.xz_swap_tracker() || !lq2.canonical_arrangement()) {
-            std::cerr << "merge: Merge not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
+            std::cerr << "get_merged_lq: Merge not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
             abort();
         }
+
+        // Pointer to merged product
+        LogicalQubit* merged_lq;
 
         // Determine whether to merge horizontally or vertically and set parameters
 
@@ -1920,7 +1923,7 @@ namespace TISCC
 
             // We require them to have the same code distance
             if (get_dz() != lq2.get_dz()) {
-                std::cerr << "LogicalQubit::merge: horizontal merge must take place between qubits with the same dz." << std::endl;
+                std::cerr << "LogicalQubit::get_merged_lq: horizontal merge must take place between qubits with the same dz." << std::endl;
                 abort();
             }
 
@@ -1928,12 +1931,15 @@ namespace TISCC
             unsigned int extra_strip = 0;
             if (get_dx()%2 == 0) {extra_strip = 1;}
             if (lq2.get_col() != get_col() + get_dx() + 1 + extra_strip) {
-                std::cerr << "LogicalQubit::merge: horizontal merge must take place between patches separated by one (two) grid columns if dx is even (odd)." << std::endl;
+                std::cerr << "LogicalQubit::get_merged_lq: horizontal merge must take place between patches separated by one (two) grid columns if dx is even (odd)." << std::endl;
                 abort();
             }
 
             // Construct and return merged patch
-            return new LogicalQubit(get_dx() + lq2.get_dx() + 1 + extra_strip, get_dz(), get_row(), get_col(), grid);
+            merged_lq = new LogicalQubit(get_dx() + lq2.get_dx() + 1 + extra_strip, get_dz(), get_row(), get_col(), grid);
+            merged_lq->lq1 = this; 
+            merged_lq->lq2 = &lq2;
+            return merged_lq;
 
         }
 
@@ -1942,7 +1948,7 @@ namespace TISCC
 
             // We require them to have the same x code distance
             if (get_dx() != lq2.get_dx()) {
-                std::cerr << "LogicalQubit::merge: vertical merge must take place between qubits with the same dx." << std::endl;
+                std::cerr << "LogicalQubit::get_merged_lq: vertical merge must take place between qubits with the same dx." << std::endl;
                 abort();
             }
 
@@ -1950,18 +1956,107 @@ namespace TISCC
             unsigned int extra_strip = 0;
             if (get_dz()%2 == 0) {extra_strip = 1;} 
             if (lq2.get_row() != get_row() + get_dz() + 1 + extra_strip) {
-                std::cerr << "LogicalQubit::merge: vertical merge must take place between patches separated by one (two) grid rows if dx is even (odd)." << std::endl;
+                std::cerr << "LogicalQubit::get_merged_lq: vertical merge must take place between patches separated by one (two) grid rows if dx is even (odd)." << std::endl;
                 abort();
             }
 
             // Construct and return merged patch
-            return new LogicalQubit(get_dx(), get_dz() + lq2.get_dz() + 1 + extra_strip, get_row(), get_col(), grid); 
+            merged_lq = new LogicalQubit(get_dx(), get_dz() + lq2.get_dz() + 1 + extra_strip, get_row(), get_col(), grid); 
+            merged_lq->lq1 = this; 
+            merged_lq->lq2 = &lq2;
+            return merged_lq;
 
         }
 
         else {
-            std::cerr << "LogicalQubit::merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+            std::cerr << "LogicalQubit::get_merged_lq: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
             abort();
         }
+    }
+
+    // merge: Prepare strip and perform idle on merged qubit
+    double LogicalQubit::merge(unsigned int cycles, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        // Determine if it is a merged product
+        if ((lq1 == nullptr) || (lq2 == nullptr)) {
+            std::cerr << "LogicalQubit::merge: merge called on qubit that is not a merged product." << std::endl;
+        }
+
+        // Determine if horizontally or vertically displaced
+        std::string direction;
+        if (lq1->get_row() == lq2->get_row()) {
+            direction = "horizontal";
+        }
+
+        else if (lq1->get_col() == lq2->get_col()) {
+            direction = "vertical";
+        }
+
+        else {
+            std::cerr << "LogicalQubit::get_merged_lq: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+            abort();
+        }
+
+        std::set<unsigned int> strip = get_strip(*lq1, *lq2);
+
+        // Prepare strip qubits
+        double time_tmp = 0;
+        for (unsigned int site : strip) {
+            time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+
+            if (direction == "horizontal")
+                time_tmp = TI_model.add_H(site, time_tmp, 0, grid, hw_master);
+        }
+
+        // Perform idle operation simultaneously
+        time = idle(cycles, grid, hw_master, time);
+
+        // 
+        return time;
+
+    }
+
+    // split: find a strip of qubits not supported by two input lq and measure them appropriately
+    double LogicalQubit::split(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        // Determine if it is a merged product
+        if ((lq1 == nullptr) || (lq2 == nullptr)) {
+            std::cerr << "LogicalQubit::split: split called on qubit that is not a merged product." << std::endl;
+        }
+
+        // Determine if horizontally or vertically displaced
+        std::string direction;
+        if (lq1->get_row() == lq2->get_row()) {
+            direction = "horizontal";
+        }
+
+        else if (lq1->get_col() == lq2->get_col()) {
+            direction = "vertical";
+        }
+
+        else {
+            std::cerr << "LogicalQubit::split: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+            abort();
+        }
+
+
+        std::set<unsigned int> strip = get_strip(*lq1, *lq2);
+
+        // Measure strip qubits in appropriate basis
+        double time_tmp;
+        for (unsigned int site : strip) {
+            time_tmp = time;
+            if (direction == "horizontal")
+                time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
+
+            time_tmp = TI_model.add_meas(site, time_tmp, 0, grid, hw_master);
+
+            // if (direction == "horizontal")
+            //     time_tmp = TI_model.add_H(site, time_tmp, 2, grid, hw_master);
+            
+        }
+
+        return time_tmp;
+
     }
 }
