@@ -55,6 +55,9 @@ public:
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double swap_left(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
+    
+    // merge: construct and return a logical qubit that represents the merged product of this qubit with an input one
+    LogicalQubit* merge(LogicalQubit& lq2, GridManager& grid);
 
     // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
     float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug);
@@ -158,9 +161,6 @@ private:
     double translate_patch(int s, int e, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
 };
-
-// Construct and return a logical qubit that represents the merged product of two input logical qubits
-LogicalQubit* merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid);
 
 // Helper functions related to binary vector math
 bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2);

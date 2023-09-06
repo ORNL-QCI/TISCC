@@ -1904,11 +1904,11 @@ namespace TISCC
         }
     }
 
-    // Construct and return a logical qubit that represents the merged product of two input logical qubits
-    LogicalQubit* merge(LogicalQubit& lq1, LogicalQubit& lq2, GridManager& grid) {
+    // merge: construct and return a logical qubit that represents the merged product of this qubit with an input one
+    LogicalQubit* LogicalQubit::merge(LogicalQubit& lq2, GridManager& grid) {
 
         // If the stabilizers have been altered at all, don't allow merge
-        if (lq1.flipped_tracker() || lq1.xz_swap_tracker() || !lq1.canonical_arrangement() || lq2.flipped_tracker() || lq2.xz_swap_tracker() || !lq2.canonical_arrangement()) {
+        if (flipped_tracker() || xz_swap_tracker() || !canonical_arrangement() || lq2.flipped_tracker() || lq2.xz_swap_tracker() || !lq2.canonical_arrangement()) {
             std::cerr << "merge: Merge not allowed for qubits that do not have the default stabilizer arrangement." << std::endl;
             abort();
         }
@@ -1916,39 +1916,52 @@ namespace TISCC
         // Determine whether to merge horizontally or vertically and set parameters
 
         // If they are horizontally displaced,
-        if (lq1.get_row() == lq2.get_row()) {
+        if (get_row() == lq2.get_row()) {
 
             // We require them to have the same code distance
-            assert(lq1.get_dz() == lq2.get_dz());
+            if (get_dz() != lq2.get_dz()) {
+                std::cerr << "LogicalQubit::merge: horizontal merge must take place between qubits with the same dz." << std::endl;
+                abort();
+            }
 
-            // Merge horizontally
+            // We require that lq1 is located one tile east-ward
             unsigned int extra_strip = 0;
-            if (lq1.get_dx()%2 == 0) {extra_strip = 1;}
-            assert(lq2.get_col() == lq1.get_col() + lq1.get_dx() + 1 + extra_strip);
-            return new LogicalQubit(lq1.get_dx() + lq2.get_dx() + 1 + extra_strip, lq1.get_dz(), lq1.get_row(), lq1.get_col(), grid);
+            if (get_dx()%2 == 0) {extra_strip = 1;}
+            if (lq2.get_col() != get_col() + get_dx() + 1 + extra_strip) {
+                std::cerr << "LogicalQubit::merge: horizontal merge must take place between patches separated by one (two) grid columns if dx is even (odd)." << std::endl;
+                abort();
+            }
+
+            // Construct and return merged patch
+            return new LogicalQubit(get_dx() + lq2.get_dx() + 1 + extra_strip, get_dz(), get_row(), get_col(), grid);
 
         }
 
         // Otherwise, if they are vertically displaced,
-        else if (lq1.get_col() == lq2.get_col()) {
+        else if (get_col() == lq2.get_col()) {
 
             // We require them to have the same x code distance
-            assert(lq1.get_dx() == lq2.get_dx());
+            if (get_dx() != lq2.get_dx()) {
+                std::cerr << "LogicalQubit::merge: vertical merge must take place between qubits with the same dx." << std::endl;
+                abort();
+            }
 
-            // Merge vertically
+            // We require that lq1 is located one tile south-ward
             unsigned int extra_strip = 0;
-            if (lq1.get_dz()%2 == 0) {extra_strip = 1;} 
-            assert(lq2.get_row() == lq1.get_row() + lq1.get_dz() + 1 + extra_strip);
-            return new LogicalQubit(lq1.get_dx(), lq1.get_dz() + lq2.get_dz() + 1 + extra_strip, lq1.get_row(), lq1.get_col(), grid); 
+            if (get_dz()%2 == 0) {extra_strip = 1;} 
+            if (lq2.get_row() != get_row() + get_dz() + 1 + extra_strip) {
+                std::cerr << "LogicalQubit::merge: vertical merge must take place between patches separated by one (two) grid rows if dx is even (odd)." << std::endl;
+                abort();
+            }
+
+            // Construct and return merged patch
+            return new LogicalQubit(get_dx(), get_dz() + lq2.get_dz() + 1 + extra_strip, get_row(), get_col(), grid); 
 
         }
 
         else {
-            std::cerr << "merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+            std::cerr << "LogicalQubit::merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
             abort();
         }
-
-
-
     }
 }

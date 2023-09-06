@@ -166,7 +166,7 @@ namespace TISCC
             lq2 = new TISCC::LogicalQubit(dx, dz, nrows, 0, *grid);
 
             // Create a merged qubit
-            lq = merge(*lq1, *lq2, *grid);
+            lq = lq1->merge(*lq2, *grid);
 
             // Grab all of the qsites on the `strip' between lq1 and lq2
             strip = lq->get_strip(*lq1, *lq2);
@@ -184,7 +184,7 @@ namespace TISCC
             lq2 = new TISCC::LogicalQubit(dx, dz, 0, ncols, *grid);
 
             // Create a merged qubit
-            lq = merge(*lq1, *lq2, *grid);
+            lq = lq1->merge(*lq2, *grid);
 
             // Grab all of the qsites on the `strip' between lq1 and lq2
             strip = lq->get_strip(*lq1, *lq2);
@@ -215,6 +215,7 @@ namespace TISCC
                 std::cout << std::endl;
                 ascii_grid = grid->ascii_grid(true);
                 grid->print_grid(ascii_grid);
+                std::cout << std::endl;
                 ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
                 grid->print_grid(ascii_grid);
             }
@@ -264,7 +265,7 @@ namespace TISCC
                 }
 
                 else if (s == "flip_patch") {
-                    time = lq->flip_patch(*grid, hw_master, time, true, true);
+                    time = lq->flip_patch(*grid, hw_master, time, true, debug);
                 }
 
                 else if (s == "move_right") {
@@ -317,7 +318,6 @@ namespace TISCC
                     for (unsigned int site : strip) {
                         time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
                         time_tmp = TI_model.add_meas(site, time_tmp, 0, *grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 0, *grid, hw_master);
                     }
 
                     // Transfer resources appropriately for later processing
