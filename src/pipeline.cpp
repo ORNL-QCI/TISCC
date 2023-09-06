@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, merge, split, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -564,6 +564,37 @@ namespace TISCC
                 time = lq->split(*grid, hw_master, time);
             }
 
+            // Move (extension followed by contraction)
+            else if (s == "move") {
+
+                if (tile_spec == "single") {std::cerr << "move: invalid tile_spec given." << std::endl; abort();}
+
+                // Prepare lq2 in approp. basis depending on direction of extension
+                else if (tile_spec == "double-horiz") {
+                    lq2->transversal_op("prepx", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-vert") {
+                    lq2->transversal_op("prepz", *grid, hw_master, time);
+                }
+
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
+
+                // Measure lq1 in approp. basis depending on direction of contraction
+                if (tile_spec == "double-vert") {
+                    lq1->transversal_op("measz", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-horiz") { 
+                    lq1->transversal_op("measx", *grid, hw_master, time);
+                }
+
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
+
+            }
+
             // Merge two patches
             else if (s == "merge") {
 
@@ -578,6 +609,63 @@ namespace TISCC
             else if (s == "split") {
 
                 if (tile_spec == "single") {std::cerr << "split: invalid tile_spec given." << std::endl; abort();}
+
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
+
+            }
+
+            // Combine into joint XX or ZZ measurement
+            else if (s == "jointmeas") {
+
+                if (tile_spec == "single") {std::cerr << "jointmeas: invalid tile_spec given." << std::endl; abort();}
+
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
+
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
+
+            }
+
+            // Merge-Contract
+            else if (s == "mergecontract") {
+
+                if (tile_spec == "single") {std::cerr << "mergecontract: invalid tile_spec given." << std::endl; abort();}
+
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
+
+                // Measure lq2 in approp. basis depending on direction of contraction
+                if (tile_spec == "double-vert") {
+                    lq2->transversal_op("measz", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-horiz") { 
+                    lq2->transversal_op("measx", *grid, hw_master, time);
+                }
+
+                // Perform split operation
+                time = lq->split(*grid, hw_master, time);
+
+            }
+
+            // Extend-Split
+            else if (s == "extendsplit") {
+
+                if (tile_spec == "single") {std::cerr << "extension: invalid tile_spec given." << std::endl; abort();}
+
+                // Prepare lq2 in approp. basis depending on direction of extension
+                else if (tile_spec == "double-horiz") {
+                    lq2->transversal_op("prepx", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-vert") {
+                    lq2->transversal_op("prepz", *grid, hw_master, time);
+                }
+
+                // Perform merge operation
+                time = lq->merge(cycles, *grid, hw_master, time);
 
                 // Perform split operation
                 time = lq->split(*grid, hw_master, time);
@@ -623,11 +711,11 @@ namespace TISCC
                 // Perform split operation
                 time = lq->split(*grid, hw_master, time);
 
-                // Post-processing: Pauli Z correction depending on measurement outcome (assumed to be tracked in software for now) (see notes)
+                // Post-processing: Pauli Z correction depending on measurement outcome
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, rotation, extension, contraction, merge, split, bellprep, bellmeas}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
             // **Note: This being after circuit generation assumes that the occupancy of the grid post-circuit is equivalent to the occupancy pre-circuit
