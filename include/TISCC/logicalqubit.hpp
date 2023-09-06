@@ -55,7 +55,7 @@ public:
     double apply_pauli(char pauli, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     double swap_left(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
-
+    double move_right(unsigned int cycles, LogicalQubit*& lq_extended, LogicalQubit*& lq_contracted, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
     
     // Construct and return a logical qubit that represents the merged product of this qubit with an input one
     LogicalQubit* get_merged_lq(LogicalQubit& lq2, GridManager& grid);

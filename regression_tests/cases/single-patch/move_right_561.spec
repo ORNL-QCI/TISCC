@@ -253,12 +253,12 @@ Configuration after move_right:
             0.0      Prepare_Z             92              0              m                             e              X
             0.0      Prepare_Z            190              0              m                             e              X
             0.0      Prepare_Z            288              0              m                             e              X
-           10.0        Y_-pi/4             89              1              X                             X              X
-           10.0        Y_-pi/4            138              1              X                             X              X
-           10.0        Y_-pi/4            187              1              X                             X              X
-           10.0        Y_-pi/4            236              1              X                             X              X
-           10.0        Y_-pi/4            285              1              X                             X              X
-           10.0        Y_-pi/4            334              1              X                             X              X
+           10.0        Y_-pi/4             89              0              X                             X              X
+           10.0        Y_-pi/4            138              0              X                             X              X
+           10.0        Y_-pi/4            187              0              X                             X              X
+           10.0        Y_-pi/4            236              0              X                             X              X
+           10.0        Y_-pi/4            285              0              X                             X              X
+           10.0        Y_-pi/4            334              0              X                             X              X
            10.0        Y_-pi/4             64              1              m                             f              X
            10.0        Y_-pi/4             78              1              m                             f              X
            10.0        Y_-pi/4            106              1              m                             f              X
@@ -277,12 +277,12 @@ Configuration after move_right:
            10.0        Y_-pi/4             92              1              m                             e              X
            10.0        Y_-pi/4            190              1              m                             e              X
            10.0        Y_-pi/4            288              1              m                             e              X
-           20.0         Z_pi/2             89              1              X                             X              X
-           20.0         Z_pi/2            138              1              X                             X              X
-           20.0         Z_pi/2            187              1              X                             X              X
-           20.0         Z_pi/2            236              1              X                             X              X
-           20.0         Z_pi/2            285              1              X                             X              X
-           20.0         Z_pi/2            334              1              X                             X              X
+           20.0         Z_pi/2             89              0              X                             X              X
+           20.0         Z_pi/2            138              0              X                             X              X
+           20.0         Z_pi/2            187              0              X                             X              X
+           20.0         Z_pi/2            236              0              X                             X              X
+           20.0         Z_pi/2            285              0              X                             X              X
+           20.0         Z_pi/2            334              0              X                             X              X
            20.0         Z_pi/2             64              1              m                             f              X
            20.0         Z_pi/2             78              1              m                             f              X
            20.0         Z_pi/2            106              1              m                             f              X

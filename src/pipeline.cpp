@@ -271,22 +271,19 @@ namespace TISCC
                 else if (s == "move_right") {
 
                     // move_right requires an additional column of qubits to the right
-                    TISCC::GridManager* tmp_grid = grid;
-                    grid = new TISCC::GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
                     delete tmp_grid;
 
                     // lq is already our standard orientation qubit, but must re-allocate it on new grid
-                    TISCC::LogicalQubit* tmp_lq = lq;
-                    lq = new TISCC::LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
                     delete tmp_lq;
 
-                    // We need another lq extended by one column
-                    TISCC::LogicalQubit* lq_extended = new TISCC::LogicalQubit(lq->get_dx_init() + 1, lq->get_dz_init(), 0, 0, *grid);
-
-                    // Finally, we need a lq contracted by a column to the left
-                    TISCC::LogicalQubit* lq_contracted = new TISCC::LogicalQubit(lq->get_dx_init(), lq->get_dz_init(), 0, 1, *grid);
-                    time = lq_contracted->flip_patch(*grid, hw_master, time, false, false);
-                    lq_contracted->xz_swap(*grid);
+                    // move_right takes in pointers to lq_extended and lq_contracted that can be used later if desired
+                    LogicalQubit* lq_extended = nullptr;
+                    LogicalQubit* lq_contracted = nullptr;
+                    time = lq->move_right(cycles, lq_extended, lq_contracted, *grid, hw_master, time);
 
                     // Visualize if debug flag is on
                     std::vector<std::string> ascii_grid;
@@ -300,24 +297,6 @@ namespace TISCC
                         std::cout << "Configuration after move_right:" << std::endl;
                         ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
                         grid->print_grid(ascii_grid);
-                    }
-
-                    // The patch extension requires initialization of strip qubits in the x basis
-                    strip = lq_extended->get_strip(*lq, *lq);
-                    double time_tmp;
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
-                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
-                    }
-
-                    // Do idle op on extended patch
-                    time = lq_extended->idle(cycles, *grid, hw_master, time);
-
-                    // Measure strip qubits on the left
-                    strip = lq_extended->get_strip(*lq_contracted, *lq_contracted);
-                    for (unsigned int site : strip) {
-                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
-                        time_tmp = TI_model.add_meas(site, time_tmp, 0, *grid, hw_master);
                     }
 
                     // Transfer resources appropriately for later processing
@@ -394,11 +373,10 @@ namespace TISCC
 
                     /* Move the patch one column to the right */
 
-                    // Construct extended and contracted qubits
-                    LogicalQubit* lq_extended = new LogicalQubit(lq->get_dx_init() + 1, lq->get_dz_init(), 0, 0, *grid);
-                    lq_extended->flip_patch(*grid, hw_master, time, false, false);
-                    LogicalQubit* lq_contracted = new LogicalQubit(lq->get_dx_init(), lq->get_dz_init(), 0, 1, *grid);
-                    lq_contracted->xz_swap(*grid);
+                    // move_right takes in pointers to lq_extended and lq_contracted that can be used later if desired
+                    TISCC::LogicalQubit* lq_extended = nullptr;
+                    TISCC::LogicalQubit* lq_contracted = nullptr;
+                    time = lq->move_right(cycles, lq_extended, lq_contracted, *grid, hw_master, time);
 
                     // Visualize if debug flag is on
                     if (debug) {
@@ -411,21 +389,6 @@ namespace TISCC
                         std::cout << "Configuration after move_right:" << std::endl;
                         ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
                         grid->print_grid(ascii_grid);
-                    }
-
-                    // The patch extension requires initialization of strip qubits in the Z basis (note Z logical is now horizontal)
-                    strip = lq_extended->get_strip(*lq, *lq);
-                    for (unsigned int site : strip) {
-                        TI_model.add_init(site, time, 0, *grid, hw_master);
-                    }
-
-                    // Do idle op on extended patch
-                    time = lq_extended->idle(cycles, *grid, hw_master, time);
-
-                    // Measure strip qubits on the left in the Z basis (note Z logical is now horizontal)
-                    strip = lq_extended->get_strip(*lq_contracted, *lq_contracted);
-                    for (unsigned int site : strip) {
-                        TI_model.add_meas(site, time, 0, *grid, hw_master);
                     }
 
                     // Transfer resources appropriately for later processing

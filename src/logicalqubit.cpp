@@ -1090,6 +1090,78 @@ namespace TISCC
         return time;
     }
 
+    // Moves patch one column right-ward on the grid. Returns pointers to newly constructed qubits.
+    double LogicalQubit::move_right(unsigned int cycles, LogicalQubit*& lq_extended, LogicalQubit*& lq_contracted, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
+
+        // 
+        if ((lq_extended != nullptr) || (lq_contracted != nullptr)) {
+            std::cerr << "LogicalQubit::move_right: arguments lq_extended and lq_contracted should be set as nullptr (this function will construct them)." << std::endl;
+            abort();
+        }
+
+        // Deal with cases of arrangements
+        bool need_hadamard = 1;
+        if (!canonical_arrangement()) {
+            std::cerr << "LogicalQubit::move_right: Must be in a canonical arrangement to perform move_right." << std::endl;
+            abort();
+        }
+        else if (xz_swap_tracker() && !flipped_tracker()) {
+            need_hadamard = 0;
+        }
+        else if (flipped_tracker() && !xz_swap_tracker()) {
+            need_hadamard = 0;
+        }
+
+        // We need another lq extended by one column
+        lq_extended = new LogicalQubit(get_dx_init() + 1, get_dz_init(), 0, 0, grid);
+
+        // The arrangement of the extended patch should be the same as lq
+        if (xz_swap_tracker()) {lq_extended->xz_swap(grid);}
+        if (flipped_tracker()) {lq_extended->flip_patch(grid, hw_master, time, false, false);}
+
+        // Finally, we need a lq contracted by a column to the left
+        lq_contracted = new LogicalQubit(get_dx_init(), get_dz_init(), 0, 1, grid);
+
+        // The arrangement of the contracted patch will depend on the arrangement of lq
+        if (!xz_swap_tracker() && !flipped_tracker()) {
+            lq_contracted->flip_patch(grid, hw_master, time, false, false);
+            lq_contracted->xz_swap(grid);
+        }
+        else if (xz_swap_tracker() && !flipped_tracker()) {
+            lq_contracted->flip_patch(grid, hw_master, time, false, false);
+        }
+        else if (!xz_swap_tracker() && flipped_tracker()) {
+            lq_contracted->xz_swap(grid);
+        }
+
+        // The patch extension requires initialization of strip qubits
+        std::set<unsigned int> strip = lq_extended->get_strip(*this, *this);
+        double time_tmp;
+        for (unsigned int site : strip) {
+            time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
+
+            if (need_hadamard) {
+                TI_model.add_H(site, time_tmp, 0, grid, hw_master);
+            }
+        }
+
+        // Do idle op on extended patch
+        time = lq_extended->idle(cycles, grid, hw_master, time);
+
+        // Measure strip qubits on the left
+        strip = lq_extended->get_strip(*lq_contracted, *lq_contracted);
+        for (unsigned int site : strip) {
+            time_tmp = time;
+            if (need_hadamard) {
+                time_tmp = TI_model.add_H(site, time_tmp, 0, grid, hw_master);
+            }
+
+            TI_model.add_meas(site, time_tmp, 0, grid, hw_master);
+        }
+
+        return time;
+    }
+
    // Add new stabilizer plaquette (to be used in corner movement)
     double LogicalQubit::add_stabilizer(unsigned int row, unsigned int col, char shape, char type, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time, bool debug) {
 
