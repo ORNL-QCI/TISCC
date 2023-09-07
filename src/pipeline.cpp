@@ -148,7 +148,7 @@ namespace TISCC
         bool extra_col = 0;
         if (parser.exists("o")) {
             std::string s = parser.get<std::string>("o");
-            if ((s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation") || (s == "single_tile_rotation_with_H")) {
+            if ((s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation") || (s == "hadamard")) {
                 extra_col = 1;
             }
         }
@@ -339,7 +339,7 @@ namespace TISCC
 
                 }
 
-                else if (s == "single_tile_rotation") {
+                if ((s == "single_tile_rotation") || (s == "hadamard")) {
 
                     std::vector<std::string> ascii_grid;
                     if (debug) {

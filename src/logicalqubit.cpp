@@ -958,12 +958,12 @@ namespace TISCC
     float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug) {
 
         // If the stabilizers have been altered at all (other than by xz_swap), don't allow flip_patch
-        if (!canonical_arrangement_)  {
-            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for patches that do not have a canonical stabilizer arrangement." << std::endl;
+        if (!canonical_arrangement_ || flipped_tracker())  {
+            std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for patches that do not have the standard or rotated stabilizer arrangement." << std::endl;
             abort();
         }
 
-        // Only currently works for odd code distances and even code distances > 6
+        // Only currently works for odd code distances and even code distances >= 6
         if ((!(dz_init_%2) && !(dx_init_%2)) && ((dx_init_ < 6) || (dz_init_ < 6))) {
             std::cerr << "LogicalQubit::flip_patch: flip_patch not allowed for even code distances lower than 6." << std::endl;
             abort();
@@ -975,10 +975,21 @@ namespace TISCC
 
         // We separate these in time 
         float time_tmp = time;
-        time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug);
-        time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
-        time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
-        time_tmp = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug);       
+
+        if (!xz_swap_tracker()) {
+            time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug);
+            time_tmp = extend_logical_operator_clockwise('Z', "opposite", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+            time_tmp = extend_logical_operator_clockwise('X', "default", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+            time_tmp = extend_logical_operator_clockwise('Z', "default", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug);  
+        }
+
+        else {
+            time_tmp = extend_logical_operator_clockwise('Z', "opposite", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug);
+            time_tmp = extend_logical_operator_clockwise('X', "opposite", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+            time_tmp = extend_logical_operator_clockwise('Z', "default", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+            time_tmp = extend_logical_operator_clockwise('X', "default", dx_init_ - 1, true, grid, tmp_ops, time_tmp, debug); 
+        }
+     
 
         // We have changed the stabilizer arrangement back to a canonical one
         if (!canonical_arrangement_) canonical_arrangement_ = true;
@@ -1116,8 +1127,8 @@ namespace TISCC
         lq_extended = new LogicalQubit(get_dx_init() + 1, get_dz_init(), 0, 0, grid);
 
         // The arrangement of the extended patch should be the same as lq
-        if (xz_swap_tracker()) {lq_extended->xz_swap(grid);}
         if (flipped_tracker()) {lq_extended->flip_patch(grid, hw_master, time, false, false);}
+        if (xz_swap_tracker()) {lq_extended->xz_swap(grid);}
 
         // Finally, we need a lq contracted by a column to the left
         lq_contracted = new LogicalQubit(get_dx_init(), get_dz_init(), 0, 1, grid);
@@ -1683,8 +1694,15 @@ namespace TISCC
 
         // Grab the logical operator located clockwise from the one to be extended
         std::string cw_edge_type;
-        if (type == 'X') cw_edge_type = opp_edge_type;
-        else if (type == 'Z') cw_edge_type = edge_type;
+        if (!xz_swap_tracker()) {
+            if (type == 'X') cw_edge_type = opp_edge_type;
+            else if (type == 'Z') cw_edge_type = edge_type;
+        }
+        else {
+            if (type == 'X') cw_edge_type = edge_type;
+            else if (type == 'Z') cw_edge_type = opp_edge_type;         
+        }
+
         std::vector<bool> cw_logical_operator = get_logical_operator(opp_type, cw_edge_type);
 
         // Max weight possible before operator eats its tail (computation should stop way before then due to stronger condition on cw_logical_op)
