@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -132,10 +132,10 @@ namespace TISCC
         unsigned int ncols = dx+1+!(dx%2);
 
         // Declare needed variables for one- and two-tile operations
-        LogicalQubit* lq = nullptr;
-        LogicalQubit* lq1 = nullptr;
-        LogicalQubit* lq2 = nullptr;
-        GridManager* grid = nullptr;
+        TISCC::LogicalQubit* lq = nullptr;
+        TISCC::LogicalQubit* lq1 = nullptr;
+        TISCC::LogicalQubit* lq2 = nullptr;
+        TISCC::GridManager* grid = nullptr;
         std::set<unsigned int> strip;
 
         // Extract tile_spec
@@ -144,35 +144,26 @@ namespace TISCC
             tile_spec = parser.get<std::string>("s");
         }
 
-        // Some operations require the usage of an additional column to the right
-        bool extra_col = 0;
-        if (parser.exists("o")) {
-            std::string s = parser.get<std::string>("o");
-            if ((s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation") || (s == "hadamard")) {
-                extra_col = 1;
-            }
-        }
-
         // Case-dependent grid & lq initialization
         if (tile_spec == "single") {
 
             // Initialize grid
-            grid = new GridManager(nrows, ncols + extra_col);
+            grid = new TISCC::GridManager(nrows, ncols);
 
             // Initialize logical qubit on  grid
-            lq = new LogicalQubit(dx, dz, 0, 0, *grid);
+            lq = new TISCC::LogicalQubit(dx, dz, 0, 0, *grid);
         }
 
         else if (tile_spec == "double-vert") {
 
             // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
-            grid = new GridManager(2*nrows, ncols + extra_col);
+            grid = new TISCC::GridManager(2*nrows, ncols);
 
             // Initialize logical qubit object using the grid
-            lq1 = new LogicalQubit(dx, dz, 0, 0, *grid);
+            lq1 = new TISCC::LogicalQubit(dx, dz, 0, 0, *grid);
 
             // Initialize second logical qubit object to the bottom of the first
-            lq2 = new LogicalQubit(dx, dz, nrows, 0, *grid);
+            lq2 = new TISCC::LogicalQubit(dx, dz, nrows, 0, *grid);
 
             // Create a merged qubit
             lq = lq1->get_merged_lq(*lq2, *grid);
@@ -184,13 +175,13 @@ namespace TISCC
         else if (tile_spec == "double-horiz") {
 
             // Construct grid with appropriate dimensions to hold two tiles top and bottom with a horizontal strip of qubits in between
-            grid = new GridManager(nrows, 2*ncols + extra_col);
+            grid = new TISCC::GridManager(nrows, 2*ncols);
 
             // Initialize logical qubit object using the grid
-            lq1 = new LogicalQubit(dx, dz, 0, 0, *grid);
+            lq1 = new TISCC::LogicalQubit(dx, dz, 0, 0, *grid);
 
             // Initialize second logical qubit object to the bottom of the first
-            lq2 = new LogicalQubit(dx, dz, 0, ncols, *grid);
+            lq2 = new TISCC::LogicalQubit(dx, dz, 0, ncols, *grid);
 
             // Create a merged qubit
             lq = lq1->get_merged_lq(*lq2, *grid);
@@ -256,7 +247,7 @@ namespace TISCC
             // Single-patch operations
             if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "pauli_x") || (s == "pauli_y") || (s == "pauli_z") 
             || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
-            || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation")) {
+            || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation") || (s == "rotation")) {
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
@@ -279,6 +270,16 @@ namespace TISCC
 
                 else if (s == "move_right") {
 
+                    // move_right requires an additional column of qubits to the right
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // lq is already our standard orientation qubit, but must re-allocate it on new grid
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+                    delete tmp_lq;
+
                     // move_right takes in pointers to lq_extended and lq_contracted that can be used later if desired
                     LogicalQubit* lq_extended = nullptr;
                     LogicalQubit* lq_contracted = nullptr;
@@ -299,24 +300,30 @@ namespace TISCC
                     }
 
                     // Transfer resources appropriately for later processing
-                    if (lq1 != nullptr) {
-                        delete lq1;
-                        lq1 = nullptr;
-                    }
-                    if (lq2 != nullptr) {
-                        delete lq2;
-                        lq2 = nullptr;
-                    }
 
-                    delete lq;
-                    lq = nullptr;
-                    lq = lq_contracted; // Contracted patch, being final state, defines logical operators for later processing
-                    lq2 = lq_extended; // Retain extended patch for calculating operator deformations
+                    // Replace lq_contracted with lq
+                    tmp_lq = lq;
+                    lq = lq_contracted;
+                    lq_contracted = tmp_lq;
+                    delete lq_contracted;
+
+                    // Replace lq_extended with lq2
+                    tmp_lq = lq2;
+                    lq2 = lq_extended;
+                    lq_extended = tmp_lq;
+                    if (lq_extended != nullptr) {
+                        delete lq_extended;               
+                    }
 
                 }
 
                 else if (s == "swap_left") {
                     
+                    // swap_left requires an additional column of qubits to the left; re-allocate grid
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
                     // re-allocate lq and swap x<->z stabilizers
                     LogicalQubit* tmp_lq = lq;
                     lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 1, *grid);
@@ -339,7 +346,19 @@ namespace TISCC
 
                 }
 
-                if ((s == "single_tile_rotation") || (s == "hadamard")) {
+                else if (s == "single_tile_rotation") {
+
+                    /* Constructing the appropriate GridManager and LogicalQubit variables */
+
+                    // Single-tile rotation requires an additional column of qubits to the right
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // lq is already our standard orientation qubit, but must re-allocate it on new grid
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+                    delete tmp_lq;
 
                     std::vector<std::string> ascii_grid;
                     if (debug) {
@@ -355,8 +374,8 @@ namespace TISCC
                     /* Move the patch one column to the right */
 
                     // move_right takes in pointers to lq_extended and lq_contracted that can be used later if desired
-                    LogicalQubit* lq_extended = nullptr;
-                    LogicalQubit* lq_contracted = nullptr;
+                    TISCC::LogicalQubit* lq_extended = nullptr;
+                    TISCC::LogicalQubit* lq_contracted = nullptr;
                     time = lq->move_right(cycles, lq_extended, lq_contracted, *grid, hw_master, time);
 
                     // Visualize if debug flag is on
@@ -373,22 +392,94 @@ namespace TISCC
                     }
 
                     // Transfer resources appropriately for later processing
-                    if (lq1 != nullptr) {
-                        delete lq1;
-                        lq1 = nullptr;
-                    }
-                    if (lq2 != nullptr) {
-                        delete lq2;
-                        lq2 = nullptr;
+
+                    // Replace lq with lq1 
+                    tmp_lq = lq1;
+                    lq1 = lq;
+                    lq = tmp_lq;
+                    if (lq != nullptr) {
+                        delete lq;
                     }
 
-                    LogicalQubit* tmp_lq = lq;
-                    lq = lq_contracted; // Contracted patch, being final state, defines logical operators for later processing
-                    lq1 = tmp_lq; // Retain flipped patch for extraction of deformations in post-processing
-                    lq2 = lq_extended; // Retain extended patch for calculating other operator deformations
+                    // Replace lq_contracted with lq
+                    tmp_lq = lq;
+                    lq = lq_contracted;
+                    lq_contracted = tmp_lq;
+                    delete lq_contracted;
+
+                    // Replace lq_extended with lq2
+                    tmp_lq = lq2;
+                    lq2 = lq_extended;
+                    lq_extended = tmp_lq;
+                    if (lq_extended != nullptr) {
+                        delete lq_extended;               
+                    }
 
                     // Lastly, swap left (whole rotation was verified without this line; the primitives were verified separately anyway)
                     time = lq->swap_left(*grid, hw_master, time);
+
+                }
+
+                else if (s == "rotation") {
+
+                    /* Constructing the appropriate GridManager and LogicalQubit variables */
+
+                    // We require an additional column of qubits to the right to complete the operation (this does not change the needed resources for a logical tile)
+                    GridManager* tmp_grid = grid;
+                    grid = new GridManager(tmp_grid->get_nrows(), tmp_grid->get_ncols() + 1);
+                    delete tmp_grid;
+
+                    // Re-allocate our standard orientation qubit on the new grid
+                    LogicalQubit* tmp_lq = lq;
+                    lq = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 0, *grid);
+
+                    // We will need extended and contracted qubits for the move_right operation
+                    LogicalQubit* lq_extended = new LogicalQubit(tmp_lq->get_dx_init() + 1, tmp_lq->get_dz_init(), 0, 0, *grid);
+                    LogicalQubit* lq_contracted = new LogicalQubit(tmp_lq->get_dx_init(), tmp_lq->get_dz_init(), 0, 1, *grid);
+
+                    /* Generate circuits */
+
+                    // Initial corner movements and idle operation
+                    time = lq->flip_patch(*grid, hw_master, time, true, false);
+                    // time = lq->idle(cycles, *grid, hw_master, time);
+
+                    std::vector<std::string> ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    // The patch extension requires initialization of strip qubits in the x basis
+                    strip = lq_extended->get_strip(*lq, *lq);
+                    double time_tmp;
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_init(site, time, 0, *grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 1, *grid, hw_master);
+                    }
+
+                    // Get extended patch into desired stabilizer arrangement and do idle op
+                    time = lq_extended->flip_patch(*grid, hw_master, time, false, false);
+                    // lq_extended->idle(cycles, *grid, hw_master, time);
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    // Use xz_swap to achieve the desired pattern of boundary stabilizers on the contracted patch
+                    lq_contracted->xz_swap(*grid);
+
+                    // Measure strip qubits on the left
+                    strip = lq_extended->get_strip(*lq_contracted, *lq_contracted);
+                    for (unsigned int site : strip) {
+                        time_tmp = TI_model.add_H(site, time, 0, *grid, hw_master);
+                        time_tmp = TI_model.add_meas(site, time_tmp, 0, *grid, hw_master);
+                        time_tmp = TI_model.add_H(site, time_tmp, 0, *grid, hw_master);
+                    }
+
+                    ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
+                    grid->print_grid(ascii_grid);
+
+                    // swap_left
+
+                    delete tmp_lq;
+                    delete lq_extended;
+                    delete lq_contracted;
 
                 }
 
@@ -587,7 +678,7 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
             // **Note: This being after circuit generation assumes that the occupancy of the grid post-circuit is equivalent to the occupancy pre-circuit
