@@ -66,9 +66,6 @@ public:
     // split: Measure strip 
     double split(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
-    // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
-    std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
-
     // A series of corner movements with the resulting strabilizer arrangement the same as if we flipped the patch upside down and then applied xz_swap
     float flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug);
 
@@ -138,6 +135,9 @@ private:
     // We track stabilizer measurement qsites corresponding with logical operator deformation
     std::vector<unsigned int> x_deformation_qsites;
     std::vector<unsigned int> z_deformation_qsites;
+
+    // Function to return the data qubits from this patch that are NOT occupied by two others (typically used to get the qsites on the intervening strip between lq from a merged product)
+    std::set<unsigned int> get_strip(LogicalQubit& lq1, LogicalQubit& lq2);
 
     // If this is a merged product, we employ pointers to track which lq were merged to produce it
     LogicalQubit* lq1;

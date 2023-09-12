@@ -136,7 +136,6 @@ namespace TISCC
         LogicalQubit* lq1 = nullptr;
         LogicalQubit* lq2 = nullptr;
         GridManager* grid = nullptr;
-        std::set<unsigned int> strip;
 
         // Extract tile_spec
         std::string tile_spec = "single";
@@ -176,9 +175,6 @@ namespace TISCC
 
             // Create a merged qubit
             lq = lq1->get_merged_lq(*lq2, *grid);
-
-            // Grab all of the qsites on the `strip' between lq1 and lq2
-            strip = lq->get_strip(*lq1, *lq2);
         }
 
         else if (tile_spec == "double-horiz") {
@@ -195,8 +191,6 @@ namespace TISCC
             // Create a merged qubit
             lq = lq1->get_merged_lq(*lq2, *grid);
 
-            // Grab all of the qsites on the `strip' between lq1 and lq2
-            strip = lq->get_strip(*lq1, *lq2);
         }
 
         else {
