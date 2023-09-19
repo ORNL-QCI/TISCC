@@ -82,7 +82,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -250,7 +250,7 @@ namespace TISCC
             // Single-patch operations
             if ((s == "idle") || (s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "pauli_x") || (s == "pauli_y") || (s == "pauli_z") 
             || (s == "inject_y") || (s == "inject_t") || (s == "flip_patch")
-            || (s == "hadamard") || (s == "move_right") || (s == "swap_left") || (s == "single_tile_rotation")) {
+            || (s == "hadamard") || (s == "move_right") || (s == "swap_left")) {
 
                 // Perform associated transversal operation
                 if ((s == "prepz") || (s == "prepx") || (s == "measz") || (s == "measx") || (s == "hadamard")) {
@@ -330,59 +330,6 @@ namespace TISCC
                         ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
                         grid->print_grid(ascii_grid);
                     }
-
-                }
-
-                if ((s == "single_tile_rotation") || (s == "hadamard")) {
-
-                    std::vector<std::string> ascii_grid;
-                    if (debug) {
-                        std::cout << "Configuration before flip_patch:" << std::endl;
-                        ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
-                        grid->print_grid(ascii_grid);
-                    }
-
-                    /* Flip the patch in one logical time-step */
-                    time = lq->flip_patch(*grid, hw_master, time, true, false);
-                    time = lq->idle(cycles, *grid, hw_master, time);
-
-                    /* Move the patch one column to the right */
-
-                    // move_right takes in pointers to lq_extended and lq_contracted that can be used later if desired
-                    LogicalQubit* lq_extended = nullptr;
-                    LogicalQubit* lq_contracted = nullptr;
-                    time = lq->move_right(cycles, lq_extended, lq_contracted, *grid, hw_master, time);
-
-                    // Visualize if debug flag is on
-                    if (debug) {
-                        std::cout << "Configuration before move_right:" << std::endl;
-                        ascii_grid = grid->ascii_grid_with_operator(lq->syndrome_measurement_qsites(), true);
-                        grid->print_grid(ascii_grid);
-                        std::cout << "Configuration after extension:" << std::endl;
-                        ascii_grid = grid->ascii_grid_with_operator(lq_extended->syndrome_measurement_qsites(), true);
-                        grid->print_grid(ascii_grid);
-                        std::cout << "Configuration after move_right:" << std::endl;
-                        ascii_grid = grid->ascii_grid_with_operator(lq_contracted->syndrome_measurement_qsites(), true);
-                        grid->print_grid(ascii_grid);
-                    }
-
-                    // Transfer resources appropriately for later processing
-                    if (lq1 != nullptr) {
-                        delete lq1;
-                        lq1 = nullptr;
-                    }
-                    if (lq2 != nullptr) {
-                        delete lq2;
-                        lq2 = nullptr;
-                    }
-
-                    LogicalQubit* tmp_lq = lq;
-                    lq = lq_contracted; // Contracted patch, being final state, defines logical operators for later processing
-                    lq1 = tmp_lq; // Retain flipped patch for extraction of deformations in post-processing
-                    lq2 = lq_extended; // Retain extended patch for calculating other operator deformations
-
-                    // Lastly, swap left (whole rotation was verified without this line; the primitives were verified separately anyway)
-                    time = lq->swap_left(*grid, hw_master, time);
 
                 }
 
@@ -581,7 +528,7 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, single_tile_rotation, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}" << std::endl;}
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
             // **Note: This being after circuit generation assumes that the occupancy of the grid post-circuit is equivalent to the occupancy pre-circuit
