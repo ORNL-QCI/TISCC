@@ -9,3 +9,4 @@ tests_*
 .DS_Store
 *.py
 *.txt
+docs/
