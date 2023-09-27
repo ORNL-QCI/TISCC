@@ -62,7 +62,7 @@ public:
      * @param site1 The first target qsite on the grid.
      * @param site2 The second target qsite on the grid.
      * @param time The time at which the instruction is applied.
-     * @param step The step number of the instruction (useful to specify order within a time-step).
+     * @param step The step number of the instruction (useful to specify where order needs to be preserved).
      * @param q1 The first qubit label within the relevant plaquette (for debugging, if applicable).
      * @param q2 The second qubit label within the relevant plaquette (for debugging, if applicable).
      * @param shape The shape of the relevant plaquette (for debugging, if applicable).
@@ -111,7 +111,7 @@ public:
     */
     double get_time() const {return time_;}
     /**
-     * @brief Gets the step number (specifying order within a time-step) of the instruction.
+     * @brief Gets the step number (useful to specify where order needs to be preserved) of the instruction.
      * 
      * Usually set to 0 if order does not need to be specified.
      * @return The step number of the instruction.

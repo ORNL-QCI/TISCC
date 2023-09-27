@@ -1,1 +1,0 @@
-TISCC -x 5 -z 5 -t 1 -o "single_tile_rotation" -p
