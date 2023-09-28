@@ -11,7 +11,7 @@ namespace TISCC
 {
     /* Helper functions */
     // Helper function to calculate the dot product mod 2 of two binary vectors
-    bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2) {
+    bool LogicalQubit::bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2) {
         if (v1.size() != v2.size()) {
             std::cerr << "bin_sym_prod: vectors of unequal length given to bin_sym_prod." << std::endl;
             abort();
@@ -24,7 +24,7 @@ namespace TISCC
     }
 
     // Helper function to calculate the product of two logical operators expressed in binary symplectic format
-    std::pair<std::vector<bool>, int> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2) {
+    std::pair<std::vector<bool>, int> LogicalQubit::operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2) {
         if (v1.size() != v2.size()) {
             std::cerr << "operator_product_binary_format: vectors of unequal length given to bin_sym_prod." << std::endl;
             std::cerr << v1.size() << " " << v2.size() << std::endl;
@@ -47,7 +47,7 @@ namespace TISCC
     }
 
     // Helper function to symplectic transform a vector in binary symplectic format
-    std::vector<bool> symplectic_transform(const std::vector<bool>& v) {
+    std::vector<bool> LogicalQubit::symplectic_transform(const std::vector<bool>& v) {
         if (v.size()%2 != 0) {
             std::cerr << "symplectic_transform: input vector has odd size." << std::endl;
             abort();
@@ -62,14 +62,14 @@ namespace TISCC
 
     // Helper function to return the Pauli weight of an operator expressed in binary symplectic format
     // Note: this currently adds a weight of two if there is any ZX on the same site
-    unsigned int pauli_weight(const std::vector<bool>& v) {
+    unsigned int LogicalQubit::hamming_weight(const std::vector<bool>& v) {
         unsigned int weight = 0;
         for (bool elem : v) weight += elem;
         return weight;
     }
 
     // Transform operators from binary representation to string e.g. 11000101 = Z(ZX)IX = i*ZYIX 
-    std::pair<std::string, std::complex<double>> binary_operator_to_pauli_string(const std::vector<bool>& binary_rep) {
+    std::pair<std::string, std::complex<double>> LogicalQubit::binary_operator_to_pauli_string(const std::vector<bool>& binary_rep) {
         std::complex<double> phase = std::complex<double>(1.0, 0.0);
         std::string result;
         for (unsigned int k = 0; k < binary_rep.size()/2; k++) {
@@ -93,7 +93,7 @@ namespace TISCC
     }
 
     // Transform operators from string to binary representation e.g. ZYIX -> -i*(11000101)
-    std::pair<std::vector<bool>, std::complex<double>> pauli_string_to_binary_operator(const std::string& pauli_string) {
+    std::pair<std::vector<bool>, std::complex<double>> LogicalQubit::pauli_string_to_binary_operator(const std::string& pauli_string) {
         std::complex<double> phase = std::complex<double>(1.0, 0.0);
         std::vector<bool> result(2*pauli_string.size(), 0);
         for (unsigned int k = 0; k < pauli_string.size(); k++) {
@@ -241,7 +241,7 @@ namespace TISCC
                     }
                 } 
             }
-            if (weight != pauli_weight(parity_check_matrix[i])) {consistent = 0;}
+            if (weight != hamming_weight(parity_check_matrix[i])) {consistent = 0;}
             if (!consistent) {
                 std::cerr << "LogicalQubit::test_stabilizers: stabilizer row " << i << " out of " << parity_check_matrix.size() - 2 << " in parity check matrix inconsistent with corresponding stabilizer." << std::endl;
                 abort();
@@ -649,8 +649,8 @@ namespace TISCC
 
     // Recalculate code distance using logical operators
     void LogicalQubit::recalculate_code_distance() {
-        dx_ = std::min(pauli_weight(get_logical_operator_default_edge('X')), pauli_weight(get_logical_operator_opposite_edge('X')));
-        dz_ = std::min(pauli_weight(get_logical_operator_default_edge('Z')), pauli_weight(get_logical_operator_opposite_edge('Z')));
+        dx_ = std::min(hamming_weight(get_logical_operator_default_edge('X')), hamming_weight(get_logical_operator_opposite_edge('X')));
+        dz_ = std::min(hamming_weight(get_logical_operator_default_edge('Z')), hamming_weight(get_logical_operator_opposite_edge('Z')));
     }
 
     // Update the logical deformation vectors with qsite
@@ -1533,7 +1533,7 @@ namespace TISCC
         // If the default-edge logical operator of the same type as the added stabilizer has overlap with it, it should be replaced (both assumed to ONLY support Z or ONLY support X)
         std::optional<std::vector<bool>> new_same_type_logical_operator;
         std::vector<bool> tmp_row = operator_product_binary_format(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')], new_row).first;
-        if (pauli_weight(tmp_row) <= pauli_weight(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')])) {
+        if (hamming_weight(tmp_row) <= hamming_weight(parity_check_matrix[parity_check_matrix.size() - 1 - (type=='Z')])) {
             new_same_type_logical_operator = std::move(tmp_row);
             add_logical_deformation_qsites(type, new_stabilizer.get_qsite('m'));
         }
@@ -1721,7 +1721,7 @@ namespace TISCC
         std::vector<bool> cw_logical_operator = get_logical_operator(opp_type, cw_edge_type);
 
         // Max weight possible before operator eats its tail (computation should stop way before then due to stronger condition on cw_logical_op)
-        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - pauli_weight(logical_operator);
+        unsigned int max_weight_to_add = 2*(dx_init_ - 1) + 2*(dz_init_ - 1) - hamming_weight(logical_operator);
 
         // Hardware instructions may be added in add_stabilizer, so we need to track time
         double time_tmp;
@@ -1760,7 +1760,7 @@ namespace TISCC
         for (unsigned int i=0; i<weight_to_add; i++) {
 
             // Do not proceed if the weight of the cw_logical_operator is only 1
-            if (pauli_weight(cw_logical_operator) == 1) {
+            if (hamming_weight(cw_logical_operator) == 1) {
                 if (debug) std::cerr << "LogicalQubit::extend_logical_operator_clockwise: No room for operator movement; a weight of " << i << " out of " << weight_to_add << " has been added." << std::endl;
                 break;
             }
@@ -1955,10 +1955,10 @@ namespace TISCC
             }
 
             // Update logical operator and account for weight added
-            unsigned int weight_diff = pauli_weight(logical_operator);
+            unsigned int weight_diff = hamming_weight(logical_operator);
             if (edge_type == "default") {logical_operator = get_logical_operator_default_edge(type);}
             else if (edge_type == "opposite") {logical_operator = get_logical_operator_opposite_edge(type);}
-            weight_diff = pauli_weight(logical_operator) - weight_diff;
+            weight_diff = hamming_weight(logical_operator) - weight_diff;
             i += weight_diff - 1;
             if (weight_diff == 0) {
                 std::cerr << "LogicalQubit::extend_logical_operator_clockwise: logical operator of desired edge type did not change weight. add_stabilizer may have chosen the default edge operator to modify." << std::endl;

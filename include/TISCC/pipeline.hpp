@@ -8,12 +8,6 @@
 #include <set>
 
 namespace TISCC {
-    void print_hw_master(
-        std::ostream& output,
-        const std::vector<HW_Instruction>& hw_master,
-        const std::set<unsigned int>& occupied_sites,
-        bool debug);
-
     int run_tiscc(
         int argc, const char* argv[],
         std::istream& in_stream,

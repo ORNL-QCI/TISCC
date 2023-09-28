@@ -1,8 +1,13 @@
 #ifndef TISCC_INSTRUCTION_HPP
 #define TISCC_INSTRUCTION_HPP
 
-#include<TISCC/gridmanager.hpp>
-#include<string>
+#include <TISCC/gridmanager.hpp>
+#include <string>
+#include <iostream>
+#include <iomanip>
+#include <limits>
+#include <vector>
+#include <set>
 
 namespace TISCC {
 
@@ -147,6 +152,19 @@ public:
      * @return The plaquette type as a character.
     */
     char get_type() const {return type_;}
+
+    /**
+     * @brief Method to print the final hardware circuit.
+     * 
+     * @param output Output stream.
+     * @param hw_master Hardware circuit to print.
+     * @param occupied_sites Qsites initially occupied on the hardware.
+    */
+    static void print_hw_master(
+        std::ostream& output,
+        const std::vector<HW_Instruction>& hw_master,
+        const std::set<unsigned int>& occupied_sites,
+        bool debug);
 
 private:
 

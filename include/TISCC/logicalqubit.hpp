@@ -240,7 +240,7 @@ public:
     double inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
     /**
-     * @brief Generates the hardware circuit for the Swap Left operation (see Sec. 2.5 of the TISCC paper).
+     * @brief Generates the hardware circuit for the Swap Left operation (see Fig. 4 of the TISCC paper).
      * 
      * @param grid The GridManager object for reference.
      * @param hw_master The vector of hardware instructions to append this operation to.
@@ -250,7 +250,7 @@ public:
     double swap_left(GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {time = translate_patch(0, -1, grid, hw_master, time); return time;}
 
     /**
-     * @brief Generates the hardware circuit for the Move Right operation (see Sec. 2.5 of the TISCC paper).
+     * @brief Generates the hardware circuit for the Move Right operation (see Fig. 4 of the TISCC paper).
      * 
      * @param cycles The number of cycles of syndrome extraction.
      * @param lq_extended Exchanges a nullptr for a pointer to the LogicalQubit corresponding with the intermediate extended patch.
@@ -389,6 +389,44 @@ public:
      */
     std::vector<std::pair<unsigned int, char>> syndrome_measurement_qsites();
 
+// Helper functions related to binary vector math
+
+    /**
+     * @brief Calculates the dot product mod 2 of two binary vectors.
+     * @return A Boolean variable representing the result.
+    */
+    static bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2);
+
+    /**
+     * @brief Calculates the product of two operators expressed in binary symplectic format.
+     * @return A pair with the binary symplectic vector on one hand and a sign on the other.
+    */
+    static std::pair<std::vector<bool>, int> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2);
+
+    /**
+     * @brief Symplectic transform of a binary symplectic vector.
+     * @return The transformed vector.
+    */
+    static std::vector<bool> symplectic_transform(const std::vector<bool>& v);
+
+    /**
+     * @brief Returns the Hamming weight of a given binary vector.
+     * @return The Hamming weight of a given binary vector.
+    */
+    static unsigned int hamming_weight(const std::vector<bool>& v);
+
+    /**
+     * @brief Transform operators from binary symplectic to string representation while tracking phase e.g. 11000101 = Z(ZX)IX = i*ZYIX.
+     * @return A pair with the operator string on one hand and a phase on the other.
+    */
+    static std::pair<std::string, std::complex<double>> binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
+
+    /**
+     * @brief Transform operators from string to binary symplectic representation, tracking phase e.g. ZYIX -> -i*(11000101)
+     * @return A pair with the binary symplectic vector on one hand and a phase on the other.
+    */
+    static std::pair<std::vector<bool>, std::complex<double>> pauli_string_to_binary_operator(const std::string& pauli_string);
+
 private:
     // Code distances and location on grid
     unsigned int dx_;
@@ -464,14 +502,6 @@ private:
     double translate_patch(int s, int e, GridManager& grid, std::vector<HW_Instruction>& hw_master, double time);
 
 };
-
-// Helper functions related to binary vector math
-bool bin_dot_prod_mod_2(const std::vector<bool>& v1, const std::vector<bool> v2);
-std::pair<std::vector<bool>, int> operator_product_binary_format(const std::vector<bool>& v1, const std::vector<bool> v2);
-std::vector<bool> symplectic_transform(const std::vector<bool>& v);
-unsigned int pauli_weight(const std::vector<bool>& v);
-std::pair<std::string, std::complex<double>> binary_operator_to_pauli_string(const std::vector<bool>& binary_rep);
-std::pair<std::vector<bool>, std::complex<double>> pauli_string_to_binary_operator(const std::string& pauli_string);
 
 }
 
