@@ -467,6 +467,10 @@ namespace TISCC
     /* Derived quantities and accessors */
     // Default edge logical operator
     const std::vector<bool>& LogicalQubit::get_logical_operator_default_edge(char type) const {
+        if ((type != 'Z') && (type != 'X')) {
+            std::cerr << "LogicalQubit::get_logical_operator_default_edge: invalid operator type given: " << type << std::endl;
+            abort();
+        }
         return parity_check_matrix[parity_check_matrix.size() - 1 - (type == 'Z')];
     }
 
@@ -483,6 +487,10 @@ namespace TISCC
                 tmp_logical_operator = operator_product_binary_format(tmp_logical_operator, parity_check_matrix[i + z_plaquettes.size()]).first;
             }
         }
+        else {
+            std::cerr << "LogicalQubit::get_logical_operator_opposite_edge: invalid operator type given: " << type << std::endl;
+            abort();
+        }
         return tmp_logical_operator;
     }
 
@@ -490,6 +498,10 @@ namespace TISCC
         std::vector<bool> logical_operator;
         if (edge_type == "default") logical_operator = get_logical_operator_default_edge(type);
         else if (edge_type == "opposite") logical_operator = get_logical_operator_opposite_edge(type);
+        else {
+            std::cerr << "LogicalQubit::get_logical_operator: invalid edge_type given: " << edge_type << std::endl;
+            abort();
+        }
         return logical_operator;
     }
 
@@ -517,6 +529,7 @@ namespace TISCC
                 deformation.push_back(p.get_qsite('m'));
             }
         }
+        else {std::cerr << "LogicalQubit::get_logical_deformation_between_edges: invalid input given." << std::endl; abort();}
         return deformation;
     }
 
@@ -955,7 +968,7 @@ namespace TISCC
     }
 
     // The result of this process is the same as if we flipped the patch upside down and then did xz_swap
-    float LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug) {
+    double LogicalQubit::flip_patch(GridManager& grid, std::vector<HW_Instruction>& hw_master, float time, bool compile_ops, bool debug) {
 
         // If the stabilizers have been altered at all (other than by xz_swap), don't allow flip_patch
         if (!canonical_arrangement_ || flipped_tracker())  {
@@ -974,7 +987,7 @@ namespace TISCC
 
 
         // We separate these in time 
-        float time_tmp = time;
+        double time_tmp = time;
 
         if (!xz_swap_tracker()) {
             time_tmp = extend_logical_operator_clockwise('X', "opposite", dz_init_ - 1, true, grid, tmp_ops, time_tmp, debug);
@@ -1605,11 +1618,13 @@ namespace TISCC
         }
 
         // Test validity of stabilizers and parity check mtx
-        // test_stabilizers(); 
-        // if (!validity_parity_check_matrix()) {
-        //     std::cerr << "LogicalQubit::add_stabilizer: Final parity check matrix invalid." << std::endl;
-        //     abort();
-        // }
+        if (debug) {
+            test_stabilizers(); 
+            if (!validity_parity_check_matrix()) {
+                std::cerr << "LogicalQubit::add_stabilizer: Final parity check matrix invalid." << std::endl;
+                abort();
+            }
+        }
 
         // Print final grid and final default-edge logical operators
         if (debug) {
@@ -2017,7 +2032,7 @@ namespace TISCC
                 abort();
             }
 
-            // We require that lq1 is located one tile east-ward
+            // We require that lq2 is located one tile east-ward
             unsigned int extra_strip = 0;
             if (get_dx()%2 == 0) {extra_strip = 1;}
             if (lq2.get_col() != get_col() + get_dx() + 1 + extra_strip) {
@@ -2042,7 +2057,7 @@ namespace TISCC
                 abort();
             }
 
-            // We require that lq1 is located one tile south-ward
+            // We require that lq2 is located one tile south-ward
             unsigned int extra_strip = 0;
             if (get_dz()%2 == 0) {extra_strip = 1;} 
             if (lq2.get_row() != get_row() + get_dz() + 1 + extra_strip) {

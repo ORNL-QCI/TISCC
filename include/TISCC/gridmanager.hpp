@@ -48,7 +48,7 @@ public:
     /**
      * @brief Provides read-only access to the array representing the hardware grid.
      * @param i The grid array index (representing a qsite).
-     * @return A reference to the SiteType at the specified qsite.
+     * @return A const reference to the SiteType at the specified qsite.
      */ 
     const SiteType& operator[] (unsigned int i) const {return grid_[i];}
 
@@ -57,7 +57,7 @@ public:
      * @param row The row coordinate.
      * @param col The column coordinate.
      * @param idx The index within repeating unit of hardware architecture.
-     * @return A reference to the SiteType at the specified coordinates.
+     * @return A const reference to the SiteType at the specified coordinates.
      */
     const SiteType& from_coords(unsigned int row, unsigned int col, unsigned int idx) const; 
 
@@ -113,7 +113,7 @@ public:
 
     /**
      * @brief Returns a set containing the grid array indices (qsites) that are occupied (by default, all 'O' sites).
-     * @return A set containing the grid array indices (qsites) that are occupied (by default, all 'O' sites).
+     * @return A const reference to the set containing the grid array indices (qsites) that are occupied (by default, all 'O' sites).
      */
     const std::set<unsigned int>& get_occ_sites() const {return occupied_sites;}
 

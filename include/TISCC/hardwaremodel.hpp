@@ -30,7 +30,8 @@ public:
     explicit HardwareModel();
 
     /**
-     * @brief Prints the durations for various native trapped-ion gates.
+     * @brief Returns a map containing the durations for implemented native trapped-ion gates.
+     * @return A const reference to the map containing the durations for implemented native trapped-ion gates.
      */
     const std::map<std::string, double>& get_ops() const {return TI_ops;}
 
@@ -78,9 +79,11 @@ public:
      * @brief Compiles a CNOT gate into hardware instructions for a specific qubit label on a plaquette.
      *
      * @param p The plaquette on which the operation is applied.
-     * @param qubit The qubit label.
+     * @param control The control qubit label.
+     * @param target The target qubit label.
      * @param time The current time in microseconds.
      * @param step The step of the syndrome extraction circuit.
+     * @param grid The GridManager object for reference.
      * @param circuit The hardware circuit to which the operation is added.
      * @return The updated time after adding the operation.
      */
