@@ -106,7 +106,7 @@ Z_-pi/4: 160
 Z_pi/2: 24
 ```
 
-ASCII representation of the hardware grid allocated to two horizontally-adjacent dx = 5, dz = 3 surface code patches. The grid is made of three types of trapping zones (qsites): `M' (memory), `O' (operation), and `J' (junction). 
+ASCII representation of the hardware grid allocated to two horizontally-adjacent dx = 5, dz = 3 surface code patches. The grid is made of three types of trapping zones (qsites): 'M' (memory), 'O' (operation), and `J' (junction). 
 
 ```
   0       1       2       3       4       5       6       7       8       9       10       11       
