@@ -1183,6 +1183,9 @@ namespace TISCC
             TI_model.add_meas(site, time_tmp, 0, grid, hw_master);
         }
 
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
+
         return time;
     }
 
@@ -2160,6 +2163,9 @@ namespace TISCC
             //     time_tmp = TI_model.add_H(site, time_tmp, 2, grid, hw_master);
             
         }
+
+        // Sort master list of hardware instructions according to overloaded operator<
+        std::stable_sort(hw_master.begin(), hw_master.end());
 
         return time_tmp;
 
