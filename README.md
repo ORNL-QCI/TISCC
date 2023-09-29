@@ -1,9 +1,9 @@
 # TISCC: Trapped-Ion Surface Code Compiler
-[![arXiv](https://img.shields.io/badge/arXiv-2302.02459-b31b1b.svg)](https://arxiv.org)
+[![arXiv](https://img.shields.io/badge/arXiv-####.#####-b31b1b.svg)](https://arxiv.org)
 
 Tool to compile a universal set of surface code operations into low-level operations native to a trapped-ion quantum computer and estimate resources for them.
 
-TISCC compiles patch operations using primitives such as transversal operations over data qubits, rounds of error correction over stabilizer plaquettes, lattice surgery operations between pairs of patches, and corner movements. Circuits generated using TISCC have been verified to yield the appropriate logical transformations through simulation and tomography. See our paper (link above) for more details.
+TISCC compiles patch operations using primitives such as transversal operations over data qubits, rounds of error correction over stabilizer plaquettes, lattice surgery operations between pairs of patches, and corner movements. Circuits generated using TISCC have been verified to yield the appropriate logical transformations through simulation and tomography. See our paper (link above) for more details..
 
 TISCC can be used either as an executable or as a library.
 
@@ -36,6 +36,7 @@ Example usage:
 ```
 
 Full usage: 
+
 ```
 Usage: ./TISCC [options...]
 Options:
@@ -55,7 +56,8 @@ Options:
 
 The first layer of CNOT gates from a round of error-correction over a d = 2 patch:
 
-```     Time (us)   Instruction  qsite1,qsite2
+```     
+        Time (us)   Instruction  qsite1,qsite2
             0.0      Prepare_Z             36
             0.0      Prepare_Z             29
             0.0      Prepare_Z             43
@@ -104,7 +106,8 @@ Z_-pi/4: 160
 Z_pi/2: 24
 ```
 
-ASCII representation of the hardware grid allocated to two horizontally-adjacent surface code patches
+ASCII representation of the hardware grid allocated to two horizontally-adjacent dx = 5, dz = 3 surface code patches. The grid is made of three types of trapping zones (qsites): `M' (memory), `O' (operation), and `J' (junction). 
+
 ```
   0       1       2       3       4       5       6       7       8       9       10       11       
 0 J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M 
@@ -122,22 +125,36 @@ ASCII representation of the hardware grid allocated to two horizontally-adjacent
 3 J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M 
   M       M       M       M       M       M       M       M       M       M       M       M       
   O       O       O       O       O       O       O       O       O       O       O       O       
-  M       M       M       M       M       M       M       M       M       M       M       M       
-4 J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M 
-  M       M       M       M       M       M       M       M       M       M       M       M       
-  O       O       O       O       O       O       O       O       O       O       O       O       
-  M       M       M       M       M       M       M       M       M       M       M       M       
-5 J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M J M O M 
-  M       M       M       M       M       M       M       M       M       M       M       M       
-  O       O       O       O       O       O       O       O       O       O       O       O       
-  M       M       M       M       M       M       M       M       M       M       M       M  
+  M       M       M       M       M       M       M       M       M       M       M       M 
+```
+
+Another representation of the grid where all sites that are occupied by default are labeled 'O' except for the syndrome measurement qsites of a merged patch, which are instead labeled by their operator type.
+
+```
+  0       1       2       3       4       5       6       7       8       9       10       11       
+0 - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - 
+  |       |       |       |       |       |       |       |       |       |       |       |       
+  O       O       Z       O       Z       O       Z       O       Z       O       Z       O       
+  |       |       |       |       |       |       |       |       |       |       |       |       
+1 - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - 
+  |       |       |       |       |       |       |       |       |       |       |       |       
+  X       Z       X       Z       X       Z       X       Z       X       Z       X       O       
+  |       |       |       |       |       |       |       |       |       |       |       |       
+2 - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - 
+  |       |       |       |       |       |       |       |       |       |       |       |       
+  O       X       Z       X       Z       X       Z       X       Z       X       Z       X       
+  |       |       |       |       |       |       |       |       |       |       |       |       
+3 - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - - - O - 
+  |       |       |       |       |       |       |       |       |       |       |       |       
+  O       Z       O       Z       O       Z       O       Z       O       Z       O       O       
+  |       |       |       |       |       |       |       |       |       |       |       | 
 ```
 
 ## TISCC API
 
 ## Example Usage
 
-Create a Bell state through a joint XX measurement of two (vertically-adjacent) patches initially in the |0> state:
+Compile a Bell state preparation circuit through a joint XX measurement of two (vertically-adjacent) patches prepared in the |0> state:
 
 ```
 // Designate the number rows and columns for a single tile
@@ -180,7 +197,7 @@ grid->enforce_hw_master_validity(hw_master);
 grid->resource_counter(hw_master);
 ```
 
-If the Bell preparation circuit were fed into a simulation (or real hardware), one might wish to perform a Pauli correction depending on the measured value of the joint XX operator. 
+If this Bell preparation circuit were fed into a simulator (or real hardware), one might wish to perform a Pauli correction depending on the measured value of the joint XX operator. To aid in these types of situations, TISCC contains functions that help collect the qsite labels for which resulting measurement outcomes need to be multiplied.
 
 ```
 // Collect measurement qsites for all X stabilizers lying between the two default-edge logical X operators
