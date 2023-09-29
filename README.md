@@ -152,7 +152,7 @@ Another representation of the grid where all sites that are occupied by default 
 
 ## TISCC API
 
-## Example Usage
+### Example Usage
 
 Compile a Bell state preparation circuit through a joint XX measurement of two (vertically-adjacent) patches prepared in the |0> state:
 
