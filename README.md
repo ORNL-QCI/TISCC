@@ -214,4 +214,4 @@ TISCC uses the same regression test suite as [Lattice Surgery Compiler](https://
 
 ## Acknowledgements
 
-TISCC was developed at Oak Ridge National Laboratory as part of the DARPA Quantum Benchmarking program. TISCC is one member of an end-to-end compilation and resource estimation pipeline for fault-tolerant quantum computing on trapped-ion processors. 
+TISCC was developed at Oak Ridge National Laboratory as part of the DARPA Quantum Benchmarking program. TISCC is one member of an end-to-end compilation and resource estimation pipeline for fault-tolerant quantum computing on trapped-ion processors. Other members are the [Lattice Surgery Compiler](https://github.com/latticesurgery-com/liblsqecc/tree/main) and the Oak Ridge Quasi-Clifford Simulator (not yet pubicly released).
