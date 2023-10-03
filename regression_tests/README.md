@@ -32,4 +32,4 @@ forwarded over.
 
 ### Attribution
 
-Everything in this directory (including most of this README file) was originally written by George Watkins for the [liblsqecc package](https://github.com/latticesurgery-com/liblsqecc).
+This regression test suite (including most of this README file) was written by George Watkins for the [liblsqecc package](https://github.com/latticesurgery-com/liblsqecc).
