@@ -16,6 +16,7 @@ Standard CMake build:
 $ mkdir build
 $ cd build
 $ cmake ..
+$ make
 ```
 
 The `TISCC` executable will be at the top level of the `build` directory. 
