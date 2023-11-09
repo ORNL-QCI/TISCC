@@ -147,7 +147,7 @@ namespace TISCC
             // Initialize logical qubit object using the grid
             lq1 = new LogicalQubit(dx, dz, 0, 0, *grid);
 
-            // Initialize second logical qubit object to the bottom of the first
+            // Initialize second logical qubit object to the right of the first
             lq2 = new LogicalQubit(dx, dz, 0, ncols, *grid);
 
             // Create a merged qubit

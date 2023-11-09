@@ -846,6 +846,7 @@ namespace TISCC
     }
 
     // Generate the positive Y eigenstate or a T state
+    // **Note: Should implement a post-selection protocol to improve injected state error rate
     double LogicalQubit::inject_state(char label, const GridManager& grid, std::vector<HW_Instruction>& hw_master, double time) {
 
         if ((label!='y') && (label!='t')) {
