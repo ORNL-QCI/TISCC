@@ -1,5 +1,5 @@
 # TISCC: Trapped-Ion Surface Code Compiler
-[![arXiv](https://img.shields.io/badge/arXiv-####.#####-b31b1b.svg)](https://arxiv.org)
+[Publication link](https://dl.acm.org/doi/10.1145/3624062.3624214)
 
 Tool to compile a universal set of surface code operations into low-level operations native to a trapped-ion quantum computer and estimate resources for them.
 
