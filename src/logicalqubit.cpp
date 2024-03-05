@@ -2102,7 +2102,7 @@ namespace TISCC
         }
 
         else {
-            std::cerr << "LogicalQubit::get_merged_lq: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
+            std::cerr << "LogicalQubit::merge: this operation must take place between logical qubits either vertically or horizontally separated, but not both." << std::endl;
             abort();
         }
 
@@ -2111,9 +2111,11 @@ namespace TISCC
         // Prepare strip qubits
         double time_tmp = 0;
         for (unsigned int site : strip) {
+
             time_tmp = TI_model.add_init(site, time, 0, grid, hw_master);
 
-            if (direction == "horizontal")
+            // Cover the case for standard and rotated arrangements
+            if (((direction == "horizontal") && (!xz_swap_tracker_)) || ((direction == "vertical") && (xz_swap_tracker_)))
                 time_tmp = TI_model.add_H(site, time_tmp, 0, grid, hw_master);
         }
 
@@ -2155,7 +2157,9 @@ namespace TISCC
         double time_tmp;
         for (unsigned int site : strip) {
             time_tmp = time;
-            if (direction == "horizontal")
+
+            // Cover the case for standard and rotated arrangements
+            if (((direction == "horizontal") && (!xz_swap_tracker_)) || ((direction == "vertical") && (xz_swap_tracker_)))
                 time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
 
             time_tmp = TI_model.add_meas(site, time_tmp, 0, grid, hw_master);
