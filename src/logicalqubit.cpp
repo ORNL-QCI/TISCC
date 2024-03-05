@@ -516,6 +516,17 @@ namespace TISCC
         else {std::cerr << "LogicalQubit::get_logical_deformation_qsites: invalid input given." << std::endl; abort();}
     }
 
+    // Clear logical deformation qsite vector
+    void LogicalQubit::clear_logical_deformation_qsites(char type) {
+        if (type == 'X') {
+            x_deformation_qsites.clear();
+        }
+        else if (type == 'Z') {
+            z_deformation_qsites.clear();
+        }
+        else {std::cerr << "LogicalQubit::clear_logical_deformation_qsites: invalid input given." << std::endl; abort();}
+    }
+
     // Return the stabilizers (given by their 'm' qsite) needed to obtain the opposite edge logical op of 'type' from the default edge one by taking their product with the latter
     std::vector<unsigned int> LogicalQubit::get_logical_deformation_between_edges(char type) const {
         std::vector<unsigned int> deformation;
@@ -959,12 +970,17 @@ namespace TISCC
         x_plaquettes = std::move(new_x_plaquettes);
         test_stabilizers();
 
+        // Trade the logical operator deformation vectors
+        std::vector<unsigned int> tmp_deformation = std::move(x_deformation_qsites);
+        x_deformation_qsites = std::move(z_deformation_qsites);
+        z_deformation_qsites = std::move(tmp_deformation);
+
         // Update code distances
         recalculate_code_distance();
 
         // We have changed the stabilizer arrangement
         // canonical_arrangement_ = false;
-        xz_swap_tracker_ = true;
+        xz_swap_tracker_ = !xz_swap_tracker_;
 
     }
 
@@ -1005,8 +1021,7 @@ namespace TISCC
         }
      
 
-        // We have changed the stabilizer arrangement back to a canonical one
-        if (!canonical_arrangement_) canonical_arrangement_ = true;
+        // Update flipped_tracker_ variable
         flipped_tracker_ = true;
 
         // Swap stabilizer circuit patterns to preserve code distance (logical ops have changed directions)
@@ -1939,6 +1954,7 @@ namespace TISCC
                 
                 if (!other_qsite.has_value()) {
                     std::cerr << "LogicalQubit::extend_logical_operator_clockwise: Supporting stabilizer invalid (path 2)." << std::endl;
+                    abort();
                 }
 
                 else {

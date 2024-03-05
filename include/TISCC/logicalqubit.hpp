@@ -139,6 +139,12 @@ public:
     */
     std::vector<unsigned int> get_logical_deformation_qsites(char type) const;
 
+    /**
+     * @brief Clears vector containing qsites representing deformations that have been made to the default-edge logical operator of given type.
+     * @param type Specifies either the X logical operator deformation ('X') or the Z logical operator deformation ('Z').
+    */
+    void clear_logical_deformation_qsites(char type);
+
      /**
      * @brief Returns a vector containing the syndrome measurement qsites required to deform the default-edge logical operator of given type into the corresponding opposite-edge logical operator.
      * 
