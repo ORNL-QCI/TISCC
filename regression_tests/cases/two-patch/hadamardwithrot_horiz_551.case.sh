@@ -1,0 +1,1 @@
+TISCC -x 5 -z 5 -t 1 -o "hadamard_with_rotation" -s "double-horiz" -p
