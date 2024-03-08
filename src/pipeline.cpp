@@ -44,7 +44,7 @@ namespace TISCC
                 .required(false);
         parser.add_argument()
                 .names({"-o", "--operation"})
-                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}")
+                .description("Surface code operation to be compiled. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas, hadamard_with_rotation}")
                 .required(false);
         parser.add_argument()
                 .names({"-s", "--tile_spec"})
@@ -490,7 +490,70 @@ namespace TISCC
 
             }
 
-            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas}" << std::endl;}
+            else if (s == "hadamard_with_rotation") {
+
+                if (tile_spec == "single") {std::cerr << "hadamard_with_rotation: invalid tile_spec given." << std::endl; abort();}
+
+                // Perform Hadamard 
+                time = lq1->transversal_op("hadamard", *grid, hw_master, time);
+
+                // Prepare lq2 in approp. basis depending on direction of extension
+                if (tile_spec == "double-horiz") {
+                    lq2->transversal_op("prepz", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-vert") {
+                    lq2->transversal_op("prepx", *grid, hw_master, time);
+                }
+
+                // Since we have applied a Hadamard, we need to modify the merged qubit stabilizers
+                lq->xz_swap(*grid);
+
+                // Corner movements prior to merge
+                unsigned int width = lq->get_dx_init()-1;
+                unsigned int height = lq->get_dz_init()-1;
+
+                if (tile_spec == "double-horiz") {
+                    lq->extend_logical_operator_clockwise('X', "opposite", height, true, *grid, hw_master, time, debug); 
+                    lq->extend_logical_operator_clockwise('Z', "default", height, true, *grid, hw_master, time, debug); 
+                }
+
+                else if (tile_spec == "double-vert") {
+                    lq->extend_logical_operator_clockwise('Z', "opposite", width, true, *grid, hw_master, time, debug); 
+                    lq->extend_logical_operator_clockwise('X', "opposite", width, true, *grid, hw_master, time, debug); 
+                }                
+
+                time = lq->merge(cycles, *grid, hw_master, time);
+
+                // Corner movement following merge
+                if (tile_spec == "double-horiz") {
+                    lq->extend_logical_operator_clockwise('X', "default", width, true, *grid, hw_master, time, debug); 
+                }
+
+                else if (tile_spec == "double-vert") {
+                    lq->extend_logical_operator_clockwise('Z', "default", height, true, *grid, hw_master, time, debug); 
+                }
+
+                // Round of error-correction after corner movement
+                time = lq->idle(cycles, *grid, hw_master, time);
+
+                // Contraction
+                // Measure lq1 in approp. basis depending on direction of contraction
+                if (tile_spec == "double-horiz") {
+                    lq1->transversal_op("measx", *grid, hw_master, time);
+                }
+
+                else if (tile_spec == "double-vert") {
+                    lq1->transversal_op("measz", *grid, hw_master, time);
+                }
+
+                // Perform the split operation (note we are using xz_swap to control the strip measurement basis)
+                lq->xz_swap(*grid);
+                time = lq->split(*grid, hw_master, time);
+                lq->xz_swap(*grid);
+            }
+
+            else {std::cerr << "No valid operation selected. Options: {idle, prepz, prepx, measz, measx, pauli_x, pauli_y, pauli_z, hadamard, inject_y, inject_t, flip_patch, move_right, swap_left, extension, contraction, move, merge, split, jointmeas, mergecontract, extendsplit, bellprep, bellmeas, hadamard_with_rotation}" << std::endl;}
 
             // Grab all of the occupied sites (to be used in printing)
             // **Note: This being after circuit generation assumes that the occupancy of the grid post-circuit is equivalent to the occupancy pre-circuit

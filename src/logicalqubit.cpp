@@ -2181,7 +2181,7 @@ namespace TISCC
 
             time_tmp = TI_model.add_meas(site, time_tmp, 0, grid, hw_master);
 
-            if (direction == "horizontal")
+            if (((direction == "horizontal") && (!xz_swap_tracker_)) || ((direction == "vertical") && (xz_swap_tracker_)))
                 time_tmp = TI_model.add_H(site, time_tmp, 2, grid, hw_master);
             
         }
