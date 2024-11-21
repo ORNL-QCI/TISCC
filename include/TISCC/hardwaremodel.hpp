@@ -298,6 +298,12 @@ public:
     */
     double get_cell_width() const {return cell_width;}
 
+    /**
+     * @brief Returns a map containing the equivalent Stim gate for each native trapped-ion gate.
+     * @return A const reference to the map containing the equivalent Stim gate for each native trapped-ion gate.
+     */
+    const std::map<std::string, std::string>& get_stim_ops() const {return TI_ops_to_stim;} 
+
 private:
     // Parameters of the hardware model
     double trap_width; // us
@@ -305,6 +311,9 @@ private:
 
     // Hash table to map trapped-ion instructions to time (in microseconds)
     std::map<std::string, double> TI_ops;
+
+    // Map between trapped-ion instructions and Stim gates
+    std::map<std::string, std::string> TI_ops_to_stim;
 
     // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
     void init_TI_ops();

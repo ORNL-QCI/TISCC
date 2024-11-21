@@ -159,12 +159,16 @@ public:
      * @param output Output stream.
      * @param hw_master Hardware circuit to print.
      * @param occupied_sites Qsites initially occupied on the hardware.
+     * @param stim Can optionally output a Stim circuit (does not include Detector instructions)
+     * 
+     * @return For Stim circuit output, we return a vector that stores the target qsite for every measurement to aid detector construction
     */
-    static void print_hw_master(
+    static std::optional<std::vector<unsigned int>> print_hw_master(
         std::ostream& output,
         const std::vector<HW_Instruction>& hw_master,
         const std::set<unsigned int>& occupied_sites,
-        bool debug);
+        bool debug = false,
+        bool stim = false);
 
 private:
 
