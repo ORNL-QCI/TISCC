@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <optional>
 #include <vector>
 #include <set>
 
