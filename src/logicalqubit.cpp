@@ -805,7 +805,7 @@ namespace TISCC
             else if (op == "measx") {
                 time_tmp = TI_model.add_H(site, time, 0, grid, hw_master);
                 time_tmp = TI_model.add_meas(site, time_tmp, 1, grid, hw_master);
-                time_tmp = TI_model.add_H(site, time_tmp, 2, grid, hw_master);
+                // time_tmp = TI_model.add_H(site, time_tmp, 2, grid, hw_master);
             }
 
             else if (op == "hadamard") {
@@ -818,7 +818,7 @@ namespace TISCC
         }
 
         // Update stabilizers appropriately for Hadamard case 
-        if (op == "hadamard") {
+        if ((op == "measx") || (op == "hadamard")) {
             xz_swap(grid);
         }
 

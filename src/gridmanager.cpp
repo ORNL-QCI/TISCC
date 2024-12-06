@@ -573,6 +573,7 @@ namespace TISCC
         };
 
         // Make sure operator is valid
+        std::set<unsigned int> encountered_qsites;
         for (const auto& element : qsites) {
             if (grid_[element.first] != SiteType::QSite_Memory_and_Ops) {
                 std::cerr << "GridManager::ascii_grid_with_operator: Valid operators can only have support on 'O' SiteTypes." << std::endl;
@@ -581,6 +582,12 @@ namespace TISCC
             if (!occupied_sites.count(element.first)) {
                 std::cerr << "GridManager::ascii_grid_with_operator: Valid operators can only have support on occupied qsites." << std::endl;
                 abort();
+            }
+            if (!encountered_qsites.count(element.first))
+                encountered_qsites.insert(element.first);
+            else {
+                std::cerr << "GridManager::ascii_grid_with_operator: Valid operators cannot touch the same qsite more than once." << std::endl;
+                abort(); 
             }
         }
 

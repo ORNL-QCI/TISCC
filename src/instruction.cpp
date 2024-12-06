@@ -47,6 +47,7 @@ namespace TISCC
         }
 
         // Output HW instructions to file
+        double current_time = 0;
         unsigned int uint_max = std::numeric_limits<unsigned int>::max();  
         for (const HW_Instruction& instruction : hw_master) {
 
@@ -72,6 +73,14 @@ namespace TISCC
 
             else
             {
+                // Check if time has changed and put a tick if so
+                if (instruction.get_time() != current_time)
+                {
+                    double time_diff = instruction.get_time() - current_time;
+                    current_time = instruction.get_time();
+                    output << "TICK[" << time_diff << "]" << std::endl;
+                }
+
                 // Move instructions update the qsites_to_qubits map
                 if (instruction.get_name() == "Move")
                 {
