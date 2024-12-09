@@ -95,6 +95,18 @@ public:
     */
     const std::vector<unsigned int>& get_index_to_qsite() const {return index_to_qsite;}
 
+    /**
+     * @brief Get X plaquettes.
+     * @return Const reference to vector of X plaquettes.
+    */
+    const std::vector<Plaquette>& get_x_plaquettes() const {return x_plaquettes;}
+
+    /**
+     * @brief Get Z plaquettes.
+     * @return Const reference to vector of Z plaquettes.
+    */
+    const std::vector<Plaquette>& get_z_plaquettes() const {return z_plaquettes;}
+
     // Derived quantities and other accessors
 
     /** 
