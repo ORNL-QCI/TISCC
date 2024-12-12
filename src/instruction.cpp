@@ -16,7 +16,7 @@ namespace TISCC
     {
         // I/O settings
         int W = 15;
-        output << std::setprecision(1);
+        output << std::setprecision(2);
         output << std::setiosflags(std::ios::fixed);
 
         // Initialize HardwareModel (TODO: have a HardwareModel be input)
@@ -106,13 +106,13 @@ namespace TISCC
                     {
                         meas_idx_to_qsite.push_back(instruction.get_site1());
                     }
-                    output << TI_model.get_stim_ops().at(instruction.get_name()) << " " << qsites_to_qubits[instruction.get_site1()] << std::endl;
+                    output << TI_model.get_TI_ops_to_stim().at(instruction.get_name()) << "[" << instruction.get_time() << "] " << qsites_to_qubits[instruction.get_site1()] << std::endl;
                 }
 
                 // Handle two-qubit operations
                 else if (instruction.get_name() == "ZZ")
                 {
-                    output << TI_model.get_stim_ops().at(instruction.get_name()) << " " << qsites_to_qubits[instruction.get_site1()] << " " << qsites_to_qubits[instruction.get_site2()] << std::endl;
+                    output << TI_model.get_TI_ops_to_stim().at(instruction.get_name())  << "[" << instruction.get_time() << "] " << qsites_to_qubits[instruction.get_site1()] << " " << qsites_to_qubits[instruction.get_site2()] << std::endl;
                 }
 
                 else if ((instruction.get_name() == "Z_pi/8") || (instruction.get_name() == "Z_-pi/8"))

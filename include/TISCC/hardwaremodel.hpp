@@ -302,7 +302,13 @@ public:
      * @brief Returns a map containing the equivalent Stim gate for each native trapped-ion gate.
      * @return A const reference to the map containing the equivalent Stim gate for each native trapped-ion gate.
      */
-    const std::map<std::string, std::string>& get_stim_ops() const {return TI_ops_to_stim;} 
+    const std::map<std::string, std::string>& get_TI_ops_to_stim() const {return TI_ops_to_stim;} 
+
+    /**
+     * @brief Returns a reverse map containing the equivalent Stim gate for each native trapped-ion gate.
+     * @return A const reference to the reverse map containing the equivalent Stim gate for each native trapped-ion gate.
+     */
+    const std::map<std::string, std::string>& get_stim_to_TI_ops() const {return stim_to_TI_ops;} 
 
 private:
     // Parameters of the hardware model
@@ -312,8 +318,9 @@ private:
     // Hash table to map trapped-ion instructions to time (in microseconds)
     std::map<std::string, double> TI_ops;
 
-    // Map between trapped-ion instructions and Stim gates
+    // Maps between trapped-ion instructions and Stim gates
     std::map<std::string, std::string> TI_ops_to_stim;
+    std::map<std::string, std::string> stim_to_TI_ops;
 
     // Initialize hash table to define trapped-ion instruction set and map instructions to time (in microseconds)
     void init_TI_ops();

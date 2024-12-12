@@ -35,18 +35,23 @@ namespace TISCC
         TI_ops["ZZ"] = 2000;
 
         // Initialize map to Stim instructions while we're at it 
-        TI_ops_to_stim["Prepare_Z"] = "RZ";
-        TI_ops_to_stim["Measure_Z"] = "MZ";
+        TI_ops_to_stim["Prepare_Z"] = "R";
+        TI_ops_to_stim["Measure_Z"] = "M";
         TI_ops_to_stim["X_pi/2"] = "X";
         TI_ops_to_stim["Y_pi/2"] = "Y";
         TI_ops_to_stim["Z_pi/2"] = "Z";
         TI_ops_to_stim["X_pi/4"] = "SQRT_X";
         TI_ops_to_stim["Y_pi/4"] = "SQRT_Y";
-        TI_ops_to_stim["Z_pi/4"] = "SQRT_Z";
+        TI_ops_to_stim["Z_pi/4"] = "S";
         TI_ops_to_stim["X_-pi/4"] = "SQRT_X_DAG";
         TI_ops_to_stim["Y_-pi/4"] = "SQRT_Y_DAG";
-        TI_ops_to_stim["Z_-pi/4"] = "SQRT_Z_DAG";
+        TI_ops_to_stim["Z_-pi/4"] = "S_DAG";
         TI_ops_to_stim["ZZ"] = "SQRT_ZZ";
+
+        for (const auto& pair : TI_ops_to_stim)
+        {
+            stim_to_TI_ops[pair.second] = pair.first;
+        }
 
     }
 
