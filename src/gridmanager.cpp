@@ -583,11 +583,9 @@ namespace TISCC
                 std::cerr << "GridManager::ascii_grid_with_operator: Valid operators can only have support on occupied qsites." << std::endl;
                 abort();
             }
-            if (!encountered_qsites.count(element.first))
-                encountered_qsites.insert(element.first);
-            else {
+            if (!encountered_qsites.insert(element.first).second) {
                 std::cerr << "GridManager::ascii_grid_with_operator: Valid operators cannot touch the same qsite more than once." << std::endl;
-                abort(); 
+                abort();
             }
         }
 
@@ -614,22 +612,42 @@ namespace TISCC
 
         /* sorted_qsites will be hit in order when looping sequentially over rows and cols in the grid */
 
+        // Q: What happens when multiple qsites are hit per repeating unit?
         unsigned int qsite_tracker = 0;
+
+        // Loop over rows
         for (unsigned int i = 0; i < nrows_; i++) {
-            for (unsigned int k = 0; k < repeating_unit.size(); k++) {
-                std::string row_output;
-                if (k==0) {
-                    row_output += std::to_string(i) + " ";
-                }
-                else {
-                    row_output += "  ";
-                }
-                for (unsigned int j = 0; j < ncols_; j++) {
+
+            // Loop over columns
+            std::vector<std::string> grid_sub_rows(repeating_unit.size(), "");
+            for (unsigned int j = 0; j < ncols_; j++) {
+
+                // Loop over sub-rows (within each repeating unit)
+                for (int k = repeating_unit.size() - 1; k > -1; k--)
+                {
+
+                    // Add portion designating row number
+                    if (j==0) {
+                        if (k==0) {
+                            grid_sub_rows[k] += std::to_string(i) + " ";
+                        }
+                        else {
+                            grid_sub_rows[k] += "  ";
+                        }
+                    }
+
+                    // The repeating unit, of course, repeats itself for every column
                     std::string new_unit = repeating_unit[k];
 
                     // Check if we have hit the next qsite in the list; if so, replace the appropriate character in new_unit
+
+                    // If we have not hit every qsite touched by the operator to be placed,
                     if (qsite_tracker < sorted_qsites.size()) {
+
+                        // Check if the row and column match the present un-placed operator, and whether the repeating unit sub-row contains its index
                         if ((i == rows[qsite_tracker]) && (j == cols[qsite_tracker]) && (repeating_unit_idxs[k].count(indices[qsite_tracker]) == 1)) {
+
+                            // If so, we replace the 'O' with the relevant operator (remember, only 'O' sites can be replaced according to the check above)
                             new_unit = new_unit.replace(new_unit.find(grid_[sorted_qsites[qsite_tracker].first]), 1, 1, sorted_qsites[qsite_tracker].second);
                             qsite_tracker++;
                         }
@@ -651,9 +669,13 @@ namespace TISCC
                             }
                         }
                     }
-                    row_output += new_unit;
+                    grid_sub_rows[k] += new_unit;
                 }
-                grid_output.push_back(row_output);
+            }
+
+            for (unsigned int sub_row_idx = 0; sub_row_idx < grid_sub_rows.size(); sub_row_idx++)
+            {
+                grid_output.push_back(grid_sub_rows[sub_row_idx]);
             }
         }
         return grid_output;
